@@ -2,6 +2,9 @@ import { BrowserRouter, Navigate, Outlet, Route, Routes, useLocation } from 'rea
 import { useAuthStore } from '@/shared/stores/authStore';
 import type { Role } from '@/shared/types/auth.types';
 import { routes } from '@/constants/routes';
+import { LoginPage } from '@/features/auth/pages/LoginPage';
+import { ForbiddenPage } from './pages/ForbiddenPage';
+import { NotFoundPage } from './pages/NotFoundPage';
 
 // ─── Guards ──────────────────────────────────────────────────────────────────
 
@@ -59,9 +62,9 @@ export function Router() {
     <BrowserRouter>
       <Routes>
         {/* ── Public ───────────────────────────────────────────────────── */}
-        <Route path={routes.login} element={<PlaceholderPage title="Sign In" />} />
-        <Route path="/403" element={<PlaceholderPage title="403 — Forbidden" />} />
-        <Route path="/404" element={<PlaceholderPage title="404 — Not Found" />} />
+        <Route path={routes.login} element={<LoginPage />} />
+        <Route path="/403" element={<ForbiddenPage />} />
+        <Route path="/404" element={<NotFoundPage />} />
 
         {/* ── Protected (requires authentication) ──────────────────────── */}
         <Route element={<AuthGuard />}>
