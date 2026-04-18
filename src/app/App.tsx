@@ -1,12 +1,17 @@
 import { QueryProvider } from './providers/QueryProvider';
 import { AuthProvider } from './providers/AuthProvider';
 import { Router } from './Router';
+import { ConfirmDialogProvider } from '@/shared/components/ui/ConfirmDialog';
+import { ToastContainer } from '@/shared/components/feedback/Toast';
 
 function App() {
   return (
     <QueryProvider>
       <AuthProvider>
-        <Router />
+        <ConfirmDialogProvider>
+          <Router />
+          <ToastContainer />
+        </ConfirmDialogProvider>
       </AuthProvider>
     </QueryProvider>
   );
