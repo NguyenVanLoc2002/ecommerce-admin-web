@@ -1,12 +1,14 @@
+import React from 'react';
 import { cn } from '@/shared/utils/cn';
 
-function SkeletonBlock({ className }: { className?: string }) {
+function SkeletonBlock({ className, style }: { className?: string; style?: React.CSSProperties }) {
   return (
     <div
       className={cn(
         'animate-pulse rounded bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 bg-[length:200%_100%]',
         className,
       )}
+      style={style}
     />
   );
 }

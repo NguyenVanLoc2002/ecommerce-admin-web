@@ -8,8 +8,12 @@ export type Role = (typeof Role)[keyof typeof Role];
 export interface AuthUser {
   id: number;
   email: string;
-  fullName: string;
-  roles: Role[];
+  firstName: string;
+  lastName: string;
+  phoneNumber?: string;
+  status: string;
+  roles: string[];
+  createdAt: string;
 }
 
 export interface Tokens {
@@ -22,10 +26,16 @@ export interface LoginRequest {
   password: string;
 }
 
-export interface LoginResponse {
+export interface LoginTokens {
   accessToken: string;
   refreshToken: string;
+  tokenType: string;
+  expiresIn: number;
+}
+
+export interface LoginResponse {
   user: AuthUser;
+  tokens: LoginTokens;
 }
 
 export interface RefreshTokenRequest {

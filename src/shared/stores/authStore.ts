@@ -21,7 +21,7 @@ export const useAuthStore = create<AuthState>()(
       role: null,
       setTokens: (tokens) =>
         set({ accessToken: tokens.accessToken, refreshToken: tokens.refreshToken }),
-      setUser: (user) => set({ user, role: user.roles[0] ?? null }),
+      setUser: (user) => set({ user, role: (user.roles[0] as Role) ?? null }),
       clear: () =>
         set({ accessToken: null, refreshToken: null, user: null, role: null }),
     }),
