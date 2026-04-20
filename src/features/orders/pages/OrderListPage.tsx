@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { AdminLayout } from '@/shared/components/layout/AdminLayout';
 import { PageHeader } from '@/shared/components/layout/PageHeader';
 import { useTableFilters } from '@/shared/hooks/useTableFilters';
-import { useDebounce } from '@/shared/hooks/useDebounce';
 import type { SortState } from '@/shared/components/table/types';
 import { useOrders } from '../hooks/useOrders';
 import { OrderTable } from '../components/OrderTable';
@@ -20,10 +19,7 @@ export function OrderListPage() {
   const [sort, setSort] = useState<SortState | undefined>();
   const [filtersOpen, setFiltersOpen] = useState(false);
 
-  const debouncedKeyword = useDebounce(filters.keyword ?? '', 300);
-  const queryParams: OrderListParams = { ...filters, keyword: debouncedKeyword || undefined };
-
-  const { data, isLoading, isError, refetch } = useOrders(queryParams);
+  const { data, isLoading, isError, refetch } = useOrders(filters);
 
   const handleSortChange = (newSort: SortState) => {
     setSort(newSort);

@@ -32,7 +32,7 @@ export function WarehouseForm({
 
   const form = useForm<WarehouseFormValues>({
     resolver: zodResolver(warehouseSchema),
-    defaultValues: { name: '', address: '', status: 'ACTIVE' },
+    defaultValues: { name: '', code: '', location: '', status: 'ACTIVE' },
   });
 
   useEffect(() => {
@@ -40,11 +40,12 @@ export function WarehouseForm({
       if (warehouse) {
         form.reset({
           name: warehouse.name,
-          address: warehouse.address ?? '',
+          code: warehouse.code,
+          location: warehouse.location ?? '',
           status: warehouse.status,
         });
       } else {
-        form.reset({ name: '', address: '', status: 'ACTIVE' });
+        form.reset({ name: '', code: '', location: '', status: 'ACTIVE' });
       }
     }
   }, [open, warehouse, form]);
@@ -78,8 +79,15 @@ export function WarehouseForm({
               disabled={isSubmitting}
             />
             <FormField
-              name="address"
-              label="Address"
+              name="code"
+              label="Code"
+              required
+              placeholder="e.g. KHO-HN-01"
+              disabled={isSubmitting || isEditMode}
+            />
+            <FormField
+              name="location"
+              label="Location"
               multiline
               rows={2}
               placeholder="Street address, city…"

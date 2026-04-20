@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Drawer } from '@/shared/components/ui/Drawer';
 import { Button } from '@/shared/components/ui/Button';
 import { Select } from '@/shared/components/ui/Select';
-import { Input } from '@/shared/components/ui/Input';
 import type { OrderListParams } from '../types/order.types';
 
 const STATUS_OPTIONS = [
@@ -18,10 +17,12 @@ const STATUS_OPTIONS = [
   { value: 'REFUNDED', label: 'Refunded' },
 ];
 
-const PAYMENT_METHOD_OPTIONS = [
-  { value: '', label: 'All methods' },
-  { value: 'COD', label: 'Cash on Delivery' },
-  { value: 'ONLINE', label: 'Online Payment' },
+const PAYMENT_STATUS_OPTIONS = [
+  { value: '', label: 'All statuses' },
+  { value: 'PENDING', label: 'Pending' },
+  { value: 'PAID', label: 'Paid' },
+  { value: 'FAILED', label: 'Failed' },
+  { value: 'REFUNDED', label: 'Refunded' },
 ];
 
 interface OrderFiltersDrawerProps {
@@ -86,29 +87,11 @@ export function OrderFiltersDrawer({
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-medium text-gray-700">Payment method</label>
+          <label className="text-sm font-medium text-gray-700">Payment status</label>
           <Select
-            options={PAYMENT_METHOD_OPTIONS}
-            value={merged.paymentMethod ?? ''}
-            onChange={(e) => set({ paymentMethod: e.target.value || undefined })}
-          />
-        </div>
-
-        <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-medium text-gray-700">From date</label>
-          <Input
-            type="date"
-            value={merged.fromDate ?? ''}
-            onChange={(e) => set({ fromDate: e.target.value || undefined })}
-          />
-        </div>
-
-        <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-medium text-gray-700">To date</label>
-          <Input
-            type="date"
-            value={merged.toDate ?? ''}
-            onChange={(e) => set({ toDate: e.target.value || undefined })}
+            options={PAYMENT_STATUS_OPTIONS}
+            value={merged.paymentStatus ?? ''}
+            onChange={(e) => set({ paymentStatus: e.target.value || undefined })}
           />
         </div>
       </div>

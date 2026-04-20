@@ -6,7 +6,8 @@ import type { StockMovementType, EntityStatus } from '@/shared/types/enums';
 export interface Warehouse {
   id: number;
   name: string;
-  address: string | null;
+  code: string;
+  location: string | null;
   status: EntityStatus;
   createdAt: string;
   updatedAt: string;
@@ -19,11 +20,15 @@ export interface WarehouseListParams extends PaginationParams {
 
 export interface CreateWarehouseRequest {
   name: string;
-  address: string;
-  status: EntityStatus;
+  code: string;
+  location?: string;
 }
 
-export type UpdateWarehouseRequest = Partial<CreateWarehouseRequest>;
+export interface UpdateWarehouseRequest {
+  name?: string;
+  location?: string;
+  status?: EntityStatus;
+}
 
 // ─── Inventory Stock ──────────────────────────────────────────────────────────
 

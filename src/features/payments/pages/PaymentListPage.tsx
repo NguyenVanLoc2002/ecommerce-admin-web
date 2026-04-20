@@ -20,8 +20,8 @@ export function PaymentListPage() {
   const [sort, setSort] = useState<SortState | undefined>();
   const [filtersOpen, setFiltersOpen] = useState(false);
 
-  const debouncedKeyword = useDebounce(filters.keyword ?? '', 300);
-  const queryParams: PaymentListParams = { ...filters, keyword: debouncedKeyword || undefined };
+  const debouncedOrderCode = useDebounce(filters.orderCode ?? '', 300);
+  const queryParams: PaymentListParams = { ...filters, orderCode: debouncedOrderCode || undefined };
 
   const { data, isLoading, isError, refetch } = usePayments(queryParams);
 

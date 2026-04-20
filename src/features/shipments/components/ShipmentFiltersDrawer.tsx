@@ -77,14 +77,22 @@ export function ShipmentFiltersDrawer({
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-medium text-gray-700">Order ID</label>
+          <label className="text-sm font-medium text-gray-700">Order code</label>
           <Input
-            type="number"
-            placeholder="e.g. 1042"
-            value={merged.orderId ?? ''}
-            onChange={(e) =>
-              set({ orderId: e.target.value ? Number(e.target.value) : undefined })
-            }
+            type="text"
+            placeholder="e.g. ORD20260420001"
+            value={merged.orderCode ?? ''}
+            onChange={(e) => set({ orderCode: e.target.value || undefined })}
+          />
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <label className="text-sm font-medium text-gray-700">Carrier</label>
+          <Input
+            type="text"
+            placeholder="e.g. GHTK"
+            value={merged.carrier ?? ''}
+            onChange={(e) => set({ carrier: e.target.value || undefined })}
           />
         </div>
 
@@ -92,8 +100,8 @@ export function ShipmentFiltersDrawer({
           <label className="text-sm font-medium text-gray-700">From date</label>
           <Input
             type="date"
-            value={merged.fromDate ?? ''}
-            onChange={(e) => set({ fromDate: e.target.value || undefined })}
+            value={merged.dateFrom ?? ''}
+            onChange={(e) => set({ dateFrom: e.target.value || undefined })}
           />
         </div>
 
@@ -101,8 +109,8 @@ export function ShipmentFiltersDrawer({
           <label className="text-sm font-medium text-gray-700">To date</label>
           <Input
             type="date"
-            value={merged.toDate ?? ''}
-            onChange={(e) => set({ toDate: e.target.value || undefined })}
+            value={merged.dateTo ?? ''}
+            onChange={(e) => set({ dateTo: e.target.value || undefined })}
           />
         </div>
       </div>

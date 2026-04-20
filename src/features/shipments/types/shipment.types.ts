@@ -43,7 +43,7 @@ export interface Shipment {
   estimatedDeliveryDate: string | null;
   shippedAt: string | null;
   deliveredAt: string | null;
-  notes: string | null;
+  note: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -57,11 +57,13 @@ export interface ShipmentEvent {
 }
 
 export interface ShipmentListParams extends PaginationParams {
-  keyword?: string;
+  orderCode?: string;
+  carrier?: string;
   status?: string;
   orderId?: number;
-  fromDate?: string;
-  toDate?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  direction?: string;
 }
 
 export interface CreateShipmentRequest {
@@ -69,17 +71,19 @@ export interface CreateShipmentRequest {
   carrier: string | null;
   trackingNumber: string | null;
   estimatedDeliveryDate: string | null;
-  notes: string | null;
+  note: string | null;
 }
 
 export interface UpdateShipmentRequest {
   carrier?: string | null;
   trackingNumber?: string | null;
   estimatedDeliveryDate?: string | null;
-  notes?: string | null;
+  note?: string | null;
 }
 
 export interface UpdateShipmentStatusRequest {
   status: ShipmentStatus;
-  note?: string;
+  description?: string;
+  location?: string;
+  eventTime?: string;
 }

@@ -79,9 +79,10 @@ export function ShipmentTable({
 
   const hasActiveFilters =
     filters.status !== undefined ||
-    filters.fromDate !== undefined ||
-    filters.toDate !== undefined ||
-    filters.orderId !== undefined;
+    filters.dateFrom !== undefined ||
+    filters.dateTo !== undefined ||
+    filters.orderId !== undefined ||
+    filters.carrier !== undefined;
 
   const columns = useMemo<ColumnDef<ShipmentSummary>[]>(
     () => [
@@ -177,8 +178,8 @@ export function ShipmentTable({
   return (
     <div className="space-y-4">
       <TableToolbar
-        searchValue={filters.keyword ?? ''}
-        onSearchChange={(keyword) => onFiltersChange({ keyword: keyword || undefined })}
+        searchValue={filters.orderCode ?? ''}
+        onSearchChange={(orderCode) => onFiltersChange({ orderCode: orderCode || undefined })}
         searchPlaceholder="Search by tracking code or order…"
         actions={
           <>

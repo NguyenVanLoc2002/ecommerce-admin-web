@@ -21,7 +21,7 @@ export function CreateShipmentPage() {
         carrier: values.carrier ?? null,
         trackingNumber: values.trackingNumber ?? null,
         estimatedDeliveryDate: values.estimatedDeliveryDate ?? null,
-        notes: values.notes ?? null,
+        note: values.notes ?? null,
       });
       toast.success('Shipment created. The order has been advanced to Shipped.');
       navigate(routes.shipments.detail(shipment.id));

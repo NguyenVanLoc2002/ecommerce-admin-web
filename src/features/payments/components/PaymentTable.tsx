@@ -50,9 +50,9 @@ export function PaymentTable({
   const hasActiveFilters =
     filters.method !== undefined ||
     filters.status !== undefined ||
-    filters.orderId !== undefined ||
-    filters.fromDate !== undefined ||
-    filters.toDate !== undefined;
+    filters.orderCode !== undefined ||
+    filters.dateFrom !== undefined ||
+    filters.dateTo !== undefined;
 
   const columns = useMemo<ColumnDef<PaymentSummary>[]>(
     () => [
@@ -139,8 +139,8 @@ export function PaymentTable({
   return (
     <div className="space-y-4">
       <TableToolbar
-        searchValue={filters.keyword ?? ''}
-        onSearchChange={(keyword) => onFiltersChange({ keyword: keyword || undefined })}
+        searchValue={filters.orderCode ?? ''}
+        onSearchChange={(orderCode) => onFiltersChange({ orderCode: orderCode || undefined })}
         searchPlaceholder="Search by order code or transaction ID…"
         actions={
           <Button

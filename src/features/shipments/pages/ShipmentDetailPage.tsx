@@ -34,7 +34,7 @@ export function ShipmentDetailPage() {
 
   const handleUpdateStatus = async (values: UpdateStatusFormValues) => {
     try {
-      await updateStatus.mutateAsync({ status: values.status, note: values.note });
+      await updateStatus.mutateAsync({ status: values.status, description: values.note });
 
       if (values.status === 'DELIVERED') {
         toast.success('Shipment delivered. The linked order has been automatically marked as delivered.');

@@ -49,7 +49,7 @@ export function OrderTable({
   const navigate = useNavigate();
 
   const hasActiveFilters =
-    filters.status || filters.paymentMethod || filters.fromDate || filters.toDate;
+    filters.status || filters.paymentStatus;
 
   const columns = useMemo<ColumnDef<OrderSummary>[]>(
     () => [
@@ -137,8 +137,8 @@ export function OrderTable({
   return (
     <div className="space-y-4">
       <TableToolbar
-        searchValue={filters.keyword ?? ''}
-        onSearchChange={(keyword) => onFiltersChange({ keyword: keyword || undefined })}
+        searchValue={''}
+        onSearchChange={() => undefined}
         searchPlaceholder="Search by order code or customer…"
         actions={
           <Button

@@ -58,11 +58,18 @@ export function WarehouseTable({
         ),
       },
       {
-        id: 'address',
-        header: 'Address',
+        id: 'code',
+        header: 'Code',
+        cell: ({ row }) => (
+          <span className="font-mono text-sm text-gray-700">{row.original.code}</span>
+        ),
+      },
+      {
+        id: 'location',
+        header: 'Location',
         cell: ({ row }) => (
           <span className="text-gray-500 text-sm">
-            {row.original.address ?? '—'}
+            {row.original.location ?? '—'}
           </span>
         ),
       },

@@ -47,10 +47,10 @@ export function ShipmentInfoCard({ shipment }: ShipmentInfoCardProps) {
           </Row>
         )}
 
-        {shipment.notes && (
+        {shipment.note && (
           <div className="pt-1 border-t border-gray-100">
             <p className="text-xs text-gray-400 mb-1">Notes</p>
-            <p className="text-sm text-gray-600">{shipment.notes}</p>
+            <p className="text-sm text-gray-600">{shipment.note}</p>
           </div>
         )}
       </div>

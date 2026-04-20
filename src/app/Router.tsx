@@ -11,6 +11,7 @@ import { WarehouseListPage, StockPage, ReservationListPage } from '@/features/in
 import { OrderListPage, OrderDetailPage } from '@/features/orders';
 import { ShipmentListPage, ShipmentDetailPage, CreateShipmentPage } from '@/features/shipments';
 import { PaymentListPage, PaymentDetailPage } from '@/features/payments';
+import { InvoiceListPage, InvoicePage } from '@/features/invoices';
 import { ForbiddenPage } from './pages/ForbiddenPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 
@@ -107,10 +108,8 @@ export function Router() {
           <Route path={routes.shipments.detail(':id')} element={<ShipmentDetailPage />} />
 
           {/* Invoices */}
-          <Route
-            path={routes.invoices.detail(':id')}
-            element={<PlaceholderPage title="Invoice" />}
-          />
+          <Route path={routes.invoices.list} element={<InvoiceListPage />} />
+          <Route path={routes.invoices.detail(':id')} element={<InvoicePage />} />
 
           {/* Promotions & Vouchers (ADMIN+) */}
           <Route element={<RoleGuard required={['ADMIN', 'SUPER_ADMIN']} />}>

@@ -14,7 +14,8 @@ import type { ShipmentListParams } from '../types/shipment.types';
 const DEFAULT_FILTERS: ShipmentListParams = {
   page: 0,
   size: 20,
-  sort: 'updatedAt,desc',
+  sort: 'createdAt',
+  direction: 'desc',
 };
 
 export function ShipmentListPage() {
@@ -23,14 +24,14 @@ export function ShipmentListPage() {
   const [sort, setSort] = useState<SortState | undefined>();
   const [filtersOpen, setFiltersOpen] = useState(false);
 
-  const debouncedKeyword = useDebounce(filters.keyword ?? '', 300);
-  const queryParams: ShipmentListParams = { ...filters, keyword: debouncedKeyword || undefined };
+  const debouncedOrderCode = useDebounce(filters.orderCode ?? '', 300);
+  const queryParams: ShipmentListParams = { ...filters, orderCode: debouncedOrderCode || undefined };
 
   const { data, isLoading, isError, refetch } = useShipments(queryParams);
 
   const handleSortChange = (newSort: SortState) => {
     setSort(newSort);
-    setFilters({ sort: `${newSort.column},${newSort.direction}` });
+    setFilters({ sort: newSort.column, direction: newSort.direction });
   };
 
   const handleFiltersApply = (updates: Partial<ShipmentListParams>) => {

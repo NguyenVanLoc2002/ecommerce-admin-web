@@ -53,10 +53,17 @@ export function WarehouseListPage() {
   const handleSubmit = async (values: WarehouseFormValues) => {
     try {
       if (editingWarehouse) {
-        await updateWarehouse.mutateAsync({ id: editingWarehouse.id, body: values });
+        await updateWarehouse.mutateAsync({
+          id: editingWarehouse.id,
+          body: { name: values.name, location: values.location || undefined, status: values.status },
+        });
         toast.success('Warehouse saved.');
       } else {
-        await createWarehouse.mutateAsync(values);
+        await createWarehouse.mutateAsync({
+          name: values.name,
+          code: values.code,
+          location: values.location || undefined,
+        });
         toast.success('Warehouse created.');
       }
       closeForm();

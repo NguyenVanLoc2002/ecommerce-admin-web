@@ -54,11 +54,9 @@ export interface OrderSummary {
 }
 
 export interface OrderListParams extends PaginationParams {
-  keyword?: string;
+  customerId?: number;
   status?: string;
-  paymentMethod?: string;
-  fromDate?: string;
-  toDate?: string;
+  paymentStatus?: string;
 }
 
 export type OrderAction = 'confirm' | 'process' | 'deliver' | 'complete' | 'cancel';

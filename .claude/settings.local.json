@@ -7,7 +7,8 @@
       "Bash(npx vite *)",
       "Bash(curl *)",
       "Bash(python -c \"import sys,json; r=json.load\\(sys.stdin\\); print\\(json.dumps\\(r['data'] if 'data' in r else r, indent=2\\)\\)\")",
-      "Bash(bun run *)"
+      "Bash(bun run *)",
+      "Bash(git diff *)"
     ]
   }
 }
