@@ -57,7 +57,7 @@ const reviewStatusMap: Record<ReviewStatus, { label: string; variant: BadgeVaria
 const productStatusMap: Record<ProductStatus, { label: string; variant: BadgeVariant }> = {
   DRAFT: { label: 'Draft', variant: 'default' },
   PUBLISHED: { label: 'Published', variant: 'success' },
-  ARCHIVED: { label: 'Archived', variant: 'warning' },
+  INACTIVE: { label: 'Inactive', variant: 'warning' },
 };
 
 const variantStatusMap: Record<VariantStatus, { label: string; variant: BadgeVariant }> = {

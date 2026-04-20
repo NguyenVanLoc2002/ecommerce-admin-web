@@ -12,3 +12,5 @@ export { Toggle } from './Toggle';
 export { Modal } from './Modal';
 export { Drawer } from './Drawer';
 export { ConfirmDialogProvider } from './ConfirmDialog';
+export { MultiSelectDropdown } from './MultiSelectDropdown';
+export type { MultiSelectOption } from './MultiSelectDropdown';

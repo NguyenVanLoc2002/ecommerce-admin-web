@@ -19,7 +19,7 @@ export const queryKeys = {
   products: {
     all: ['products'] as const,
     lists: () => [...queryKeys.products.all, 'list'] as const,
-    list: (params: Record<string, unknown>) =>
+    list: (params: object) =>
       [...queryKeys.products.lists(), params] as const,
     detail: (id: number) => [...queryKeys.products.all, 'detail', id] as const,
   },
@@ -35,14 +35,14 @@ export const queryKeys = {
   categories: {
     all: ['categories'] as const,
     lists: () => [...queryKeys.categories.all, 'list'] as const,
-    list: (params: Record<string, unknown>) =>
+    list: (params: object) =>
       [...queryKeys.categories.lists(), params] as const,
   },
 
   brands: {
     all: ['brands'] as const,
     lists: () => [...queryKeys.brands.all, 'list'] as const,
-    list: (params: Record<string, unknown>) =>
+    list: (params: object) =>
       [...queryKeys.brands.lists(), params] as const,
   },
 
@@ -50,17 +50,19 @@ export const queryKeys = {
   warehouses: {
     all: ['warehouses'] as const,
     lists: () => [...queryKeys.warehouses.all, 'list'] as const,
-    list: (params: Record<string, unknown>) =>
+    list: (params: object) =>
       [...queryKeys.warehouses.lists(), params] as const,
   },
 
   inventory: {
     all: ['inventory'] as const,
+    stock: (params: object) =>
+      [...queryKeys.inventory.all, 'stock', params] as const,
     byVariant: (variantId: number) =>
       [...queryKeys.inventory.all, 'variant', variantId] as const,
-    movements: (params: Record<string, unknown>) =>
+    movements: (params: object) =>
       [...queryKeys.inventory.all, 'movements', params] as const,
-    reservations: (params: Record<string, unknown>) =>
+    reservations: (params: object) =>
       [...queryKeys.inventory.all, 'reservations', params] as const,
   },
 
@@ -68,7 +70,7 @@ export const queryKeys = {
   orders: {
     all: ['orders'] as const,
     lists: () => [...queryKeys.orders.all, 'list'] as const,
-    list: (params: Record<string, unknown>) =>
+    list: (params: object) =>
       [...queryKeys.orders.lists(), params] as const,
     detail: (id: number) => [...queryKeys.orders.all, 'detail', id] as const,
   },
@@ -77,16 +79,17 @@ export const queryKeys = {
   shipments: {
     all: ['shipments'] as const,
     lists: () => [...queryKeys.shipments.all, 'list'] as const,
-    list: (params: Record<string, unknown>) =>
+    list: (params: object) =>
       [...queryKeys.shipments.lists(), params] as const,
     detail: (id: number) => [...queryKeys.shipments.all, 'detail', id] as const,
+    events: (id: number) => [...queryKeys.shipments.all, 'events', id] as const,
   },
 
   // ── Phase 9: Payments ───────────────────────────────────────────────────
   payments: {
     all: ['payments'] as const,
     lists: () => [...queryKeys.payments.all, 'list'] as const,
-    list: (params: Record<string, unknown>) =>
+    list: (params: object) =>
       [...queryKeys.payments.lists(), params] as const,
     detail: (id: number) => [...queryKeys.payments.all, 'detail', id] as const,
     transactions: (id: number) =>
@@ -103,7 +106,7 @@ export const queryKeys = {
   promotions: {
     all: ['promotions'] as const,
     lists: () => [...queryKeys.promotions.all, 'list'] as const,
-    list: (params: Record<string, unknown>) =>
+    list: (params: object) =>
       [...queryKeys.promotions.lists(), params] as const,
     detail: (id: number) => [...queryKeys.promotions.all, 'detail', id] as const,
   },
@@ -111,17 +114,17 @@ export const queryKeys = {
   vouchers: {
     all: ['vouchers'] as const,
     lists: () => [...queryKeys.vouchers.all, 'list'] as const,
-    list: (params: Record<string, unknown>) =>
+    list: (params: object) =>
       [...queryKeys.vouchers.lists(), params] as const,
     detail: (id: number) => [...queryKeys.vouchers.all, 'detail', id] as const,
-    usages: (id: number, params: Record<string, unknown>) =>
+    usages: (id: number, params: object) =>
       [...queryKeys.vouchers.all, 'usages', id, params] as const,
   },
 
   // ── Phase 12: Reviews ───────────────────────────────────────────────────
   reviews: {
     all: ['reviews'] as const,
-    pending: (params: Record<string, unknown>) =>
+    pending: (params: object) =>
       [...queryKeys.reviews.all, 'pending', params] as const,
     detail: (id: number) => [...queryKeys.reviews.all, 'detail', id] as const,
   },
@@ -130,7 +133,7 @@ export const queryKeys = {
   auditLog: {
     all: ['auditLog'] as const,
     lists: () => [...queryKeys.auditLog.all, 'list'] as const,
-    list: (params: Record<string, unknown>) =>
+    list: (params: object) =>
       [...queryKeys.auditLog.lists(), params] as const,
   },
 };

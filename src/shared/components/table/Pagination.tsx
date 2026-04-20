@@ -12,7 +12,7 @@ const PAGE_SIZE_OPTIONS = [
 ];
 
 interface PaginationProps {
-  pagination: Pick<PaginatedResponse<unknown>, 'totalElements' | 'totalPages' | 'number' | 'size'>;
+  pagination: Pick<PaginatedResponse<unknown>, 'totalItems' | 'totalPages' | 'page' | 'size'>;
   onPageChange: (page: number) => void;
   onPageSizeChange: (size: number) => void;
   className?: string;
@@ -24,10 +24,10 @@ export function Pagination({
   onPageSizeChange,
   className,
 }: PaginationProps) {
-  const { totalElements, totalPages, number: page, size } = pagination;
+  const { totalItems, totalPages, page, size } = pagination;
 
-  const from = totalElements === 0 ? 0 : page * size + 1;
-  const to = Math.min((page + 1) * size, totalElements);
+  const from = totalItems === 0 ? 0 : page * size + 1;
+  const to = Math.min((page + 1) * size, totalItems);
 
   const pageNumbers = buildPageNumbers(page, totalPages);
 
@@ -35,7 +35,7 @@ export function Pagination({
     <div className={cn('flex items-center justify-between gap-4 py-3 px-4', className)}>
       <p className="text-sm text-gray-500">
         Showing <span className="font-medium text-gray-700">{from}–{to}</span> of{' '}
-        <span className="font-medium text-gray-700">{totalElements}</span> results
+        <span className="font-medium text-gray-700">{totalItems}</span> results
       </p>
       <div className="flex items-center gap-2">
         <Select

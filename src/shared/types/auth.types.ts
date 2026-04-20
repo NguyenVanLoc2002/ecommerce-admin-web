@@ -8,8 +8,12 @@ export type Role = (typeof Role)[keyof typeof Role];
 export interface AuthUser {
   id: number;
   email: string;
-  fullName: string;
-  roles: Role[];
+  firstName: string;
+  lastName: string;
+  phoneNumber?: string;
+  status: string;
+  roles: string[];
+  createdAt: string;
 }
 
 export interface Tokens {

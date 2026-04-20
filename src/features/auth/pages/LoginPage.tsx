@@ -10,18 +10,14 @@ export function LoginPage() {
   const [searchParams] = useSearchParams();
   const accessToken = useAuthStore((s) => s.accessToken);
 
-  // Already authenticated — redirect immediately
+  // Redirect users who are already authenticated (e.g., direct URL visit or
+  // page refresh on /login while a valid session exists in localStorage).
   useEffect(() => {
     if (accessToken) {
       const redirect = searchParams.get('redirect');
       navigate(redirect ?? routes.dashboard, { replace: true });
     }
   }, [accessToken, navigate, searchParams]);
-
-  const handleSuccess = () => {
-    const redirect = searchParams.get('redirect');
-    navigate(redirect ?? routes.dashboard, { replace: true });
-  };
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12">
@@ -37,7 +33,7 @@ export function LoginPage() {
 
         {/* Card */}
         <div className="rounded-xl bg-white px-8 py-8 shadow-sm ring-1 ring-gray-200">
-          <LoginForm onSuccess={handleSuccess} />
+          <LoginForm />
         </div>
       </div>
     </div>

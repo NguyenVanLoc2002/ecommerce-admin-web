@@ -3,6 +3,15 @@ import { useAuthStore } from '@/shared/stores/authStore';
 import type { Role } from '@/shared/types/auth.types';
 import { routes } from '@/constants/routes';
 import { LoginPage } from '@/features/auth/pages/LoginPage';
+import { DashboardPage } from '@/features/dashboard';
+import { ProductListPage, ProductEditPage, ProductVariantsPage } from '@/features/products';
+import { CategoryListPage } from '@/features/categories';
+import { BrandListPage } from '@/features/brands';
+import { WarehouseListPage, StockPage, ReservationListPage } from '@/features/inventory';
+import { OrderListPage, OrderDetailPage } from '@/features/orders';
+import { ShipmentListPage, ShipmentDetailPage, CreateShipmentPage } from '@/features/shipments';
+import { PaymentListPage, PaymentDetailPage } from '@/features/payments';
+import { InvoiceListPage, InvoicePage } from '@/features/invoices';
 import { ForbiddenPage } from './pages/ForbiddenPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 
@@ -68,74 +77,39 @@ export function Router() {
 
         {/* ── Protected (requires authentication) ──────────────────────── */}
         <Route element={<AuthGuard />}>
-          <Route path={routes.dashboard} element={<PlaceholderPage title="Dashboard" />} />
+          <Route path={routes.dashboard} element={<DashboardPage />} />
 
           {/* Products */}
-          <Route path={routes.products.list} element={<PlaceholderPage title="Products" />} />
-          <Route path={routes.products.create} element={<PlaceholderPage title="New Product" />} />
-          <Route
-            path={routes.products.edit(':id')}
-            element={<PlaceholderPage title="Edit Product" />}
-          />
-          <Route
-            path={routes.products.variants(':id')}
-            element={<PlaceholderPage title="Manage Variants" />}
-          />
+          <Route path={routes.products.list} element={<ProductListPage />} />
+          <Route path={routes.products.create} element={<ProductEditPage />} />
+          <Route path={routes.products.edit(':id')} element={<ProductEditPage />} />
+          <Route path={routes.products.variants(':id')} element={<ProductVariantsPage />} />
 
           {/* Catalog */}
-          <Route
-            path={routes.categories.list}
-            element={<PlaceholderPage title="Categories" />}
-          />
-          <Route path={routes.brands.list} element={<PlaceholderPage title="Brands" />} />
+          <Route path={routes.categories.list} element={<CategoryListPage />} />
+          <Route path={routes.brands.list} element={<BrandListPage />} />
 
           {/* Inventory */}
-          <Route
-            path={routes.inventory.warehouses}
-            element={<PlaceholderPage title="Warehouses" />}
-          />
-          <Route
-            path={routes.inventory.stock}
-            element={<PlaceholderPage title="Inventory" />}
-          />
-          <Route
-            path={routes.inventory.reservations}
-            element={<PlaceholderPage title="Reservations" />}
-          />
+          <Route path={routes.inventory.warehouses} element={<WarehouseListPage />} />
+          <Route path={routes.inventory.stock} element={<StockPage />} />
+          <Route path={routes.inventory.reservations} element={<ReservationListPage />} />
 
           {/* Orders */}
-          <Route path={routes.orders.list} element={<PlaceholderPage title="Orders" />} />
-          <Route
-            path={routes.orders.detail(':id')}
-            element={<PlaceholderPage title="Order Detail" />}
-          />
+          <Route path={routes.orders.list} element={<OrderListPage />} />
+          <Route path={routes.orders.detail(':id')} element={<OrderDetailPage />} />
 
           {/* Payments */}
-          <Route path={routes.payments.list} element={<PlaceholderPage title="Payments" />} />
-          <Route
-            path={routes.payments.detail(':id')}
-            element={<PlaceholderPage title="Payment Detail" />}
-          />
+          <Route path={routes.payments.list} element={<PaymentListPage />} />
+          <Route path={routes.payments.detail(':id')} element={<PaymentDetailPage />} />
 
           {/* Shipments */}
-          <Route
-            path={routes.shipments.list}
-            element={<PlaceholderPage title="Shipments" />}
-          />
-          <Route
-            path={routes.shipments.create}
-            element={<PlaceholderPage title="New Shipment" />}
-          />
-          <Route
-            path={routes.shipments.detail(':id')}
-            element={<PlaceholderPage title="Shipment Detail" />}
-          />
+          <Route path={routes.shipments.list} element={<ShipmentListPage />} />
+          <Route path={routes.shipments.create} element={<CreateShipmentPage />} />
+          <Route path={routes.shipments.detail(':id')} element={<ShipmentDetailPage />} />
 
           {/* Invoices */}
-          <Route
-            path={routes.invoices.detail(':id')}
-            element={<PlaceholderPage title="Invoice" />}
-          />
+          <Route path={routes.invoices.list} element={<InvoiceListPage />} />
+          <Route path={routes.invoices.detail(':id')} element={<InvoicePage />} />
 
           {/* Promotions & Vouchers (ADMIN+) */}
           <Route element={<RoleGuard required={['ADMIN', 'SUPER_ADMIN']} />}>

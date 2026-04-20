@@ -43,6 +43,7 @@ export const routes = {
   },
 
   invoices: {
+    list: '/invoices',
     detail: (id: number | ':id') => `/invoices/${id}`,
   },
 
