@@ -119,7 +119,7 @@ export function CategoryTable({
       />
 
       <DataTable
-        data={data?.content ?? []}
+        data={data?.items ?? []}
         columns={columns}
         getRowId={(row) => String(row.id)}
         sort={sort}

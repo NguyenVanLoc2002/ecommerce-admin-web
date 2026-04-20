@@ -30,17 +30,21 @@ export interface Product {
   updatedAt: string;
 }
 
+export interface VariantAttribute {
+  attributeName: string;
+  value: string;
+}
+
 export interface ProductVariant {
   id: number;
   productId: number;
   sku: string;
-  name: string;
-  price: number;
+  variantName: string;
+  basePrice: number;
   salePrice: number | null;
-  weight: number | null;
-  dimensions: string | null;
+  weightGram: number | null;
   status: VariantStatus;
-  attributes: Record<string, string>;
+  attributes: VariantAttribute[];
   createdAt: string;
   updatedAt: string;
 }
@@ -66,20 +70,14 @@ export interface CreateProductRequest {
 
 export type UpdateProductRequest = Partial<CreateProductRequest>;
 
-export interface VariantAttributeEntry {
-  key: string;
-  value: string;
-}
-
 export interface CreateVariantRequest {
   sku: string;
-  name: string;
-  price: number;
+  variantName: string;
+  basePrice: number;
   salePrice: number | null;
-  weight: number | null;
-  dimensions: string | null;
+  weightGram: number | null;
   status: VariantStatus;
-  attributes: Record<string, string>;
+  attributes: VariantAttribute[];
 }
 
 export type UpdateVariantRequest = Partial<CreateVariantRequest>;

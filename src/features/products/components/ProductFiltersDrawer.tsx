@@ -9,7 +9,7 @@ import { MultiSelectDropdown } from '@/shared/components/ui/MultiSelectDropdown'
 const STATUS_OPTIONS = [
   { value: 'DRAFT', label: 'Draft' },
   { value: 'PUBLISHED', label: 'Published' },
-  { value: 'ARCHIVED', label: 'Archived' },
+  { value: 'INACTIVE', label: 'Inactive' },
 ];
 
 const FEATURED_OPTIONS = [

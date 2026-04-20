@@ -21,10 +21,10 @@ export interface ShipmentSummary {
   orderId: number;
   orderCode: string;
   customer: ShipmentCustomer;
-  trackingCode: string | null;
+  trackingNumber: string | null;
   carrier: string | null;
   status: ShipmentStatus;
-  estimatedDelivery: string | null;
+  estimatedDeliveryDate: string | null;
   shippedAt: string | null;
   deliveredAt: string | null;
   createdAt: string;
@@ -37,10 +37,10 @@ export interface Shipment {
   orderCode: string;
   customer: ShipmentCustomer;
   shippingAddress: ShipmentAddress;
-  trackingCode: string | null;
+  trackingNumber: string | null;
   carrier: string | null;
   status: ShipmentStatus;
-  estimatedDelivery: string | null;
+  estimatedDeliveryDate: string | null;
   shippedAt: string | null;
   deliveredAt: string | null;
   notes: string | null;
@@ -67,15 +67,15 @@ export interface ShipmentListParams extends PaginationParams {
 export interface CreateShipmentRequest {
   orderId: number;
   carrier: string | null;
-  trackingCode: string | null;
-  estimatedDelivery: string | null;
+  trackingNumber: string | null;
+  estimatedDeliveryDate: string | null;
   notes: string | null;
 }
 
 export interface UpdateShipmentRequest {
   carrier?: string | null;
-  trackingCode?: string | null;
-  estimatedDelivery?: string | null;
+  trackingNumber?: string | null;
+  estimatedDeliveryDate?: string | null;
   notes?: string | null;
 }
 

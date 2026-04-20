@@ -11,7 +11,7 @@ export const adjustStockSchema = z.object({
     .number()
     .int()
     .refine((n) => n !== 0, 'Quantity must not be zero'),
-  reason: z.enum(['DAMAGE', 'RETURN', 'CORRECTION', 'OTHER']),
+  movementType: z.enum(['EXPORT', 'ADJUSTMENT', 'RETURN']),
   note: z.string().max(500).default(''),
 });
 

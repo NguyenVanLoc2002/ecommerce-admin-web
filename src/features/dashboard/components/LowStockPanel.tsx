@@ -38,7 +38,7 @@ export function LowStockPanel() {
 
       {!isLoading && !isError && (
         <>
-          {data?.content.length === 0 ? (
+          {data?.items.length === 0 ? (
             <p className="px-5 py-10 text-center text-sm text-gray-400">
               All stock levels are healthy.
             </p>
@@ -69,7 +69,7 @@ export function LowStockPanel() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                  {data?.content.map((item) => (
+                  {data?.items.map((item) => (
                     <tr key={`${item.variantId}-${item.warehouseId}`} className="hover:bg-gray-50">
                       <td className="px-5 py-3">
                         <p className="font-medium text-gray-900">{item.variantName}</p>

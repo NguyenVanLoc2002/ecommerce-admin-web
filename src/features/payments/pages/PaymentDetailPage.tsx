@@ -28,7 +28,7 @@ export function PaymentDetailPage() {
     isError: transactionsError,
     refetch: refetchTransactions,
   } = usePaymentTransactions(paymentId);
-  const markPaid = useMarkPaymentPaid(paymentId);
+  const markPaid = useMarkPaymentPaid();
 
   const handleMarkPaid = async () => {
     const ok = await confirm({
@@ -41,7 +41,7 @@ export function PaymentDetailPage() {
     if (!ok) return;
 
     try {
-      await markPaid.mutateAsync();
+      await markPaid.mutateAsync(payment.orderId);
       toast.success('Payment marked as paid.');
     } catch (err) {
       if (err instanceof AppError) {

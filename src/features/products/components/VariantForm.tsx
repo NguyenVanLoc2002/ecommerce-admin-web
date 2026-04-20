@@ -22,8 +22,8 @@ interface VariantFormProps {
   onSubmit: (values: VariantFormValues) => void;
 }
 
-function attributesToEntries(attributes: Record<string, string>) {
-  return Object.entries(attributes).map(([key, value]) => ({ key, value }));
+function attributesToEntries(attributes: Array<{ attributeName: string; value: string }>) {
+  return attributes.map(({ attributeName, value }) => ({ key: attributeName, value }));
 }
 
 export function VariantForm({
@@ -54,13 +54,13 @@ export function VariantForm({
       if (variant) {
         form.reset({
           sku: variant.sku,
-          name: variant.name,
-          price: variant.price,
+          name: variant.variantName,
+          price: variant.basePrice,
           salePrice: variant.salePrice ?? null,
-          weight: variant.weight ?? null,
-          dimensions: variant.dimensions ?? null,
+          weight: variant.weightGram ?? null,
+          dimensions: null,
           status: variant.status,
-          attributes: attributesToEntries(variant.attributes ?? {}),
+          attributes: attributesToEntries(variant.attributes ?? []),
         });
       } else {
         form.reset({

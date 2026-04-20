@@ -24,13 +24,13 @@ export const dashboardService = {
   },
 
   getPendingReviewStats: () =>
-    apiClient.get<PaginatedResponse<DashboardReview>>('/admin/reviews/pending', {
+    apiClient.get<PaginatedResponse<DashboardReview>>('/reviews/pending', {
       params: { page: 0, size: 1 },
     }),
 
   getLowStockStats: () =>
-    apiClient.get<PaginatedResponse<DashboardLowStockItem>>('/admin/inventories/reservations', {
-      params: { page: 0, size: 1, maxAvailable: 5 },
+    apiClient.get<PaginatedResponse<DashboardLowStockItem>>('/admin/inventories', {
+      params: { page: 0, size: 1 },
     }),
 
   getOutForDeliveryStats: () =>
@@ -44,12 +44,12 @@ export const dashboardService = {
     }),
 
   getPendingReviews: () =>
-    apiClient.get<PaginatedResponse<DashboardReview>>('/admin/reviews/pending', {
+    apiClient.get<PaginatedResponse<DashboardReview>>('/reviews/pending', {
       params: { page: 0, size: 5, sort: 'createdAt,asc' },
     }),
 
   getLowStockItems: () =>
-    apiClient.get<PaginatedResponse<DashboardLowStockItem>>('/admin/inventories/reservations', {
-      params: { page: 0, size: 10, maxAvailable: 5 },
+    apiClient.get<PaginatedResponse<DashboardLowStockItem>>('/admin/inventories', {
+      params: { page: 0, size: 10 },
     }),
 };

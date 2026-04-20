@@ -1,13 +1,25 @@
 import { Truck } from 'lucide-react';
 import { StatusBadge } from '@/shared/components/ui/StatusBadge';
 import { formatDateTime, formatDate } from '@/shared/utils/formatDate';
-import type { OrderShipment } from '../types/order.types';
+import type { ShipmentStatus } from '@/shared/types/enums';
 
 interface OrderShipmentSummaryProps {
-  shipment: OrderShipment;
+  trackingNumber: string | null;
+  carrier: string | null;
+  status: ShipmentStatus;
+  estimatedDeliveryDate: string | null;
+  shippedAt: string | null;
+  deliveredAt: string | null;
 }
 
-export function OrderShipmentSummary({ shipment }: OrderShipmentSummaryProps) {
+export function OrderShipmentSummary({
+  trackingNumber,
+  carrier,
+  status,
+  estimatedDeliveryDate,
+  shippedAt,
+  deliveredAt,
+}: OrderShipmentSummaryProps) {
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-4 space-y-3">
       <div className="flex items-center gap-2">
@@ -18,41 +30,41 @@ export function OrderShipmentSummary({ shipment }: OrderShipmentSummaryProps) {
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <span className="text-sm text-gray-500">Status</span>
-          <StatusBadge type="shipment" status={shipment.status} />
+          <StatusBadge type="shipment" status={status} />
         </div>
 
-        {shipment.carrier && (
+        {carrier && (
           <div className="flex items-center justify-between">
             <span className="text-sm text-gray-500">Carrier</span>
-            <span className="text-sm font-medium text-gray-800">{shipment.carrier}</span>
+            <span className="text-sm font-medium text-gray-800">{carrier}</span>
           </div>
         )}
 
-        {shipment.trackingCode && (
+        {trackingNumber && (
           <div className="flex items-center justify-between gap-4">
             <span className="text-sm text-gray-500 shrink-0">Tracking</span>
-            <span className="text-xs font-mono text-primary-600">{shipment.trackingCode}</span>
+            <span className="text-xs font-mono text-primary-600">{trackingNumber}</span>
           </div>
         )}
 
-        {shipment.shippedAt && (
+        {shippedAt && (
           <div className="flex items-center justify-between">
             <span className="text-sm text-gray-500">Shipped</span>
-            <span className="text-xs text-gray-600">{formatDateTime(shipment.shippedAt)}</span>
+            <span className="text-xs text-gray-600">{formatDateTime(shippedAt)}</span>
           </div>
         )}
 
-        {shipment.estimatedDelivery && (
+        {estimatedDeliveryDate && (
           <div className="flex items-center justify-between">
             <span className="text-sm text-gray-500">Est. delivery</span>
-            <span className="text-xs text-gray-600">{formatDate(shipment.estimatedDelivery)}</span>
+            <span className="text-xs text-gray-600">{formatDate(estimatedDeliveryDate)}</span>
           </div>
         )}
 
-        {shipment.deliveredAt && (
+        {deliveredAt && (
           <div className="flex items-center justify-between">
             <span className="text-sm text-gray-500">Delivered</span>
-            <span className="text-xs text-gray-600">{formatDateTime(shipment.deliveredAt)}</span>
+            <span className="text-xs text-gray-600">{formatDateTime(deliveredAt)}</span>
           </div>
         )}
       </div>

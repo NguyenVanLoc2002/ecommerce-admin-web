@@ -14,7 +14,7 @@ export const productSchema = z.object({
     .max(300, 'Short description must be 300 characters or less')
     .default(''),
   description: z.string().default(''),
-  status: z.enum(['DRAFT', 'PUBLISHED', 'ARCHIVED']),
+  status: z.enum(['DRAFT', 'PUBLISHED', 'INACTIVE']),
   featured: z.boolean().default(false),
 });
 

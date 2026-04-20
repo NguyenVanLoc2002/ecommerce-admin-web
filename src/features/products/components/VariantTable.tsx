@@ -31,11 +31,11 @@ export function VariantTable({ productId, variants, onEdit, onAddNew }: VariantT
         header: 'Name',
         cell: ({ row }) => (
           <div>
-            <p className="font-medium text-gray-900">{row.original.name}</p>
-            {Object.keys(row.original.attributes ?? {}).length > 0 && (
+            <p className="font-medium text-gray-900">{row.original.variantName}</p>
+            {(row.original.attributes ?? []).length > 0 && (
               <p className="text-xs text-gray-400">
-                {Object.entries(row.original.attributes)
-                  .map(([k, v]) => `${k}: ${v}`)
+                {row.original.attributes
+                  .map(({ attributeName, value }) => `${attributeName}: ${value}`)
                   .join(', ')}
               </p>
             )}
@@ -47,7 +47,7 @@ export function VariantTable({ productId, variants, onEdit, onAddNew }: VariantT
         header: 'Price',
         cell: ({ row }) => (
           <div>
-            <p className="font-medium text-gray-900">{formatMoney(row.original.price)}</p>
+            <p className="font-medium text-gray-900">{formatMoney(row.original.basePrice)}</p>
             {row.original.salePrice != null && (
               <p className="text-xs text-success-600">{formatMoney(row.original.salePrice)}</p>
             )}

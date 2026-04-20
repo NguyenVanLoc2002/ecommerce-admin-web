@@ -118,7 +118,7 @@ export function WarehouseTable({
       />
 
       <DataTable
-        data={data?.content ?? []}
+        data={data?.items ?? []}
         columns={columns}
         getRowId={(row) => String(row.id)}
         sort={sort}

@@ -17,11 +17,10 @@ interface VariantPanelProps {
   productId: number;
 }
 
-function entriesToRecord(attributes: Array<{ key: string; value: string }>): Record<string, string> {
-  return attributes.reduce<Record<string, string>>((acc, { key, value }) => {
-    if (key) acc[key] = value;
-    return acc;
-  }, {});
+function entriesToAttributes(attributes: Array<{ key: string; value: string }>) {
+  return attributes
+    .filter((a) => a.key)
+    .map(({ key, value }) => ({ attributeName: key, value }));
 }
 
 export function VariantPanel({ productId }: VariantPanelProps) {
@@ -49,11 +48,13 @@ export function VariantPanel({ productId }: VariantPanelProps) {
 
   const handleSubmit = async (values: VariantFormValues) => {
     const payload = {
-      ...values,
+      sku: values.sku,
+      variantName: values.name,
+      basePrice: values.price,
       salePrice: values.salePrice ?? null,
-      weight: values.weight ?? null,
-      dimensions: values.dimensions ?? null,
-      attributes: entriesToRecord(values.attributes),
+      weightGram: values.weight ?? null,
+      status: values.status,
+      attributes: entriesToAttributes(values.attributes),
     };
 
     try {

@@ -26,16 +26,10 @@ export interface LoginRequest {
   password: string;
 }
 
-export interface LoginTokens {
+export interface LoginResponse {
   accessToken: string;
   refreshToken: string;
-  tokenType: string;
-  expiresIn: number;
-}
-
-export interface LoginResponse {
   user: AuthUser;
-  tokens: LoginTokens;
 }
 
 export interface RefreshTokenRequest {

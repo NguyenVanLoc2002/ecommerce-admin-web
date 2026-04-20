@@ -23,15 +23,15 @@ export function ShipmentInfoCard({ shipment }: ShipmentInfoCardProps) {
           </Row>
         )}
 
-        {shipment.trackingCode && (
+        {shipment.trackingNumber && (
           <Row icon={<Hash className="h-4 w-4 text-gray-400" />} label="Tracking Code">
-            <span className="font-mono text-sm text-primary-600">{shipment.trackingCode}</span>
+            <span className="font-mono text-sm text-primary-600">{shipment.trackingNumber}</span>
           </Row>
         )}
 
-        {shipment.estimatedDelivery && (
+        {shipment.estimatedDeliveryDate && (
           <Row icon={<Calendar className="h-4 w-4 text-gray-400" />} label="Est. Delivery">
-            <span className="text-sm text-gray-700">{formatDate(shipment.estimatedDelivery)}</span>
+            <span className="text-sm text-gray-700">{formatDate(shipment.estimatedDeliveryDate)}</span>
           </Row>
         )}
 

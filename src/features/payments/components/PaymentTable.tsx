@@ -160,7 +160,7 @@ export function PaymentTable({
       />
 
       <DataTable
-        data={data?.content ?? []}
+        data={data?.items ?? []}
         columns={columns}
         getRowId={(row) => String(row.id)}
         sort={sort}

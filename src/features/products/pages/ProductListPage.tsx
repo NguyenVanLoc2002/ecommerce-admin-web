@@ -42,7 +42,7 @@ export function ProductListPage() {
     .filter(([, v]) => v)
     .map(([id]) => Number(id));
 
-  const brandOptions: MultiSelectOption[] = (brandsData?.content ?? []).map((b) => ({
+  const brandOptions: MultiSelectOption[] = (brandsData?.items ?? []).map((b) => ({
     value: b.id,
     label: b.name,
   }));
@@ -70,21 +70,21 @@ export function ProductListPage() {
     }
   };
 
-  const handleBulkArchive = async () => {
+  const handleBulkDeactivate = async () => {
     if (selectedIds.length === 0) return;
     const ok = await confirm({
-      title: `Archive ${selectedIds.length} product${selectedIds.length > 1 ? 's' : ''}?`,
-      description: 'Archived products will no longer be visible to customers.',
-      confirmLabel: 'Archive',
+      title: `Deactivate ${selectedIds.length} product${selectedIds.length > 1 ? 's' : ''}?`,
+      description: 'Deactivated products will no longer be visible to customers.',
+      confirmLabel: 'Deactivate',
     });
     if (!ok) return;
 
-    const result = await bulkUpdateStatus.mutateAsync({ ids: selectedIds, status: 'ARCHIVED' });
+    const result = await bulkUpdateStatus.mutateAsync({ ids: selectedIds, status: 'INACTIVE' });
     setRowSelection({});
     if (result.failed > 0) {
-      toast.warning(`${result.succeeded} archived, ${result.failed} failed.`);
+      toast.warning(`${result.succeeded} deactivated, ${result.failed} failed.`);
     } else {
-      toast.success(`${result.succeeded} product${result.succeeded > 1 ? 's' : ''} archived.`);
+      toast.success(`${result.succeeded} product${result.succeeded > 1 ? 's' : ''} deactivated.`);
     }
   };
 
@@ -131,7 +131,7 @@ export function ProductListPage() {
           rowSelection={rowSelection}
           onRowSelectionChange={setRowSelection}
           onBulkPublish={() => void handleBulkPublish()}
-          onBulkArchive={() => void handleBulkArchive()}
+          onBulkArchive={() => void handleBulkDeactivate()}
           onBulkDelete={() => void handleBulkDelete()}
           isBulkPending={isBulkPending}
           onCreateNew={() => navigate(routes.products.create)}

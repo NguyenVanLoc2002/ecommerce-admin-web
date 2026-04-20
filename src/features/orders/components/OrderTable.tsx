@@ -57,26 +57,13 @@ export function OrderTable({
         id: 'code',
         header: 'Order',
         cell: ({ row }) => (
-          <div>
-            <button
-              type="button"
-              onClick={() => navigate(routes.orders.detail(row.original.id))}
-              className="font-mono text-sm font-semibold text-primary-600 hover:text-primary-700 hover:underline"
-            >
-              #{row.original.code}
-            </button>
-            <p className="text-xs text-gray-400">{row.original.customer.email}</p>
-          </div>
-        ),
-      },
-      {
-        id: 'customer',
-        header: 'Customer',
-        cell: ({ row }) => (
-          <div>
-            <p className="text-sm font-medium text-gray-900">{row.original.customer.fullName}</p>
-            <p className="text-xs text-gray-400">{row.original.customer.phone}</p>
-          </div>
+          <button
+            type="button"
+            onClick={() => navigate(routes.orders.detail(row.original.id))}
+            className="font-mono text-sm font-semibold text-primary-600 hover:text-primary-700 hover:underline"
+          >
+            #{row.original.orderCode}
+          </button>
         ),
       },
       {
@@ -104,15 +91,6 @@ export function OrderTable({
         ),
       },
       {
-        id: 'items',
-        header: 'Items',
-        className: 'text-center',
-        headerClassName: 'text-center',
-        cell: ({ row }) => (
-          <span className="text-sm text-gray-600">{row.original.itemCount}</span>
-        ),
-      },
-      {
         id: 'total',
         header: 'Total',
         enableSorting: true,
@@ -120,7 +98,7 @@ export function OrderTable({
         className: 'text-right tabular-nums',
         cell: ({ row }) => (
           <span className="text-sm font-semibold text-gray-900">
-            {formatMoney(row.original.total)}
+            {formatMoney(row.original.totalAmount)}
           </span>
         ),
       },
@@ -180,7 +158,7 @@ export function OrderTable({
       />
 
       <DataTable
-        data={data?.content ?? []}
+        data={data?.items ?? []}
         columns={columns}
         getRowId={(row) => String(row.id)}
         sort={sort}

@@ -40,11 +40,11 @@ export function RecentOrdersPanel() {
 
       {!isLoading && !isError && (
         <>
-          {data?.content.length === 0 ? (
+          {data?.items.length === 0 ? (
             <p className="px-5 py-10 text-center text-sm text-gray-400">No orders yet.</p>
           ) : (
             <ul className="divide-y divide-gray-100">
-              {data?.content.map((order) => (
+              {data?.items.map((order) => (
                 <li key={order.id}>
                   <Link
                     to={routes.orders.detail(order.id)}

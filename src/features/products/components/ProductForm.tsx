@@ -15,7 +15,7 @@ import type { Product, BrandOption, CategoryOption } from '../types/product.type
 const STATUS_OPTIONS = [
   { value: 'DRAFT', label: 'Draft' },
   { value: 'PUBLISHED', label: 'Published' },
-  { value: 'ARCHIVED', label: 'Archived' },
+  { value: 'INACTIVE', label: 'Inactive' },
 ];
 
 interface ProductFormProps {
@@ -86,7 +86,7 @@ export function ProductForm({
 
   const watchedStatus = form.watch('status');
   const showPublishWarning =
-    showNoVariantsWarning && (watchedStatus === 'PUBLISHED' || watchedStatus === 'ARCHIVED');
+    showNoVariantsWarning && (watchedStatus === 'PUBLISHED' || watchedStatus === 'INACTIVE');
 
   return (
     <FormProvider {...form}>

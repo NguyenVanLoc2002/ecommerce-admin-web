@@ -1,5 +1,5 @@
 import type { PaginationParams } from '@/shared/types/api.types';
-import type { StockMovementType, StockAdjustmentReason, EntityStatus } from '@/shared/types/enums';
+import type { StockMovementType, EntityStatus } from '@/shared/types/enums';
 
 // ─── Warehouse ────────────────────────────────────────────────────────────────
 
@@ -32,13 +32,13 @@ export interface InventoryStock {
   warehouseId: number;
   warehouseName: string;
   variantId: number;
-  variantSku: string;
+  sku: string;
   variantName: string;
   productId: number;
   productName: string;
-  quantityOnHand: number;
-  quantityReserved: number;
-  quantityAvailable: number;
+  onHand: number;
+  reserved: number;
+  available: number;
   updatedAt: string;
 }
 
@@ -47,18 +47,11 @@ export interface InventoryStockParams extends PaginationParams {
   warehouseId?: number;
 }
 
-export interface ImportStockRequest {
-  warehouseId: number;
-  variantId: number;
-  quantity: number;
-  note: string;
-}
-
 export interface AdjustStockRequest {
   warehouseId: number;
   variantId: number;
   quantity: number;
-  reason: StockAdjustmentReason;
+  movementType: StockMovementType;
   note: string;
 }
 
@@ -83,7 +76,7 @@ export interface StockMovement {
 export interface StockMovementParams extends PaginationParams {
   variantId?: number;
   warehouseId?: number;
-  type?: string;
+  movementType?: string;
 }
 
 // ─── Reservation ──────────────────────────────────────────────────────────────

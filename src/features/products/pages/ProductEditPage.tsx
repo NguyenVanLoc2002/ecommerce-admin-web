@@ -29,8 +29,8 @@ export function ProductEditPage() {
   const { data: categoriesData } = useCategoryOptions();
   const { data: brandsData } = useBrandOptions();
 
-  const brands = brandsData?.content ?? [];
-  const categories = categoriesData?.content ?? [];
+  const brands = brandsData?.items ?? [];
+  const categories = categoriesData?.items ?? [];
 
   const isSubmitting = createProduct.isPending || updateProduct.isPending;
 

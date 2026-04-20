@@ -147,7 +147,7 @@ export function ProductTable({
     return <ErrorCard onRetry={onRetry} />;
   }
 
-  const products = data?.content ?? [];
+  const products = data?.items ?? [];
 
   return (
     <div className="space-y-3">
@@ -199,7 +199,7 @@ export function ProductTable({
                 onClick={onBulkArchive}
                 isLoading={isBulkPending}
               >
-                Archive
+                Deactivate
               </Button>
               <Button
                 variant="danger"
@@ -247,7 +247,7 @@ export function ProductTable({
         }
       />
 
-      {data && data.totalElements > 0 && (
+      {data && data.totalItems > 0 && (
         <Pagination
           pagination={data}
           onPageChange={(page) => onFiltersChange({ page })}

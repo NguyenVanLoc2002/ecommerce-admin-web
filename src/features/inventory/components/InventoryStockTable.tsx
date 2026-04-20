@@ -66,7 +66,7 @@ export function InventoryStockTable({
           <div>
             <p className="font-medium text-gray-900 text-sm">{row.original.productName}</p>
             <p className="text-xs text-gray-500">
-              <span className="font-mono">{row.original.variantSku}</span>
+              <span className="font-mono">{row.original.sku}</span>
               {' — '}
               {row.original.variantName}
             </p>
@@ -86,7 +86,7 @@ export function InventoryStockTable({
         headerClassName: 'text-right',
         className: 'text-right tabular-nums',
         cell: ({ row }) => (
-          <span className="font-medium text-gray-800">{row.original.quantityOnHand}</span>
+          <span className="font-medium text-gray-800">{row.original.onHand}</span>
         ),
       },
       {
@@ -95,7 +95,7 @@ export function InventoryStockTable({
         headerClassName: 'text-right',
         className: 'text-right tabular-nums',
         cell: ({ row }) => (
-          <span className="text-gray-500">{row.original.quantityReserved}</span>
+          <span className="text-gray-500">{row.original.reserved}</span>
         ),
       },
       {
@@ -103,7 +103,7 @@ export function InventoryStockTable({
         header: 'Available',
         headerClassName: 'text-right',
         className: 'text-right',
-        cell: ({ row }) => <AvailabilityCell value={row.original.quantityAvailable} />,
+        cell: ({ row }) => <AvailabilityCell value={row.original.available} />,
       },
       {
         id: 'updatedAt',
@@ -168,7 +168,7 @@ export function InventoryStockTable({
       />
 
       <DataTable
-        data={data?.content ?? []}
+        data={data?.items ?? []}
         columns={columns}
         getRowId={(row) => String(row.id)}
         emptyState={

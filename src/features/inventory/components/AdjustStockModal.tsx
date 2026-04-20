@@ -8,11 +8,10 @@ import { FormSelect } from '@/shared/components/form/FormSelect';
 import { adjustStockSchema, type AdjustStockFormValues } from '../schemas/adjustStockSchema';
 import type { Warehouse } from '../types/inventory.types';
 
-const REASON_OPTIONS = [
-  { value: 'DAMAGE', label: 'Damage' },
+const MOVEMENT_TYPE_OPTIONS = [
+  { value: 'ADJUSTMENT', label: 'Adjustment / Correction' },
+  { value: 'EXPORT', label: 'Export / Remove' },
   { value: 'RETURN', label: 'Return' },
-  { value: 'CORRECTION', label: 'Correction' },
-  { value: 'OTHER', label: 'Other' },
 ];
 
 interface AdjustStockContext {
@@ -50,7 +49,7 @@ export function AdjustStockModal({
       warehouseId: 0,
       variantId: 0,
       quantity: undefined as unknown as number,
-      reason: 'CORRECTION',
+      movementType: 'ADJUSTMENT' as const,
       note: '',
     },
   });
@@ -61,7 +60,7 @@ export function AdjustStockModal({
         warehouseId: context?.warehouseId ?? (0 as unknown as number),
         variantId: context?.variantId ?? (0 as unknown as number),
         quantity: undefined as unknown as number,
-        reason: 'CORRECTION',
+        movementType: 'ADJUSTMENT',
         note: '',
       });
     }
@@ -137,10 +136,10 @@ export function AdjustStockModal({
               disabled={isSubmitting}
             />
             <FormSelect
-              name="reason"
-              label="Reason"
+              name="movementType"
+              label="Movement type"
               required
-              options={REASON_OPTIONS}
+              options={MOVEMENT_TYPE_OPTIONS}
               disabled={isSubmitting}
             />
             <FormField

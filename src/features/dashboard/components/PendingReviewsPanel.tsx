@@ -56,13 +56,13 @@ export function PendingReviewsPanel() {
 
       {!isLoading && !isError && (
         <>
-          {data?.content.length === 0 ? (
+          {data?.items.length === 0 ? (
             <p className="px-5 py-10 text-center text-sm text-gray-400">
               No pending reviews — you're all caught up!
             </p>
           ) : (
             <ul className="divide-y divide-gray-100">
-              {data?.content.map((review) => (
+              {data?.items.map((review) => (
                 <li key={review.id} className="px-5 py-3">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">

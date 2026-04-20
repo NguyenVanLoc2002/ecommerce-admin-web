@@ -7,11 +7,13 @@ export interface ApiResponse<T> {
 }
 
 export interface PaginatedResponse<T> {
-  content: T[];
-  totalElements: number;
-  totalPages: number;
-  number: number;
+  items: T[];
+  page: number;
   size: number;
+  totalItems: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrevious: boolean;
 }
 
 export interface ApiError {
@@ -20,7 +22,7 @@ export interface ApiError {
   message: string;
   path: string;
   timestamp: string;
-  fieldErrors?: FieldError[];
+  errors?: FieldError[];
 }
 
 export interface FieldError {
@@ -52,6 +54,6 @@ export class AppError extends Error {
     super(apiError.message);
     this.name = 'AppError';
     this.code = apiError.code;
-    this.fieldErrors = apiError.fieldErrors;
+    this.fieldErrors = apiError.errors;
   }
 }

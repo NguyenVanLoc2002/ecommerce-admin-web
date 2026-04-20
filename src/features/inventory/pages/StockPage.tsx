@@ -51,7 +51,7 @@ export function StockPage() {
   const importStock = useImportStock();
   const adjustStock = useAdjustStock();
 
-  const warehouses = warehouseData?.content ?? [];
+  const warehouses = warehouseData?.items ?? [];
 
   const openImport = (stock?: InventoryStock) => {
     setStockContext(stock);
@@ -167,7 +167,7 @@ export function StockPage() {
                 warehouseId: stockContext.warehouseId,
                 warehouseName: stockContext.warehouseName,
                 variantId: stockContext.variantId,
-                variantSku: stockContext.variantSku,
+                variantSku: stockContext.sku,
                 variantName: stockContext.variantName,
               }
             : undefined
@@ -189,7 +189,7 @@ export function StockPage() {
                 warehouseId: stockContext.warehouseId,
                 warehouseName: stockContext.warehouseName,
                 variantId: stockContext.variantId,
-                variantSku: stockContext.variantSku,
+                variantSku: stockContext.sku,
                 variantName: stockContext.variantName,
               }
             : undefined

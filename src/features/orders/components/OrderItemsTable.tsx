@@ -52,13 +52,13 @@ export function OrderItemsTable({
               <p className="text-xs text-gray-500">
                 {item.variantName}
                 {' · '}
-                <span className="font-mono">{item.variantSku}</span>
+                <span className="font-mono">{item.sku}</span>
               </p>
               <p className="mt-0.5 text-xs text-gray-400">
                 {formatMoney(item.unitPrice)} × {item.quantity}
-                {item.discount > 0 && (
+                {item.discountAmount > 0 && (
                   <span className="ml-1 text-success-600">
-                    (−{formatMoney(item.discount)})
+                    (−{formatMoney(item.discountAmount)})
                   </span>
                 )}
               </p>
@@ -66,7 +66,7 @@ export function OrderItemsTable({
 
             {/* Total */}
             <p className="shrink-0 text-sm font-semibold text-gray-900 tabular-nums">
-              {formatMoney(item.total)}
+              {formatMoney(item.lineTotal)}
             </p>
           </div>
         ))}

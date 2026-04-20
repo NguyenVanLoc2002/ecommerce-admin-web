@@ -105,7 +105,7 @@ export function ShipmentDetailPage() {
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <PageHeader
-            title={shipment.trackingCode ?? `Shipment #${shipment.id}`}
+            title={shipment.trackingNumber ?? `Shipment #${shipment.id}`}
             description={`Order #${shipment.orderCode}`}
           />
         </div>

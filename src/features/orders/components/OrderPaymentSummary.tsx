@@ -1,8 +1,7 @@
 import { CreditCard } from 'lucide-react';
 import { StatusBadge } from '@/shared/components/ui/StatusBadge';
 import { formatMoney } from '@/shared/utils/formatMoney';
-import { formatDateTime } from '@/shared/utils/formatDate';
-import type { OrderPayment } from '../types/order.types';
+import type { PaymentMethod, PaymentStatus } from '@/shared/types/enums';
 
 const PAYMENT_METHOD_LABEL: Record<string, string> = {
   COD: 'Cash on Delivery',
@@ -10,10 +9,16 @@ const PAYMENT_METHOD_LABEL: Record<string, string> = {
 };
 
 interface OrderPaymentSummaryProps {
-  payment: OrderPayment;
+  paymentMethod: PaymentMethod;
+  paymentStatus: PaymentStatus | null;
+  totalAmount: number;
 }
 
-export function OrderPaymentSummary({ payment }: OrderPaymentSummaryProps) {
+export function OrderPaymentSummary({
+  paymentMethod,
+  paymentStatus,
+  totalAmount,
+}: OrderPaymentSummaryProps) {
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-4 space-y-3">
       <div className="flex items-center gap-2">
@@ -25,35 +30,21 @@ export function OrderPaymentSummary({ payment }: OrderPaymentSummaryProps) {
         <div className="flex items-center justify-between">
           <span className="text-sm text-gray-500">Method</span>
           <span className="text-sm font-medium text-gray-800">
-            {PAYMENT_METHOD_LABEL[payment.method] ?? payment.method}
+            {PAYMENT_METHOD_LABEL[paymentMethod] ?? paymentMethod}
           </span>
         </div>
 
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-500">Status</span>
-          <StatusBadge type="payment" status={payment.status} />
-        </div>
+        {paymentStatus && (
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-gray-500">Status</span>
+            <StatusBadge type="payment" status={paymentStatus} />
+          </div>
+        )}
 
         <div className="flex items-center justify-between">
           <span className="text-sm text-gray-500">Amount</span>
-          <span className="text-sm font-semibold text-gray-900">{formatMoney(payment.amount)}</span>
+          <span className="text-sm font-semibold text-gray-900">{formatMoney(totalAmount)}</span>
         </div>
-
-        {payment.paidAt && (
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-500">Paid at</span>
-            <span className="text-xs text-gray-600">{formatDateTime(payment.paidAt)}</span>
-          </div>
-        )}
-
-        {payment.transactionId && (
-          <div className="flex items-start justify-between gap-4">
-            <span className="text-sm text-gray-500 shrink-0">Txn ID</span>
-            <span className="text-xs font-mono text-gray-600 text-right break-all">
-              {payment.transactionId}
-            </span>
-          </div>
-        )}
       </div>
     </div>
   );

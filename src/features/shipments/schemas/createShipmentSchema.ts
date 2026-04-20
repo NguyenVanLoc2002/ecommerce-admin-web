@@ -10,12 +10,12 @@ export const createShipmentSchema = z.object({
     .max(100, 'Carrier name must be at most 100 characters')
     .optional()
     .transform((v) => v?.trim() || null),
-  trackingCode: z
+  trackingNumber: z
     .string()
     .max(100, 'Tracking code must be at most 100 characters')
     .optional()
     .transform((v) => v?.trim() || null),
-  estimatedDelivery: z
+  estimatedDeliveryDate: z
     .string()
     .optional()
     .transform((v) => v || null),

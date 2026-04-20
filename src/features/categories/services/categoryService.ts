@@ -9,10 +9,10 @@ import type {
 
 export const categoryService = {
   getList: (params: CategoryListParams) =>
-    apiClient.get<PaginatedResponse<Category>>('/admin/categories', { params }),
+    apiClient.get<PaginatedResponse<Category>>('/categories', { params }),
 
   getById: (id: number) =>
-    apiClient.get<Category>(`/admin/categories/${id}`),
+    apiClient.get<Category>(`/categories/${id}`),
 
   create: (body: CreateCategoryRequest) =>
     apiClient.post<Category>('/admin/categories', body),

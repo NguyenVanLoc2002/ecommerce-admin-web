@@ -95,8 +95,8 @@ export function ShipmentTable({
               onClick={() => navigate(routes.shipments.detail(row.original.id))}
               className="group/tracking"
             >
-              {row.original.trackingCode ? (
-                <TrackingCell code={row.original.trackingCode} />
+              {row.original.trackingNumber ? (
+                <TrackingCell code={row.original.trackingNumber} />
               ) : (
                 <span className="font-mono text-sm font-semibold text-primary-600 hover:text-primary-700 hover:underline">
                   #{row.original.id}
@@ -138,13 +138,13 @@ export function ShipmentTable({
         ),
       },
       {
-        id: 'estimatedDelivery',
+        id: 'estimatedDeliveryDate',
         header: 'Est. Delivery',
         enableSorting: true,
         cell: ({ row }) => (
           <span className="text-sm text-gray-600 whitespace-nowrap">
-            {row.original.estimatedDelivery ? (
-              formatDate(row.original.estimatedDelivery)
+            {row.original.estimatedDeliveryDate ? (
+              formatDate(row.original.estimatedDeliveryDate)
             ) : (
               <span className="text-gray-300">—</span>
             )}
@@ -207,7 +207,7 @@ export function ShipmentTable({
       />
 
       <DataTable
-        data={data?.content ?? []}
+        data={data?.items ?? []}
         columns={columns}
         getRowId={(row) => String(row.id)}
         sort={sort}

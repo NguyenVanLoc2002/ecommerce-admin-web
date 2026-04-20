@@ -1,16 +1,16 @@
-import { CheckCircle2, Truck, PackageCheck, XCircle, ArrowRight } from 'lucide-react';
+import { CheckCircle2, PackageCheck, XCircle, ArrowRight } from 'lucide-react';
 import { Button } from '@/shared/components/ui/Button';
 import { useConfirmDialog } from '@/shared/hooks/useConfirmDialog';
 import { toast } from '@/shared/stores/uiStore';
 import { AppError } from '@/shared/types/api.types';
-import { useUpdateOrderStatus } from '../hooks/useUpdateOrderStatus';
-import type { Order } from '../types/order.types';
+import { useOrderAction } from '../hooks/useUpdateOrderStatus';
+import type { Order, OrderAction } from '../types/order.types';
 import type { OrderStatus } from '@/shared/types/enums';
 
 interface ActionDef {
   label: string;
   icon: React.ReactNode;
-  nextStatus: OrderStatus;
+  action: OrderAction;
   variant: 'primary' | 'secondary' | 'danger';
   confirmTitle: string;
   confirmDescription: string;
@@ -23,7 +23,7 @@ const STATUS_ACTIONS: Partial<Record<OrderStatus, ActionDef[]>> = {
     {
       label: 'Confirm Order',
       icon: <CheckCircle2 className="h-4 w-4" />,
-      nextStatus: 'CONFIRMED',
+      action: 'confirm',
       variant: 'primary',
       confirmTitle: 'Confirm this order?',
       confirmDescription: 'The customer will be notified that their order is confirmed.',
@@ -32,7 +32,7 @@ const STATUS_ACTIONS: Partial<Record<OrderStatus, ActionDef[]>> = {
     {
       label: 'Cancel Order',
       icon: <XCircle className="h-4 w-4" />,
-      nextStatus: 'CANCELLED',
+      action: 'cancel',
       variant: 'danger',
       confirmTitle: 'Cancel this order?',
       confirmDescription: 'This action cannot be undone. The customer will be notified.',
@@ -44,7 +44,7 @@ const STATUS_ACTIONS: Partial<Record<OrderStatus, ActionDef[]>> = {
     {
       label: 'Cancel Order',
       icon: <XCircle className="h-4 w-4" />,
-      nextStatus: 'CANCELLED',
+      action: 'cancel',
       variant: 'danger',
       confirmTitle: 'Cancel this order?',
       confirmDescription: 'The order is awaiting payment. Cancelling will notify the customer.',
@@ -56,7 +56,7 @@ const STATUS_ACTIONS: Partial<Record<OrderStatus, ActionDef[]>> = {
     {
       label: 'Mark as Processing',
       icon: <ArrowRight className="h-4 w-4" />,
-      nextStatus: 'PROCESSING',
+      action: 'process',
       variant: 'primary',
       confirmTitle: 'Mark order as processing?',
       confirmDescription: 'The order will move to the processing stage.',
@@ -65,28 +65,7 @@ const STATUS_ACTIONS: Partial<Record<OrderStatus, ActionDef[]>> = {
     {
       label: 'Cancel Order',
       icon: <XCircle className="h-4 w-4" />,
-      nextStatus: 'CANCELLED',
-      variant: 'danger',
-      confirmTitle: 'Cancel this order?',
-      confirmDescription: 'This action cannot be undone.',
-      confirmLabel: 'Cancel order',
-      confirmVariant: 'destructive',
-    },
-  ],
-  PROCESSING: [
-    {
-      label: 'Mark as Shipped',
-      icon: <Truck className="h-4 w-4" />,
-      nextStatus: 'SHIPPED',
-      variant: 'primary',
-      confirmTitle: 'Mark order as shipped?',
-      confirmDescription: 'Confirm that the order has been handed to the carrier.',
-      confirmLabel: 'Mark shipped',
-    },
-    {
-      label: 'Cancel Order',
-      icon: <XCircle className="h-4 w-4" />,
-      nextStatus: 'CANCELLED',
+      action: 'cancel',
       variant: 'danger',
       confirmTitle: 'Cancel this order?',
       confirmDescription: 'This action cannot be undone.',
@@ -98,7 +77,7 @@ const STATUS_ACTIONS: Partial<Record<OrderStatus, ActionDef[]>> = {
     {
       label: 'Mark as Delivered',
       icon: <PackageCheck className="h-4 w-4" />,
-      nextStatus: 'DELIVERED',
+      action: 'deliver',
       variant: 'primary',
       confirmTitle: 'Mark order as delivered?',
       confirmDescription: 'Confirm that the customer has received the order.',
@@ -109,7 +88,7 @@ const STATUS_ACTIONS: Partial<Record<OrderStatus, ActionDef[]>> = {
     {
       label: 'Mark as Completed',
       icon: <CheckCircle2 className="h-4 w-4" />,
-      nextStatus: 'COMPLETED',
+      action: 'complete',
       variant: 'primary',
       confirmTitle: 'Mark order as completed?',
       confirmDescription: 'The order will be closed and no further changes can be made.',
@@ -124,7 +103,7 @@ interface OrderActionPanelProps {
 
 export function OrderActionPanel({ order }: OrderActionPanelProps) {
   const { confirm } = useConfirmDialog();
-  const updateStatus = useUpdateOrderStatus(order.id);
+  const orderAction = useOrderAction(order.id);
   const actions = STATUS_ACTIONS[order.status] ?? [];
 
   if (actions.length === 0) {
@@ -136,17 +115,17 @@ export function OrderActionPanel({ order }: OrderActionPanelProps) {
     );
   }
 
-  const handleAction = async (action: ActionDef) => {
+  const handleAction = async (actionDef: ActionDef) => {
     const ok = await confirm({
-      title: action.confirmTitle,
-      description: action.confirmDescription,
-      confirmLabel: action.confirmLabel,
-      variant: action.confirmVariant ?? 'default',
+      title: actionDef.confirmTitle,
+      description: actionDef.confirmDescription,
+      confirmLabel: actionDef.confirmLabel,
+      variant: actionDef.confirmVariant ?? 'default',
     });
     if (!ok) return;
 
     try {
-      await updateStatus.mutateAsync({ status: action.nextStatus });
+      await orderAction.mutateAsync(actionDef.action);
       toast.success('Order status updated.');
     } catch (err) {
       if (err instanceof AppError) {
@@ -166,17 +145,17 @@ export function OrderActionPanel({ order }: OrderActionPanelProps) {
     <div className="rounded-lg border border-gray-200 bg-white p-4">
       <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-3">Actions</p>
       <div className="flex flex-col gap-2">
-        {actions.map((action) => (
+        {actions.map((actionDef) => (
           <Button
-            key={action.nextStatus}
-            variant={action.variant === 'danger' ? 'danger' : action.variant}
+            key={actionDef.action}
+            variant={actionDef.variant === 'danger' ? 'danger' : actionDef.variant}
             size="sm"
             className="w-full justify-start"
-            leftIcon={action.icon}
-            isLoading={updateStatus.isPending}
-            onClick={() => void handleAction(action)}
+            leftIcon={actionDef.icon}
+            isLoading={orderAction.isPending}
+            onClick={() => void handleAction(actionDef)}
           >
-            {action.label}
+            {actionDef.label}
           </Button>
         ))}
       </div>

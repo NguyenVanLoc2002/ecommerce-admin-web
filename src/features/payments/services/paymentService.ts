@@ -12,6 +12,6 @@ export const paymentService = {
   getTransactions: (id: number) =>
     apiClient.get<PaymentTransaction[]>(`/admin/payments/${id}/transactions`),
 
-  markPaid: (id: number) =>
-    apiClient.post<Payment>(`/admin/payments/${id}/mark-paid`),
+  completeCod: (orderId: number) =>
+    apiClient.post<Payment>(`/admin/payments/order/${orderId}/complete`),
 };

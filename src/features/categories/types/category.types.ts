@@ -6,6 +6,7 @@ export interface Category {
   name: string;
   slug: string;
   description: string | null;
+  parentId: number | null;
   status: EntityStatus;
   productCount: number;
   createdAt: string;
@@ -21,6 +22,7 @@ export interface CreateCategoryRequest {
   name: string;
   slug: string;
   description: string;
+  parentId?: number | null;
   status: EntityStatus;
 }
 

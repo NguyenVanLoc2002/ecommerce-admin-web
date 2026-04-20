@@ -11,6 +11,16 @@ export const OrderStatus = {
 } as const;
 export type OrderStatus = (typeof OrderStatus)[keyof typeof OrderStatus];
 
+// Status on the Order entity's paymentStatus field
+export const OrderPaymentStatus = {
+  PENDING: 'PENDING',
+  PAID: 'PAID',
+  FAILED: 'FAILED',
+  REFUNDED: 'REFUNDED',
+} as const;
+export type OrderPaymentStatus = (typeof OrderPaymentStatus)[keyof typeof OrderPaymentStatus];
+
+// Status on the Payment record entity
 export const PaymentStatus = {
   PENDING: 'PENDING',
   INITIATED: 'INITIATED',
@@ -54,7 +64,7 @@ export type ReviewStatus = (typeof ReviewStatus)[keyof typeof ReviewStatus];
 export const ProductStatus = {
   DRAFT: 'DRAFT',
   PUBLISHED: 'PUBLISHED',
-  ARCHIVED: 'ARCHIVED',
+  INACTIVE: 'INACTIVE',
 } as const;
 export type ProductStatus = (typeof ProductStatus)[keyof typeof ProductStatus];
 
@@ -66,10 +76,9 @@ export type VariantStatus = (typeof VariantStatus)[keyof typeof VariantStatus];
 
 export const StockMovementType = {
   IMPORT: 'IMPORT',
+  EXPORT: 'EXPORT',
   ADJUSTMENT: 'ADJUSTMENT',
-  RESERVATION: 'RESERVATION',
-  RELEASE: 'RELEASE',
-  FULFILLMENT: 'FULFILLMENT',
+  RETURN: 'RETURN',
 } as const;
 export type StockMovementType = (typeof StockMovementType)[keyof typeof StockMovementType];
 
@@ -93,7 +102,7 @@ export const AuditAction = {
 export type AuditAction = (typeof AuditAction)[keyof typeof AuditAction];
 
 export const PromotionScope = {
-  ORDER: 'ORDER',
+  ALL: 'ALL',
   PRODUCT: 'PRODUCT',
   CATEGORY: 'CATEGORY',
   BRAND: 'BRAND',
@@ -114,15 +123,6 @@ export const PromotionRuleType = {
   FIRST_ORDER: 'FIRST_ORDER',
 } as const;
 export type PromotionRuleType = (typeof PromotionRuleType)[keyof typeof PromotionRuleType];
-
-export const StockAdjustmentReason = {
-  DAMAGE: 'DAMAGE',
-  RETURN: 'RETURN',
-  CORRECTION: 'CORRECTION',
-  OTHER: 'OTHER',
-} as const;
-export type StockAdjustmentReason =
-  (typeof StockAdjustmentReason)[keyof typeof StockAdjustmentReason];
 
 export const EntityStatus = {
   ACTIVE: 'ACTIVE',

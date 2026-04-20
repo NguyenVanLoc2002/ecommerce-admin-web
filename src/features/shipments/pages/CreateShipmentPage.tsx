@@ -19,8 +19,8 @@ export function CreateShipmentPage() {
       const shipment = await createShipment.mutateAsync({
         orderId: values.orderId,
         carrier: values.carrier ?? null,
-        trackingCode: values.trackingCode ?? null,
-        estimatedDelivery: values.estimatedDelivery ?? null,
+        trackingNumber: values.trackingNumber ?? null,
+        estimatedDeliveryDate: values.estimatedDeliveryDate ?? null,
         notes: values.notes ?? null,
       });
       toast.success('Shipment created. The order has been advanced to Shipped.');

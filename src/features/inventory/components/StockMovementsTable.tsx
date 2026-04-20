@@ -167,7 +167,7 @@ export function StockMovementsTable({
       />
 
       <DataTable
-        data={data?.content ?? []}
+        data={data?.items ?? []}
         columns={columns}
         getRowId={(row) => String(row.id)}
         emptyState={

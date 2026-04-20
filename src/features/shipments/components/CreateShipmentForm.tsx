@@ -8,8 +8,8 @@ import { createShipmentSchema, type CreateShipmentFormValues } from '../schemas/
 const DEFAULT_VALUES: CreateShipmentFormValues = {
   orderId: 0,
   carrier: null,
-  trackingCode: null,
-  estimatedDelivery: null,
+  trackingNumber: null,
+  estimatedDeliveryDate: null,
   notes: null,
 };
 
@@ -57,13 +57,13 @@ export function CreateShipmentForm({
                 hint="Shipping carrier name."
               />
               <FormField
-                name="trackingCode"
+                name="trackingNumber"
                 label="Tracking Code"
                 placeholder="e.g. VT123456789VN"
                 hint="Carrier tracking number."
               />
               <FormField
-                name="estimatedDelivery"
+                name="estimatedDeliveryDate"
                 label="Estimated Delivery"
                 type="date"
               />

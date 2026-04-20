@@ -16,7 +16,6 @@ import { OrderActionPanel } from '../components/OrderActionPanel';
 import { OrderAddressCard } from '../components/OrderAddressCard';
 import { OrderItemsTable } from '../components/OrderItemsTable';
 import { OrderPaymentSummary } from '../components/OrderPaymentSummary';
-import { OrderShipmentSummary } from '../components/OrderShipmentSummary';
 
 export function OrderDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -73,7 +72,7 @@ export function OrderDetailPage() {
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <PageHeader
-            title={`Order #${order.code}`}
+            title={`Order #${order.orderCode}`}
             description={`Placed ${formatDateTime(order.createdAt)}`}
             actions={
               <StatusBadge type="order" status={order.status as OrderStatus} />
@@ -92,19 +91,19 @@ export function OrderDetailPage() {
           <div className="lg:col-span-2">
             <OrderItemsTable
               items={order.items}
-              subtotal={order.subtotal}
+              subtotal={order.subTotal}
               discountAmount={order.discountAmount}
               shippingFee={order.shippingFee}
-              total={order.total}
+              total={order.totalAmount}
               voucherCode={order.voucherCode}
             />
 
-            {order.note && (
+            {order.customerNote && (
               <div className="mt-4 rounded-lg border border-gray-200 bg-white p-4">
                 <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
                   Customer Note
                 </p>
-                <p className="mt-1.5 text-sm text-gray-700">{order.note}</p>
+                <p className="mt-1.5 text-sm text-gray-700">{order.customerNote}</p>
               </div>
             )}
           </div>
@@ -112,9 +111,20 @@ export function OrderDetailPage() {
           {/* Right sidebar — actions + info cards */}
           <div className="space-y-4">
             <OrderActionPanel order={order} />
-            <OrderAddressCard address={order.shippingAddress} customer={order.customer} />
-            {order.payment && <OrderPaymentSummary payment={order.payment} />}
-            {order.shipment && <OrderShipmentSummary shipment={order.shipment} />}
+            <OrderAddressCard
+              receiverName={order.receiverName}
+              receiverPhone={order.receiverPhone}
+              shippingStreet={order.shippingStreet}
+              shippingWard={order.shippingWard}
+              shippingDistrict={order.shippingDistrict}
+              shippingCity={order.shippingCity}
+              shippingPostalCode={order.shippingPostalCode}
+            />
+            <OrderPaymentSummary
+              paymentMethod={order.paymentMethod}
+              paymentStatus={order.paymentStatus}
+              totalAmount={order.totalAmount}
+            />
           </div>
         </div>
       </div>

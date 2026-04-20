@@ -34,7 +34,7 @@ export function DashboardPage() {
   const lowStock = useLowStockStats();
   const outForDelivery = useOutForDeliveryStats();
 
-  const todayRevenue = todayPayments.data?.content.reduce(
+  const todayRevenue = todayPayments.data?.items.reduce(
     (sum, p) => sum + (p.amount ?? 0),
     0,
   );
@@ -51,7 +51,7 @@ export function DashboardPage() {
         <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-6">
           <KpiCard
             title="Orders Today"
-            value={todayOrders.data?.totalElements ?? 0}
+            value={todayOrders.data?.totalItems ?? 0}
             icon={ShoppingCart}
             iconBg="bg-primary-50"
             iconColor="text-primary-600"
@@ -81,7 +81,7 @@ export function DashboardPage() {
           />
           <KpiCard
             title="Pending Confirmation"
-            value={pendingOrders.data?.totalElements ?? 0}
+            value={pendingOrders.data?.totalItems ?? 0}
             icon={Clock}
             iconBg="bg-warning-50"
             iconColor="text-warning-600"
@@ -93,7 +93,7 @@ export function DashboardPage() {
           />
           <KpiCard
             title="Pending Reviews"
-            value={pendingReviews.data?.totalElements ?? 0}
+            value={pendingReviews.data?.totalItems ?? 0}
             icon={Star}
             iconBg="bg-info-50"
             iconColor="text-info-600"
@@ -105,7 +105,7 @@ export function DashboardPage() {
           />
           <KpiCard
             title="Low Stock"
-            value={lowStock.data?.totalElements ?? 0}
+            value={lowStock.data?.totalItems ?? 0}
             icon={AlertTriangle}
             iconBg="bg-danger-50"
             iconColor="text-danger-600"
@@ -117,7 +117,7 @@ export function DashboardPage() {
           />
           <KpiCard
             title="Out for Delivery"
-            value={outForDelivery.data?.totalElements ?? 0}
+            value={outForDelivery.data?.totalItems ?? 0}
             icon={Truck}
             iconBg="bg-primary-50"
             iconColor="text-primary-600"

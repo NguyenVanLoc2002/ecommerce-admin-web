@@ -18,7 +18,7 @@ export function ReservationListPage() {
   const { data, isLoading, isError, refetch } = useReservations(filters);
   const { data: warehouseData } = useWarehouseOptions();
 
-  const warehouses = warehouseData?.content ?? [];
+  const warehouses = warehouseData?.items ?? [];
 
   return (
     <AdminLayout>
