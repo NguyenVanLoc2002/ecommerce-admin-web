@@ -10,7 +10,7 @@ export function useLogin() {
   return useMutation({
     mutationFn: (request: LoginRequest) => authService.login(request),
     onSuccess: (data) => {
-      setTokens({ accessToken: data.accessToken, refreshToken: data.refreshToken });
+      setTokens(data.tokens);
       setUser(data.user);
     },
   });

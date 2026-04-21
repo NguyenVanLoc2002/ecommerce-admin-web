@@ -19,6 +19,8 @@ export interface AuthUser {
 export interface Tokens {
   accessToken: string;
   refreshToken: string;
+  tokenType?: string;
+  expiresIn?: number;
 }
 
 export interface LoginRequest {
@@ -27,9 +29,8 @@ export interface LoginRequest {
 }
 
 export interface LoginResponse {
-  accessToken: string;
-  refreshToken: string;
   user: AuthUser;
+  tokens: Tokens;
 }
 
 export interface RefreshTokenRequest {
@@ -39,4 +40,6 @@ export interface RefreshTokenRequest {
 export interface RefreshTokenResponse {
   accessToken: string;
   refreshToken: string;
+  tokenType?: string;
+  expiresIn?: number;
 }
