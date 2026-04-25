@@ -42,6 +42,7 @@ export const permissions = {
   reviews: {
     read: ['STAFF', 'ADMIN', 'SUPER_ADMIN'] as const,
     write: ['STAFF', 'ADMIN', 'SUPER_ADMIN'] as const,
+    delete: ['ADMIN', 'SUPER_ADMIN'] as const,
   },
   // ADMIN+ only
   vouchers: {

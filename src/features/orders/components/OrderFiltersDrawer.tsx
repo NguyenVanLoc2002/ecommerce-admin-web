@@ -78,8 +78,9 @@ export function OrderFiltersDrawer({
     >
       <div className="space-y-5">
         <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-medium text-gray-700">Status</label>
+          <label htmlFor="filter-status" className="text-sm font-medium text-gray-700">Status</label>
           <Select
+            id="filter-status"
             options={STATUS_OPTIONS}
             value={merged.status ?? ''}
             onChange={(e) => set({ status: e.target.value || undefined })}
@@ -87,8 +88,9 @@ export function OrderFiltersDrawer({
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-medium text-gray-700">Payment status</label>
+          <label htmlFor="filter-payment-status" className="text-sm font-medium text-gray-700">Payment status</label>
           <Select
+            id="filter-payment-status"
             options={PAYMENT_STATUS_OPTIONS}
             value={merged.paymentStatus ?? ''}
             onChange={(e) => set({ paymentStatus: e.target.value || undefined })}

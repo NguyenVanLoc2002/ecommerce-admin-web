@@ -12,6 +12,8 @@ interface DataTableProps<T> {
   onSortChange?: (sort: SortState) => void;
   rowSelection?: RowSelectionState;
   onRowSelectionChange?: (selection: RowSelectionState) => void;
+  onRowClick?: (row: T) => void;
+  activeRowId?: string;
   isLoading?: boolean;
   emptyState?: React.ReactNode;
   className?: string;
@@ -32,10 +34,12 @@ export function DataTable<T>({
   onSortChange,
   rowSelection,
   onRowSelectionChange,
+  onRowClick,
+  activeRowId,
   emptyState,
   className,
 }: DataTableProps<T>) {
-  const [hiddenColumns, setHiddenColumns] = useState<Set<string>>(new Set());
+  const [hiddenColumns] = useState<Set<string>>(new Set());
 
   const visibleColumns = useMemo(
     () => columns.filter((col) => !col.enableHiding || !hiddenColumns.has(col.id)),
@@ -73,9 +77,6 @@ export function DataTable<T>({
 
   const hasSelectColumn = columns.some((c) => c.id === 'select');
 
-  void hiddenColumns;
-  void setHiddenColumns;
-
   return (
     <div className={cn('overflow-x-auto rounded-lg border border-gray-200', className)}>
       <table className="min-w-full divide-y divide-gray-200 text-sm">
@@ -84,7 +85,7 @@ export function DataTable<T>({
             {visibleColumns.map((col) => {
               if (col.id === 'select') {
                 return (
-                  <th key="select" className="w-10 pl-4 pr-2 py-3">
+                  <th key="select" scope="col" className="w-10 pl-4 pr-2 py-3">
                     <Checkbox
                       checked={allSelected}
                       indeterminate={!allSelected && someSelected}
@@ -93,15 +94,27 @@ export function DataTable<T>({
                   </th>
                 );
               }
+              const ariaSort = col.enableSorting && sort?.column === col.id
+                ? sort.direction === 'asc' ? 'ascending' : 'descending'
+                : col.enableSorting ? 'none' : undefined;
               return (
                 <th
                   key={col.id}
+                  scope="col"
+                  aria-sort={ariaSort}
                   className={cn(
                     'px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide',
                     col.enableSorting && 'cursor-pointer select-none hover:text-gray-700',
                     col.headerClassName,
                   )}
                   onClick={() => handleSort(col)}
+                  onKeyDown={(e) => {
+                    if (col.enableSorting && (e.key === 'Enter' || e.key === ' ')) {
+                      e.preventDefault();
+                      handleSort(col);
+                    }
+                  }}
+                  tabIndex={col.enableSorting ? 0 : undefined}
                 >
                   <span className="inline-flex items-center gap-1">
                     {typeof col.header === 'function' ? col.header() : col.header}
@@ -126,9 +139,15 @@ export function DataTable<T>({
               return (
                 <tr
                   key={rowId}
+                  onClick={() => onRowClick?.(row)}
                   className={cn(
                     'transition-colors',
-                    isSelected ? 'bg-primary-50' : 'hover:bg-gray-50',
+                    onRowClick && 'cursor-pointer',
+                    activeRowId === rowId
+                      ? 'bg-primary-50'
+                      : isSelected
+                        ? 'bg-primary-50'
+                        : 'hover:bg-gray-50',
                   )}
                 >
                   {visibleColumns.map((col) => {
@@ -164,7 +183,7 @@ export function DataTable<T>({
       </table>
 
       {hasSelectColumn && rowSelection && onRowSelectionChange && (
-        <div className="sr-only">
+        <div className="sr-only" aria-live="polite">
           {Object.values(rowSelection).filter(Boolean).length} rows selected
         </div>
       )}

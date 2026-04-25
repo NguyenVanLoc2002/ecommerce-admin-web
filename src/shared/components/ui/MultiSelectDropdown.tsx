@@ -59,6 +59,8 @@ export function MultiSelectDropdown({
       <button
         type="button"
         disabled={disabled}
+        aria-haspopup="listbox"
+        aria-expanded={open}
         onClick={() => setOpen((prev) => !prev)}
         className={cn(
           'flex min-h-9 w-full items-center justify-between rounded-md border bg-white px-3 py-1.5 text-sm text-left',

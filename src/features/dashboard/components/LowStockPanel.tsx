@@ -12,7 +12,14 @@ export function LowStockPanel() {
   return (
     <div className="rounded-lg border border-gray-200 bg-white">
       <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
-        <h2 className="text-sm font-semibold text-gray-900">Low Stock Alerts</h2>
+        <div className="flex items-center gap-2">
+          <h2 className="text-sm font-semibold text-gray-900">Low Stock Alerts</h2>
+          {!isLoading && !isError && (data?.items.length ?? 0) > 0 && (
+            <span className="rounded-full bg-danger-50 px-2 py-0.5 text-xs font-medium tabular-nums text-danger-700">
+              {data!.totalItems}
+            </span>
+          )}
+        </div>
         <Link
           to={routes.inventory.stock}
           className="flex items-center gap-1 text-xs font-medium text-primary-600 hover:text-primary-700"
@@ -87,9 +94,7 @@ export function LowStockPanel() {
                         <span
                           className={cn(
                             'inline-block min-w-[2rem] rounded px-1.5 py-0.5 text-right text-xs font-semibold tabular-nums',
-                            item.available === 0
-                              ? 'bg-danger-50 text-danger-700'
-                              : item.available <= 5
+                            item.available <= 5
                               ? 'bg-danger-50 text-danger-700'
                               : 'bg-warning-50 text-warning-700',
                           )}

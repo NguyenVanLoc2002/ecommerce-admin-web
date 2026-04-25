@@ -376,7 +376,7 @@ SUPER_ADMIN > ADMIN > STAFF > CUSTOMER
 |---|---|
 | `DRAFT` | Not visible to public |
 | `PUBLISHED` | Visible and purchasable |
-| `INACTIVE` | Hidden from public |
+| `ARCHIVED` | No longer sold, hidden from storefront |
 
 ### ProductVariantStatus
 | Value | Description |

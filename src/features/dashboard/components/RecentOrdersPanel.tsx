@@ -14,7 +14,13 @@ export function RecentOrdersPanel() {
   return (
     <div className="rounded-lg border border-gray-200 bg-white">
       <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
-        <h2 className="text-sm font-semibold text-gray-900">Recent Orders</h2>
+        <div className="flex items-center gap-2">
+          <h2 className="text-sm font-semibold text-gray-900">Recent Orders</h2>
+          <span aria-hidden className="relative flex h-1.5 w-1.5">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success-400 opacity-75" />
+            <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-success-500" />
+          </span>
+        </div>
         <Link
           to={routes.orders.list}
           className="flex items-center gap-1 text-xs font-medium text-primary-600 hover:text-primary-700"
@@ -48,7 +54,7 @@ export function RecentOrdersPanel() {
                 <li key={order.id}>
                   <Link
                     to={routes.orders.detail(order.id)}
-                    className="flex items-center justify-between gap-4 px-5 py-3 hover:bg-gray-50 transition-colors"
+                    className="flex items-center justify-between gap-4 px-5 py-3 transition-colors hover:bg-gray-50"
                   >
                     <div className="min-w-0">
                       <p className="truncate text-sm font-medium text-gray-900">

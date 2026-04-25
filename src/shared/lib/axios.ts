@@ -88,7 +88,11 @@ _instance.interceptors.response.use(
     }
 
     // ── 401 → attempt token refresh ────────────────────────────────────────
-    if (error.response?.status === 401 && config && !config._retry) {
+    // Only enter the refresh flow if the store holds a refresh token. Without
+    // one the user has no active session, so a 401 is a genuine auth failure
+    // (e.g. wrong login credentials) and must be forwarded as an AppError.
+    const storedRefreshToken = useAuthStore.getState().refreshToken;
+    if (error.response?.status === 401 && config && !config._retry && storedRefreshToken) {
       if (isRefreshing) {
         // Another refresh is in-flight; queue this request until it resolves
         return new Promise((resolve, reject) => {
@@ -106,7 +110,7 @@ _instance.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        const refreshToken = useAuthStore.getState().refreshToken;
+        const refreshToken = storedRefreshToken;
 
         const { data } = await _refreshInstance.post<
           ApiResponse<{ accessToken: string; refreshToken: string }>

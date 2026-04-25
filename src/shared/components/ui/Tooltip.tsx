@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useId } from 'react';
 import { createPortal } from 'react-dom';
 import { cn } from '@/shared/utils/cn';
 
@@ -15,6 +15,8 @@ export function Tooltip({ content, placement = 'top', children, className }: Too
   const [visible, setVisible] = useState(false);
   const [coords, setCoords] = useState({ top: 0, left: 0 });
   const triggerRef = useRef<HTMLSpanElement>(null);
+  const uid = useId();
+  const tooltipId = `tooltip-${uid}`;
 
   useEffect(() => {
     if (!visible || !triggerRef.current) return;
@@ -43,6 +45,7 @@ export function Tooltip({ content, placement = 'top', children, className }: Too
       <span
         ref={triggerRef}
         className="inline-flex"
+        aria-describedby={visible ? tooltipId : undefined}
         onMouseEnter={() => setVisible(true)}
         onMouseLeave={() => setVisible(false)}
         onFocus={() => setVisible(true)}
@@ -53,10 +56,11 @@ export function Tooltip({ content, placement = 'top', children, className }: Too
       {visible &&
         createPortal(
           <div
+            id={tooltipId}
             role="tooltip"
             style={{ top: coords.top, left: coords.left }}
             className={cn(
-              'absolute z-50 max-w-xs rounded bg-gray-900 px-2 py-1 text-xs text-white shadow-sm pointer-events-none',
+              'absolute z-50 max-w-xs rounded bg-gray-900 px-2 py-1 text-xs text-white shadow-sm pointer-events-none animate-fade-in motion-reduce:animate-none',
               placementClasses[placement],
               className,
             )}

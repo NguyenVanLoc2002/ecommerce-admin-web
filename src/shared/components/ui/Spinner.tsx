@@ -1,7 +1,7 @@
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/shared/utils/cn';
 
-const spinnerVariants = cva('animate-spin text-current', {
+const spinnerVariants = cva('animate-spin motion-reduce:animate-none text-current', {
   variants: {
     size: {
       sm: 'h-4 w-4',

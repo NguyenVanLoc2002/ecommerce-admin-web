@@ -24,109 +24,85 @@ export function OrderDetailPage() {
 
   const { data: order, isLoading, isError, refetch } = useOrder(orderId);
 
-  if (isLoading) {
-    return (
-      <AdminLayout>
-        <div className="p-6">
+  return (
+    <AdminLayout>
+      <div className="p-6">
+        {isLoading ? (
           <SkeletonDetail />
-        </div>
-      </AdminLayout>
-    );
-  }
-
-  if (isError) {
-    return (
-      <AdminLayout>
-        <div className="p-6">
+        ) : isError ? (
           <ErrorCard onRetry={() => void refetch()} />
-        </div>
-      </AdminLayout>
-    );
-  }
-
-  if (!order) {
-    return (
-      <AdminLayout>
-        <div className="p-6">
+        ) : !order ? (
           <EmptyState
             icon={<ShoppingBag className="h-10 w-10" />}
             title="Order not found"
             message="The order you're looking for doesn't exist or has been removed."
             action={{ label: 'Back to Orders', onClick: () => navigate(routes.orders.list) }}
           />
-        </div>
-      </AdminLayout>
-    );
-  }
+        ) : (
+          <div className="space-y-6">
+            <div className="flex items-center gap-3">
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                onClick={() => navigate(routes.orders.list)}
+                aria-label="Back to orders"
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+              <PageHeader
+                title={`Order #${order.orderCode}`}
+                description={`Placed ${formatDateTime(order.createdAt)}`}
+                actions={
+                  <StatusBadge type="order" status={order.status as OrderStatus} />
+                }
+              />
+            </div>
 
-  return (
-    <AdminLayout>
-      <div className="space-y-6 p-6">
-        <div className="flex items-center gap-3">
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            onClick={() => navigate(routes.orders.list)}
-            aria-label="Back to orders"
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <PageHeader
-            title={`Order #${order.orderCode}`}
-            description={`Placed ${formatDateTime(order.createdAt)}`}
-            actions={
-              <StatusBadge type="order" status={order.status as OrderStatus} />
-            }
-          />
-        </div>
+            <div className="rounded-lg border border-gray-200 bg-white px-6 py-5">
+              <OrderStatusStepper status={order.status as OrderStatus} />
+            </div>
 
-        {/* Status stepper — full width */}
-        <div className="rounded-lg border border-gray-200 bg-white px-6 py-5">
-          <OrderStatusStepper status={order.status as OrderStatus} />
-        </div>
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+              <div className="lg:col-span-2">
+                <OrderItemsTable
+                  items={order.items}
+                  subtotal={order.subTotal}
+                  discountAmount={order.discountAmount}
+                  shippingFee={order.shippingFee}
+                  total={order.totalAmount}
+                  voucherCode={order.voucherCode}
+                />
 
-        {/* Main content grid */}
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          {/* Left column — order items (2/3 width) */}
-          <div className="lg:col-span-2">
-            <OrderItemsTable
-              items={order.items}
-              subtotal={order.subTotal}
-              discountAmount={order.discountAmount}
-              shippingFee={order.shippingFee}
-              total={order.totalAmount}
-              voucherCode={order.voucherCode}
-            />
-
-            {order.customerNote && (
-              <div className="mt-4 rounded-lg border border-gray-200 bg-white p-4">
-                <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
-                  Customer Note
-                </p>
-                <p className="mt-1.5 text-sm text-gray-700">{order.customerNote}</p>
+                {order.customerNote && (
+                  <div className="mt-4 rounded-lg border border-gray-200 bg-white p-4">
+                    <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
+                      Customer Note
+                    </p>
+                    <p className="mt-1.5 text-sm text-gray-700">{order.customerNote}</p>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
 
-          {/* Right sidebar — actions + info cards */}
-          <div className="space-y-4">
-            <OrderActionPanel order={order} />
-            <OrderAddressCard
-              receiverName={order.receiverName}
-              receiverPhone={order.receiverPhone}
-              shippingStreet={order.shippingStreet}
-              shippingWard={order.shippingWard}
-              shippingDistrict={order.shippingDistrict}
-              shippingCity={order.shippingCity}
-              shippingPostalCode={order.shippingPostalCode}
-            />
-            <OrderPaymentSummary
-              paymentMethod={order.paymentMethod}
-              paymentStatus={order.paymentStatus}
-              totalAmount={order.totalAmount}
-            />
+              <div className="space-y-4">
+                <OrderActionPanel order={order} refetch={refetch} />
+                <OrderAddressCard
+                  receiverName={order.receiverName}
+                  receiverPhone={order.receiverPhone}
+                  shippingStreet={order.shippingStreet}
+                  shippingWard={order.shippingWard}
+                  shippingDistrict={order.shippingDistrict}
+                  shippingCity={order.shippingCity}
+                  shippingPostalCode={order.shippingPostalCode}
+                />
+                <OrderPaymentSummary
+                  paymentMethod={order.paymentMethod}
+                  paymentStatus={order.paymentStatus}
+                  totalAmount={order.totalAmount}
+                />
+              </div>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </AdminLayout>
   );

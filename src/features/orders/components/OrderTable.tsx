@@ -137,8 +137,8 @@ export function OrderTable({
   return (
     <div className="space-y-4">
       <TableToolbar
-        searchValue={''}
-        onSearchChange={() => undefined}
+        searchValue={filters.keyword ?? ''}
+        onSearchChange={(v) => onFiltersChange({ keyword: v || undefined, page: 0 })}
         searchPlaceholder="Search by order code or customer…"
         actions={
           <Button
@@ -158,7 +158,7 @@ export function OrderTable({
       />
 
       <DataTable
-        data={data?.items ?? []}
+        data={data?.content ?? []}
         columns={columns}
         getRowId={(row) => String(row.id)}
         sort={sort}

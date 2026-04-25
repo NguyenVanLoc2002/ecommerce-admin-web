@@ -898,7 +898,7 @@ Returns `200` with updated `OrderResponse`.
 
 ## 9. Payment Management
 
-> **Auth note:** `AdminPaymentController` has no class-level `@PreAuthorize`. All endpoints are secured by `@SecurityRequirement(name = "bearerAuth")` only — effective access is controlled by the SecurityConfig path guard (`/admin/**` requires `STAFF` or higher).
+> **Auth note:** `AdminPaymentController` has class-level `@PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'STAFF')")` and `@SecurityRequirement(name = "bearerAuth")`. All endpoints require `STAFF` or higher — no per-method overrides.
 
 ### 9.1 List All Payments
 
@@ -917,9 +917,9 @@ All params are optional.
 | `orderCode` | string | — | Partial, case-insensitive match on order code |
 | `dateFrom` | date | — | Format: `yyyy-MM-dd` — filters on `createdAt` |
 | `dateTo` | date | — | Format: `yyyy-MM-dd` — filters on `createdAt` |
-| `page` | integer | — | Spring Pageable (no default specified) |
-| `size` | integer | — | Spring Pageable (no default specified) |
-| `sort` | string | — | Spring Pageable format |
+| `page` | integer | — | Default: `0` |
+| `size` | integer | — | Default: `20` (`@PageableDefault`) |
+| `sort` | string | — | Spring Pageable format, e.g., `sort=createdAt,desc` |
 
 #### Response (200) — Paginated `PaymentResponse`
 
@@ -1026,7 +1026,7 @@ Returns `List<TransactionResponse>` (non-paginated) for a payment.
 
 #### Query Params
 
-Filters bind to `ShipmentFilter`. All params are optional. Pagination uses manual params (not Spring Pageable).
+Filters bind to `ShipmentFilter`. All params are optional. Pagination via Spring Pageable (`@PageableDefault(size=20, sort="createdAt")`).
 
 | Param | Type | Required | Description |
 |---|---|:---:|---|
@@ -1038,8 +1038,7 @@ Filters bind to `ShipmentFilter`. All params are optional. Pagination uses manua
 | `dateTo` | date | — | Format: `yyyy-MM-dd` — filters on `createdAt` |
 | `page` | integer | — | Default: `0` |
 | `size` | integer | — | Default: `20` |
-| `sort` | string | — | Sort field name. Default: `createdAt` |
-| `direction` | string | — | `asc` or `desc`. Default: `desc` |
+| `sort` | string | — | Spring Pageable format, e.g., `sort=createdAt,desc` |
 
 ### 10.5 Update Shipment Details
 
@@ -1135,7 +1134,7 @@ PENDING → IN_TRANSIT → OUT_FOR_DELIVERY → DELIVERED (terminal)
 
 #### Query Params
 
-Filters bind to `InvoiceFilter`. All params are optional. Pagination uses manual params (not Spring Pageable).
+Filters bind to `InvoiceFilter`. All params are optional. Pagination via Spring Pageable (`@PageableDefault(size=20, sort="issuedAt", direction=DESC)`).
 
 | Param | Type | Required | Description |
 |---|---|:---:|---|
@@ -1146,8 +1145,7 @@ Filters bind to `InvoiceFilter`. All params are optional. Pagination uses manual
 | `dateTo` | date | — | Format: `yyyy-MM-dd` — filters on `issuedAt` |
 | `page` | integer | — | Default: `0` |
 | `size` | integer | — | Default: `20` |
-| `sort` | string | — | Sort field name. Default: `issuedAt` |
-| `direction` | string | — | `asc` or `desc`. Default: `desc` |
+| `sort` | string | — | Spring Pageable format, e.g., `sort=issuedAt,desc` (default: `issuedAt,desc`) |
 
 ### 11.6 Update Invoice Status
 
@@ -1234,7 +1232,7 @@ Filters bind to `InvoiceFilter`. All params are optional. Pagination uses manual
 
 #### Query Params
 
-Filters bind to `PromotionFilter`. All params are optional. Pagination uses manual params (not Spring Pageable).
+Filters bind to `PromotionFilter`. All params are optional. Pagination via Spring Pageable (`@PageableDefault(size=20, sort="createdAt")`).
 
 | Param | Type | Required | Description |
 |---|---|:---:|---|
@@ -1245,8 +1243,7 @@ Filters bind to `PromotionFilter`. All params are optional. Pagination uses manu
 | `dateTo` | date | — | Format: `yyyy-MM-dd` — filters on `endDate` |
 | `page` | integer | — | Default: `0` |
 | `size` | integer | — | Default: `20` |
-| `sort` | string | — | Sort field name. Default: `createdAt` |
-| `direction` | string | — | `asc` or `desc`. Default: `desc` |
+| `sort` | string | — | Spring Pageable format, e.g., `sort=createdAt,desc` |
 
 ### 12.4 Update Promotion
 
@@ -1450,6 +1447,21 @@ All fields optional.
 - **Allowed roles:** `STAFF`, `ADMIN`, `SUPER_ADMIN`
 - **Note:** This endpoint is not under `/admin/**` path — it lives in `ReviewController`.
 - **Pagination:** `@PageableDefault(size = 20)` via Spring Pageable.
+
+#### Query Params (ReviewFilter)
+
+All params are optional. Defaults to `status=PENDING` if `status` is not provided.
+
+| Param | Type | Required | Description |
+|---|---|:---:|---|
+| `status` | string | — | `PENDING`, `APPROVED`, `REJECTED`. Default: `PENDING` |
+| `productId` | long | — | Filter by product |
+| `customerId` | long | — | Filter by customer |
+| `minRating` | integer | — | Minimum rating (1–5, inclusive) |
+| `maxRating` | integer | — | Maximum rating (1–5, inclusive) |
+| `page` | integer | — | Default: `0` |
+| `size` | integer | — | Default: `20` |
+| `sort` | string | — | Spring Pageable format, e.g., `sort=createdAt,asc` |
 
 #### Response (200) — Paginated `ReviewResponse`
 

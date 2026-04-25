@@ -40,9 +40,9 @@ export function OrderStatusStepper({ status }: OrderStatusStepperProps) {
   return (
     <div>
       {isTerminal ? (
-        <div className="flex items-center gap-3">
+        <div role="status" className="flex items-center gap-3">
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-danger-100">
-            <X className="h-4 w-4 text-danger-600" />
+            <X className="h-4 w-4 text-danger-600" aria-hidden />
           </div>
           <div>
             <p className="text-sm font-semibold text-danger-700">
@@ -52,16 +52,19 @@ export function OrderStatusStepper({ status }: OrderStatusStepperProps) {
           </div>
         </div>
       ) : (
-        <div className="flex items-start">
+        <ol role="list" aria-label="Order progress" className="flex items-start">
           {MAIN_STEPS.map((step, index) => {
             const isCompleted = index < currentIndex;
             const isCurrent = index === currentIndex;
             const isFuture = index > currentIndex;
 
             return (
-              <div key={step.key} className="flex flex-1 items-start">
+              <li
+                key={step.key}
+                aria-current={isCurrent ? 'step' : undefined}
+                className="flex flex-1 items-start"
+              >
                 <div className="flex flex-col items-center">
-                  {/* Circle */}
                   <div
                     className={cn(
                       'flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 transition-colors',
@@ -69,6 +72,7 @@ export function OrderStatusStepper({ status }: OrderStatusStepperProps) {
                       isCurrent && 'border-primary-600 bg-primary-600',
                       isFuture && 'border-gray-200 bg-white',
                     )}
+                    aria-hidden
                   >
                     {isCompleted ? (
                       <Check className="h-4 w-4 text-white" />
@@ -82,7 +86,6 @@ export function OrderStatusStepper({ status }: OrderStatusStepperProps) {
                       <span className="h-2 w-2 rounded-full bg-gray-300" />
                     )}
                   </div>
-                  {/* Label */}
                   <p
                     className={cn(
                       'mt-2 text-center text-xs font-medium whitespace-nowrap',
@@ -98,9 +101,8 @@ export function OrderStatusStepper({ status }: OrderStatusStepperProps) {
                   </p>
                 </div>
 
-                {/* Connector line */}
                 {index < MAIN_STEPS.length - 1 && (
-                  <div className="mx-2 mt-4 h-0.5 flex-1">
+                  <div className="mx-2 mt-4 h-0.5 flex-1" aria-hidden>
                     <div
                       className={cn(
                         'h-full rounded',
@@ -109,10 +111,10 @@ export function OrderStatusStepper({ status }: OrderStatusStepperProps) {
                     />
                   </div>
                 )}
-              </div>
+              </li>
             );
           })}
-        </div>
+        </ol>
       )}
     </div>
   );

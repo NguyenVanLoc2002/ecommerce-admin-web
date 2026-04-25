@@ -57,6 +57,7 @@ export interface OrderListParams extends PaginationParams {
   customerId?: number;
   status?: string;
   paymentStatus?: string;
+  keyword?: string;
 }
 
 export type OrderAction = 'confirm' | 'process' | 'deliver' | 'complete' | 'cancel';

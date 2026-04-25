@@ -12,6 +12,10 @@ import { OrderListPage, OrderDetailPage } from '@/features/orders';
 import { ShipmentListPage, ShipmentDetailPage, CreateShipmentPage } from '@/features/shipments';
 import { PaymentListPage, PaymentDetailPage } from '@/features/payments';
 import { InvoiceListPage, InvoicePage } from '@/features/invoices';
+import { PromotionListPage, PromotionEditPage } from '@/features/promotions';
+import { VoucherListPage, VoucherEditPage, VoucherUsagesPage } from '@/features/vouchers';
+import { ReviewModerationPage } from '@/features/reviews';
+import { AuditLogPage } from '@/features/audit-log';
 import { ForbiddenPage } from './pages/ForbiddenPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 
@@ -111,47 +115,29 @@ export function Router() {
           <Route path={routes.invoices.list} element={<InvoiceListPage />} />
           <Route path={routes.invoices.detail(':id')} element={<InvoicePage />} />
 
-          {/* Promotions & Vouchers (ADMIN+) */}
+          {/* Promotions (ADMIN+) */}
           <Route element={<RoleGuard required={['ADMIN', 'SUPER_ADMIN']} />}>
-            <Route
-              path={routes.promotions.list}
-              element={<PlaceholderPage title="Promotions" />}
-            />
-            <Route
-              path={routes.promotions.create}
-              element={<PlaceholderPage title="New Promotion" />}
-            />
-            <Route
-              path={routes.promotions.edit(':id')}
-              element={<PlaceholderPage title="Edit Promotion" />}
-            />
-            <Route
-              path={routes.vouchers.list}
-              element={<PlaceholderPage title="Vouchers" />}
-            />
-            <Route
-              path={routes.vouchers.create}
-              element={<PlaceholderPage title="New Voucher" />}
-            />
-            <Route
-              path={routes.vouchers.edit(':id')}
-              element={<PlaceholderPage title="Edit Voucher" />}
-            />
-            <Route
-              path={routes.vouchers.usages(':id')}
-              element={<PlaceholderPage title="Voucher Usages" />}
-            />
+            <Route path={routes.promotions.list} element={<PromotionListPage />} />
+            <Route path={routes.promotions.create} element={<PromotionEditPage />} />
+            <Route path={routes.promotions.edit(':id')} element={<PromotionEditPage />} />
+          </Route>
+
+          {/* Vouchers — list + usages readable by all staff */}
+          <Route path={routes.vouchers.list} element={<VoucherListPage />} />
+          <Route path={routes.vouchers.usages(':id')} element={<VoucherUsagesPage />} />
+
+          {/* Voucher create/edit (ADMIN+) */}
+          <Route element={<RoleGuard required={['ADMIN', 'SUPER_ADMIN']} />}>
+            <Route path={routes.vouchers.create} element={<VoucherEditPage />} />
+            <Route path={routes.vouchers.edit(':id')} element={<VoucherEditPage />} />
           </Route>
 
           {/* Reviews */}
-          <Route path={routes.reviews.list} element={<PlaceholderPage title="Reviews" />} />
+          <Route path={routes.reviews.list} element={<ReviewModerationPage />} />
 
           {/* Audit Log (ADMIN+) */}
           <Route element={<RoleGuard required={['ADMIN', 'SUPER_ADMIN']} />}>
-            <Route
-              path={routes.auditLog.list}
-              element={<PlaceholderPage title="Audit Log" />}
-            />
+            <Route path={routes.auditLog.list} element={<AuditLogPage />} />
           </Route>
         </Route>
 

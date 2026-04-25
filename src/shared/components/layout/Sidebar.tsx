@@ -1,4 +1,4 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, useMatch } from 'react-router-dom';
 import {
   LayoutDashboard,
   Package,
@@ -45,6 +45,36 @@ const navItems: NavItem[] = [
   { label: 'Audit Log', to: routes.auditLog.list, icon: ClipboardList, adminOnly: true },
 ];
 
+function formatRole(role: string | null): string {
+  if (!role) return '';
+  return role
+    .toLowerCase()
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function SidebarNavItem({ item }: { item: NavItem }) {
+  const match = useMatch({ path: item.to, end: item.to === routes.dashboard });
+  const isActive = !!match;
+
+  return (
+    <NavLink
+      to={item.to}
+      end={item.to === routes.dashboard}
+      aria-current={isActive ? 'page' : undefined}
+      className={cn(
+        'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+        isActive
+          ? 'bg-gray-800 text-white'
+          : 'text-gray-400 hover:bg-gray-800 hover:text-white',
+      )}
+    >
+      <item.icon className="h-4 w-4 shrink-0" aria-hidden />
+      {item.label}
+    </NavLink>
+  );
+}
+
 export function Sidebar() {
   const role = useAuthStore((s) => s.role);
   const user = useAuthStore((s) => s.user);
@@ -55,7 +85,6 @@ export function Sidebar() {
 
   return (
     <>
-      {/* Mobile overlay */}
       {sidebarOpen && (
         <div
           className="fixed inset-0 z-20 bg-black/40 lg:hidden"
@@ -70,7 +99,6 @@ export function Sidebar() {
           sidebarOpen ? 'translate-x-0' : '-translate-x-full',
         )}
       >
-        {/* Logo */}
         <div className="flex h-16 shrink-0 items-center justify-between border-b border-gray-700/60 px-5">
           <div className="flex items-center gap-2.5">
             <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary-600">
@@ -80,7 +108,7 @@ export function Sidebar() {
           </div>
           <button
             type="button"
-            className="rounded p-1 text-gray-400 hover:text-white lg:hidden"
+            className="rounded p-2 text-gray-400 hover:text-white lg:hidden"
             onClick={() => setSidebarOpen(false)}
             aria-label="Close sidebar"
           >
@@ -88,32 +116,13 @@ export function Sidebar() {
           </button>
         </div>
 
-        {/* Navigation */}
-        <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
+        <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-0.5" aria-label="Main navigation">
           {navItems.map((item) => {
             if (item.adminOnly && !isAdmin) return null;
-            return (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                end={item.to === routes.dashboard}
-                className={({ isActive }) =>
-                  cn(
-                    'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
-                    isActive
-                      ? 'bg-gray-800 text-white'
-                      : 'text-gray-400 hover:bg-gray-800 hover:text-white',
-                  )
-                }
-              >
-                <item.icon className="h-4 w-4 shrink-0" aria-hidden />
-                {item.label}
-              </NavLink>
-            );
+            return <SidebarNavItem key={item.to} item={item} />;
           })}
         </nav>
 
-        {/* User info */}
         <div className="shrink-0 border-t border-gray-700/60 px-4 py-3">
           <div className="flex items-center gap-3">
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-700">
@@ -123,7 +132,7 @@ export function Sidebar() {
               <p className="truncate text-sm font-medium text-white">
                 {user ? (`${user.firstName} ${user.lastName}`.trim() || user.email) : '—'}
               </p>
-              <p className="truncate text-xs text-gray-400">{role}</p>
+              <p className="truncate text-xs text-gray-400">{formatRole(role)}</p>
             </div>
           </div>
         </div>

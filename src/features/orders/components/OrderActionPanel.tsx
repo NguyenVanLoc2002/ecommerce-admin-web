@@ -99,9 +99,10 @@ const STATUS_ACTIONS: Partial<Record<OrderStatus, ActionDef[]>> = {
 
 interface OrderActionPanelProps {
   order: Order;
+  refetch: () => void;
 }
 
-export function OrderActionPanel({ order }: OrderActionPanelProps) {
+export function OrderActionPanel({ order, refetch }: OrderActionPanelProps) {
   const { confirm } = useConfirmDialog();
   const orderAction = useOrderAction(order.id);
   const actions = STATUS_ACTIONS[order.status] ?? [];
@@ -131,7 +132,7 @@ export function OrderActionPanel({ order }: OrderActionPanelProps) {
       if (err instanceof AppError) {
         if (err.code === 'ORDER_STATUS_INVALID') {
           toast.error('Order was updated by someone else. Refreshing…');
-          setTimeout(() => window.location.reload(), 1000);
+          setTimeout(() => refetch(), 1000);
         } else {
           toast.error(err.message || 'Failed to update order status.');
         }

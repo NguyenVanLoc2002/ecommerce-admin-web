@@ -32,8 +32,11 @@ export function Pagination({
   const pageNumbers = buildPageNumbers(page, totalPages);
 
   return (
-    <div className={cn('flex items-center justify-between gap-4 py-3 px-4', className)}>
-      <p className="text-sm text-gray-500">
+    <nav
+      aria-label="Pagination"
+      className={cn('flex items-center justify-between gap-4 py-3 px-4', className)}
+    >
+      <p className="text-sm text-gray-500" aria-live="polite" aria-atomic>
         Showing <span className="font-medium text-gray-700">{from}–{to}</span> of{' '}
         <span className="font-medium text-gray-700">{totalItems}</span> results
       </p>
@@ -43,6 +46,7 @@ export function Pagination({
           value={String(size)}
           onChange={(e) => onPageSizeChange(Number(e.target.value))}
           className="w-32 h-8 text-xs"
+          aria-label="Results per page"
         />
         <div className="flex items-center gap-1">
           <Button
@@ -56,7 +60,7 @@ export function Pagination({
           </Button>
           {pageNumbers.map((p, i) =>
             p === '...' ? (
-              <span key={`ellipsis-${i}`} className="px-1 text-gray-400 text-sm select-none">
+              <span key={`ellipsis-${i}`} className="px-1 text-gray-400 text-sm select-none" aria-hidden>
                 …
               </span>
             ) : (
@@ -64,8 +68,11 @@ export function Pagination({
                 key={p}
                 type="button"
                 onClick={() => onPageChange(p)}
+                aria-label={`Page ${p + 1}`}
+                aria-current={p === page ? 'page' : undefined}
                 className={cn(
                   'h-8 w-8 rounded text-sm font-medium transition-colors',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-1',
                   p === page
                     ? 'bg-primary-600 text-white'
                     : 'text-gray-700 hover:bg-gray-100',
@@ -86,7 +93,7 @@ export function Pagination({
           </Button>
         </div>
       </div>
-    </div>
+    </nav>
   );
 }
 
