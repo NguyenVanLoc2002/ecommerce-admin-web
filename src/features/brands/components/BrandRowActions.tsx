@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 import { Button } from '@/shared/components/ui/Button';
 import { useConfirmDialog } from '@/shared/hooks/useConfirmDialog';
@@ -16,6 +16,15 @@ export function BrandRowActions({ brand, onEdit }: BrandRowActionsProps) {
   const { confirm } = useConfirmDialog();
   const deleteBrand = useDeleteBrand();
   const [menuOpen, setMenuOpen] = useState(false);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMenuOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [menuOpen]);
 
   const handleDelete = async () => {
     setMenuOpen(false);

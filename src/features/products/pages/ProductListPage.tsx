@@ -22,6 +22,8 @@ const DEFAULT_FILTERS: ProductListParams = {
   sort: 'createdAt,desc',
 };
 
+type BulkAction = 'publish' | 'deactivate' | 'delete';
+
 export function ProductListPage() {
   const navigate = useNavigate();
   const { confirm } = useConfirmDialog();
@@ -29,6 +31,7 @@ export function ProductListPage() {
   const [sort, setSort] = useState<SortState | undefined>();
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [pendingBulk, setPendingBulk] = useState<BulkAction | null>(null);
 
   const debouncedKeyword = useDebounce(filters.keyword ?? '', 300);
   const queryParams: ProductListParams = { ...filters, keyword: debouncedKeyword || undefined };
@@ -61,12 +64,17 @@ export function ProductListPage() {
     });
     if (!ok) return;
 
-    const result = await bulkUpdateStatus.mutateAsync({ ids: selectedIds, status: 'PUBLISHED' });
-    setRowSelection({});
-    if (result.failed > 0) {
-      toast.warning(`${result.succeeded} published, ${result.failed} failed.`);
-    } else {
-      toast.success(`${result.succeeded} product${result.succeeded > 1 ? 's' : ''} published.`);
+    setPendingBulk('publish');
+    try {
+      const result = await bulkUpdateStatus.mutateAsync({ ids: selectedIds, status: 'PUBLISHED' });
+      setRowSelection({});
+      if (result.failed > 0) {
+        toast.warning(`${result.succeeded} published, ${result.failed} failed.`);
+      } else {
+        toast.success(`${result.succeeded} product${result.succeeded > 1 ? 's' : ''} published.`);
+      }
+    } finally {
+      setPendingBulk(null);
     }
   };
 
@@ -79,12 +87,17 @@ export function ProductListPage() {
     });
     if (!ok) return;
 
-    const result = await bulkUpdateStatus.mutateAsync({ ids: selectedIds, status: 'INACTIVE' });
-    setRowSelection({});
-    if (result.failed > 0) {
-      toast.warning(`${result.succeeded} deactivated, ${result.failed} failed.`);
-    } else {
-      toast.success(`${result.succeeded} product${result.succeeded > 1 ? 's' : ''} deactivated.`);
+    setPendingBulk('deactivate');
+    try {
+      const result = await bulkUpdateStatus.mutateAsync({ ids: selectedIds, status: 'INACTIVE' });
+      setRowSelection({});
+      if (result.failed > 0) {
+        toast.warning(`${result.succeeded} deactivated, ${result.failed} failed.`);
+      } else {
+        toast.success(`${result.succeeded} product${result.succeeded > 1 ? 's' : ''} deactivated.`);
+      }
+    } finally {
+      setPendingBulk(null);
     }
   };
 
@@ -98,16 +111,19 @@ export function ProductListPage() {
     });
     if (!ok) return;
 
-    const result = await bulkDelete.mutateAsync(selectedIds);
-    setRowSelection({});
-    if (result.failed > 0) {
-      toast.warning(`${result.succeeded} deleted, ${result.failed} failed.`);
-    } else {
-      toast.success(`${result.succeeded} product${result.succeeded > 1 ? 's' : ''} deleted.`);
+    setPendingBulk('delete');
+    try {
+      const result = await bulkDelete.mutateAsync(selectedIds);
+      setRowSelection({});
+      if (result.failed > 0) {
+        toast.warning(`${result.succeeded} deleted, ${result.failed} failed.`);
+      } else {
+        toast.success(`${result.succeeded} product${result.succeeded > 1 ? 's' : ''} deleted.`);
+      }
+    } finally {
+      setPendingBulk(null);
     }
   };
-
-  const isBulkPending = bulkUpdateStatus.isPending || bulkDelete.isPending;
 
   return (
     <AdminLayout>
@@ -133,7 +149,7 @@ export function ProductListPage() {
           onBulkPublish={() => void handleBulkPublish()}
           onBulkArchive={() => void handleBulkDeactivate()}
           onBulkDelete={() => void handleBulkDelete()}
-          isBulkPending={isBulkPending}
+          pendingBulk={pendingBulk}
           onCreateNew={() => navigate(routes.products.create)}
         />
       </div>

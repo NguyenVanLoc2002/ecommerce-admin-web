@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 import { Button } from '@/shared/components/ui/Button';
 import { useConfirmDialog } from '@/shared/hooks/useConfirmDialog';
@@ -18,11 +18,20 @@ export function VariantRowActions({ productId, variant, onEdit }: VariantRowActi
   const deleteVariant = useDeleteVariant(productId);
   const [menuOpen, setMenuOpen] = useState(false);
 
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMenuOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [menuOpen]);
+
   const handleDelete = async () => {
     setMenuOpen(false);
     const ok = await confirm({
       title: 'Delete variant?',
-      description: `"${variant.name}" (${variant.sku}) will be permanently deleted.`,
+      description: `"${variant.variantName}" (${variant.sku}) will be permanently deleted.`,
       confirmLabel: 'Delete',
       variant: 'destructive',
     });

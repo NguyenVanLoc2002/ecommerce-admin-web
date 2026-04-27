@@ -47,12 +47,12 @@ export function PaymentTable({
 }: PaymentTableProps) {
   const navigate = useNavigate();
 
-  const hasActiveFilters =
-    filters.method !== undefined ||
-    filters.status !== undefined ||
-    filters.orderCode !== undefined ||
-    filters.dateFrom !== undefined ||
-    filters.dateTo !== undefined;
+  const activeFilterCount = [
+    filters.method,
+    filters.status,
+    filters.dateFrom,
+    filters.dateTo,
+  ].filter((v) => v !== undefined && v !== '').length;
 
   const columns = useMemo<ColumnDef<PaymentSummary>[]>(
     () => [
@@ -60,15 +60,15 @@ export function PaymentTable({
         id: 'order',
         header: 'Order',
         cell: ({ row }) => (
-          <div>
+          <div className="min-w-0">
             <button
               type="button"
               onClick={() => navigate(routes.payments.detail(row.original.id))}
-              className="font-mono text-sm font-semibold text-primary-600 hover:text-primary-700 hover:underline"
+              className="rounded-sm font-mono text-sm font-bold text-primary-600 transition-colors hover:text-primary-700 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-1"
             >
               #{row.original.orderCode}
             </button>
-            <p className="mt-0.5 text-xs text-gray-400">{row.original.customer.fullName}</p>
+            <p className="mt-0.5 truncate text-xs text-gray-500">{row.original.customer.fullName}</p>
           </div>
         ),
       },
@@ -85,8 +85,10 @@ export function PaymentTable({
         id: 'amount',
         header: 'Amount',
         enableSorting: true,
+        headerClassName: 'text-right',
+        className: 'text-right',
         cell: ({ row }) => (
-          <span className="text-sm font-medium text-gray-900 tabular-nums">
+          <span className="text-sm font-semibold text-gray-900 tabular-nums">
             {formatMoney(row.original.amount)}
           </span>
         ),
@@ -141,7 +143,7 @@ export function PaymentTable({
       <TableToolbar
         searchValue={filters.orderCode ?? ''}
         onSearchChange={(orderCode) => onFiltersChange({ orderCode: orderCode || undefined })}
-        searchPlaceholder="Search by order code or transaction ID…"
+        searchPlaceholder="Search by order code…"
         actions={
           <Button
             variant="secondary"
@@ -150,9 +152,9 @@ export function PaymentTable({
             leftIcon={<SlidersHorizontal className="h-4 w-4" />}
           >
             Filters
-            {hasActiveFilters && (
+            {activeFilterCount > 0 && (
               <span className="ml-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary-600 text-[10px] font-bold text-white">
-                !
+                {activeFilterCount}
               </span>
             )}
           </Button>

@@ -12,7 +12,7 @@ import { EmptyState } from '@/shared/components/feedback/EmptyState';
 import { formatDate } from '@/shared/utils/formatDate';
 import type { ColumnDef, SortState } from '@/shared/components/table/types';
 import type { PaginatedResponse } from '@/shared/types/api.types';
-import type { VariantStatus } from '@/shared/types/enums';
+import type { EntityStatus } from '@/shared/types/enums';
 import type { Category, CategoryListParams } from '../types/category.types';
 import { CategoryRowActions } from './CategoryRowActions';
 
@@ -21,6 +21,21 @@ const STATUS_FILTER_OPTIONS = [
   { value: 'ACTIVE', label: 'Active' },
   { value: 'INACTIVE', label: 'Inactive' },
 ];
+
+function ProductCountMeter({ count, max }: { count: number; max: number }) {
+  const ratio = max > 0 ? Math.min(1, count / max) : 0;
+  return (
+    <div className="flex flex-col items-end gap-1">
+      <span className="text-sm font-semibold tabular-nums text-gray-700">{count}</span>
+      <div className="h-1 w-16 overflow-hidden rounded-full bg-gray-100" aria-hidden>
+        <div
+          className="h-full rounded-full bg-primary-400"
+          style={{ width: `${ratio * 100}%` }}
+        />
+      </div>
+    </div>
+  );
+}
 
 interface CategoryTableProps {
   data: PaginatedResponse<Category> | undefined;
@@ -47,6 +62,12 @@ export function CategoryTable({
   onEdit,
   onCreateNew,
 }: CategoryTableProps) {
+  const items = data?.items ?? [];
+  const maxProductCount = useMemo(
+    () => items.reduce((acc, c) => Math.max(acc, c.productCount), 0),
+    [items],
+  );
+
   const columns = useMemo<ColumnDef<Category>[]>(
     () => [
       {
@@ -54,9 +75,9 @@ export function CategoryTable({
         header: 'Name',
         enableSorting: true,
         cell: ({ row }) => (
-          <div>
-            <p className="font-medium text-gray-900">{row.original.name}</p>
-            <p className="text-xs text-gray-400 font-mono">{row.original.slug}</p>
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold text-gray-900">{row.original.name}</p>
+            <p className="truncate font-mono text-xs text-gray-400">{row.original.slug}</p>
           </div>
         ),
       },
@@ -64,14 +85,16 @@ export function CategoryTable({
         id: 'status',
         header: 'Status',
         cell: ({ row }) => (
-          <StatusBadge type="variant" status={row.original.status as VariantStatus} />
+          <StatusBadge type="entity" status={row.original.status as EntityStatus} />
         ),
       },
       {
         id: 'productCount',
         header: 'Products',
+        headerClassName: 'text-right',
+        className: 'text-right',
         cell: ({ row }) => (
-          <span className="text-gray-600">{row.original.productCount}</span>
+          <ProductCountMeter count={row.original.productCount} max={maxProductCount} />
         ),
       },
       {
@@ -79,7 +102,7 @@ export function CategoryTable({
         header: 'Created',
         enableSorting: true,
         cell: ({ row }) => (
-          <span className="text-gray-500 text-sm">{formatDate(row.original.createdAt)}</span>
+          <span className="whitespace-nowrap text-xs text-gray-500">{formatDate(row.original.createdAt)}</span>
         ),
       },
       {
@@ -91,7 +114,7 @@ export function CategoryTable({
         ),
       },
     ],
-    [onEdit],
+    [onEdit, maxProductCount],
   );
 
   if (isLoading) return <SkeletonTable rows={6} />;
@@ -112,14 +135,14 @@ export function CategoryTable({
           />
         }
         actions={
-          <Button size="sm" onClick={onCreateNew} leftIcon={<Plus className="h-4 w-4" />}>
+          <Button size="md" onClick={onCreateNew} leftIcon={<Plus className="h-4 w-4" />}>
             Add Category
           </Button>
         }
       />
 
       <DataTable
-        data={data?.items ?? []}
+        data={items}
         columns={columns}
         getRowId={(row) => String(row.id)}
         sort={sort}
@@ -128,7 +151,7 @@ export function CategoryTable({
           <EmptyState
             icon={<Tag className="h-10 w-10" />}
             title="No categories yet"
-            message="Create your first category to organise your product catalog."
+            message="Create your first category to organize your product catalog."
             action={{ label: 'Add Category', onClick: onCreateNew }}
           />
         }

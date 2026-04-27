@@ -21,12 +21,10 @@ const DEFAULT_FILTERS: CategoryListParams = {
 };
 
 export function CategoryListPage() {
-  const [filters, setFilters, resetFilters] = useTableFilters<CategoryListParams>(DEFAULT_FILTERS);
+  const [filters, setFilters] = useTableFilters<CategoryListParams>(DEFAULT_FILTERS);
   const [sort, setSort] = useState<SortState | undefined>();
   const [formOpen, setFormOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | undefined>();
-
-  void resetFilters;
 
   const debouncedKeyword = useDebounce(filters.keyword ?? '', 300);
   const queryParams: CategoryListParams = { ...filters, keyword: debouncedKeyword || undefined };
@@ -82,7 +80,7 @@ export function CategoryListPage() {
       <div className="space-y-6 p-6">
         <PageHeader
           title="Categories"
-          description="Organise your product catalog into categories."
+          description="Group products so customers can browse and filter."
         />
 
         <CategoryTable

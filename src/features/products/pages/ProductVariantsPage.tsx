@@ -55,7 +55,7 @@ export function ProductVariantsPage() {
     <AdminLayout>
       <div className="p-6 max-w-5xl">
         <PageHeader
-          title={`Variants — ${product?.name ?? ''}`}
+          title={product?.name ? `${product.name}: Variants` : 'Variants'}
           description={`Product ID: ${productId}`}
           actions={
             <Button

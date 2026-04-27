@@ -21,12 +21,10 @@ const DEFAULT_FILTERS: BrandListParams = {
 };
 
 export function BrandListPage() {
-  const [filters, setFilters, resetFilters] = useTableFilters<BrandListParams>(DEFAULT_FILTERS);
+  const [filters, setFilters] = useTableFilters<BrandListParams>(DEFAULT_FILTERS);
   const [sort, setSort] = useState<SortState | undefined>();
   const [formOpen, setFormOpen] = useState(false);
   const [editingBrand, setEditingBrand] = useState<Brand | undefined>();
-
-  void resetFilters;
 
   const debouncedKeyword = useDebounce(filters.keyword ?? '', 300);
   const queryParams: BrandListParams = { ...filters, keyword: debouncedKeyword || undefined };

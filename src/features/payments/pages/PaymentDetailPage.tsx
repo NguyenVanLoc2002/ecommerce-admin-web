@@ -31,6 +31,7 @@ export function PaymentDetailPage() {
   const markPaid = useMarkPaymentPaid();
 
   const handleMarkPaid = async () => {
+    if (!payment) return;
     const ok = await confirm({
       title: 'Mark payment as paid?',
       description:

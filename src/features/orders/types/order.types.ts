@@ -11,6 +11,7 @@ export interface OrderItem {
   productName: string;
   variantName: string;
   sku: string;
+  imageUrl?: string;
   unitPrice: number;
   quantity: number;
   lineTotal: number;

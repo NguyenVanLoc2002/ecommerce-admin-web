@@ -67,10 +67,10 @@ export function OrderStatusStepper({ status }: OrderStatusStepperProps) {
                 <div className="flex flex-col items-center">
                   <div
                     className={cn(
-                      'flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 transition-colors',
-                      isCompleted && 'border-success-500 bg-success-500',
-                      isCurrent && 'border-primary-600 bg-primary-600',
-                      isFuture && 'border-gray-200 bg-white',
+                      'flex shrink-0 items-center justify-center rounded-full border-2 transition-all duration-200',
+                      isCompleted && 'h-8 w-8 border-success-500 bg-success-500',
+                      isCurrent && 'h-9 w-9 border-primary-600 bg-primary-600 ring-4 ring-primary-100 ring-offset-1',
+                      isFuture && 'h-8 w-8 border-gray-200 bg-white',
                     )}
                     aria-hidden
                   >
@@ -88,10 +88,10 @@ export function OrderStatusStepper({ status }: OrderStatusStepperProps) {
                   </div>
                   <p
                     className={cn(
-                      'mt-2 text-center text-xs font-medium whitespace-nowrap',
-                      isCompleted && 'text-success-700',
-                      isCurrent && 'text-primary-700',
-                      isFuture && 'text-gray-400',
+                      'mt-2 text-center text-xs whitespace-nowrap',
+                      isCompleted && 'font-medium text-success-700',
+                      isCurrent && 'font-semibold text-primary-700',
+                      isFuture && 'font-medium text-gray-400',
                     )}
                   >
                     {step.label}
@@ -102,10 +102,10 @@ export function OrderStatusStepper({ status }: OrderStatusStepperProps) {
                 </div>
 
                 {index < MAIN_STEPS.length - 1 && (
-                  <div className="mx-2 mt-4 h-0.5 flex-1" aria-hidden>
+                  <div className="mx-2 mt-[17px] h-1 flex-1" aria-hidden>
                     <div
                       className={cn(
-                        'h-full rounded',
+                        'h-full rounded-full transition-colors duration-300',
                         index < currentIndex ? 'bg-success-400' : 'bg-gray-200',
                       )}
                     />

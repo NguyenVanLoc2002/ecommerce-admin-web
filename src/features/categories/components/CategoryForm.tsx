@@ -80,7 +80,7 @@ export function CategoryForm({
             Cancel
           </Button>
           <Button type="submit" form="category-form" isLoading={isSubmitting}>
-            {isSubmitting ? 'Saving…' : isEditMode ? 'Save changes' : 'Create'}
+            {isSubmitting ? 'Saving…' : isEditMode ? 'Save changes' : 'Create category'}
           </Button>
         </>
       }

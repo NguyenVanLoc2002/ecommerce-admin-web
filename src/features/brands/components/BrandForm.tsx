@@ -76,7 +76,7 @@ export function BrandForm({ open, onClose, brand, isSubmitting, onSubmit }: Bran
             Cancel
           </Button>
           <Button type="submit" form="brand-form" isLoading={isSubmitting}>
-            {isSubmitting ? 'Saving…' : isEditMode ? 'Save changes' : 'Create'}
+            {isSubmitting ? 'Saving…' : isEditMode ? 'Save changes' : 'Create brand'}
           </Button>
         </>
       }

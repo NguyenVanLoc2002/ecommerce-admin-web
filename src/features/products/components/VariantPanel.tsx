@@ -90,10 +90,13 @@ export function VariantPanel({ productId }: VariantPanelProps) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <p className="text-sm text-gray-500">
-          {variants?.length ?? 0} variant{(variants?.length ?? 0) !== 1 ? 's' : ''}
+        <p className="text-sm font-medium text-gray-700">
+          <span className="tabular-nums">{variants?.length ?? 0}</span>{' '}
+          <span className="text-gray-500">
+            variant{(variants?.length ?? 0) !== 1 ? 's' : ''}
+          </span>
         </p>
-        <Button size="sm" onClick={openAddForm} leftIcon={<Plus className="h-4 w-4" />}>
+        <Button size="md" onClick={openAddForm} leftIcon={<Plus className="h-4 w-4" />}>
           Add variant
         </Button>
       </div>

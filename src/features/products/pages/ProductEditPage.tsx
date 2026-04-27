@@ -115,7 +115,7 @@ export function ProductEditPage() {
       <div className="p-6 max-w-3xl">
         <PageHeader
           title={isEditMode ? (product?.name ?? 'Edit Product') : 'New Product'}
-          description={isEditMode ? `ID: ${productId}` : 'Fill in the details to create a new product.'}
+          description={isEditMode ? `Product ID: ${productId}` : 'Add a product to your catalog.'}
           actions={
             isEditMode ? (
               <Button

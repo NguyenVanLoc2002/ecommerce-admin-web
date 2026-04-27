@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MoreHorizontal, Pencil, Layers, Trash2 } from 'lucide-react';
 import { Button } from '@/shared/components/ui/Button';
@@ -18,6 +18,15 @@ export function ProductRowActions({ product }: ProductRowActionsProps) {
   const { confirm } = useConfirmDialog();
   const deleteProduct = useDeleteProduct();
   const [menuOpen, setMenuOpen] = useState(false);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMenuOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [menuOpen]);
 
   const handleDelete = async () => {
     setMenuOpen(false);

@@ -48,8 +48,7 @@ export function OrderTable({
 }: OrderTableProps) {
   const navigate = useNavigate();
 
-  const hasActiveFilters =
-    filters.status || filters.paymentStatus;
+  const activeFilterCount = [filters.status, filters.paymentStatus].filter(Boolean).length;
 
   const columns = useMemo<ColumnDef<OrderSummary>[]>(
     () => [
@@ -60,7 +59,7 @@ export function OrderTable({
           <button
             type="button"
             onClick={() => navigate(routes.orders.detail(row.original.id))}
-            className="font-mono text-sm font-semibold text-primary-600 hover:text-primary-700 hover:underline"
+            className="rounded-sm font-mono text-sm font-bold text-primary-600 transition-colors hover:text-primary-700 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-1"
           >
             #{row.original.orderCode}
           </button>
@@ -148,9 +147,9 @@ export function OrderTable({
             leftIcon={<SlidersHorizontal className="h-4 w-4" />}
           >
             Filters
-            {hasActiveFilters && (
+            {activeFilterCount > 0 && (
               <span className="ml-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary-600 text-[10px] font-bold text-white">
-                !
+                {activeFilterCount}
               </span>
             )}
           </Button>
@@ -158,7 +157,7 @@ export function OrderTable({
       />
 
       <DataTable
-        data={data?.content ?? []}
+        data={data?.items ?? []}
         columns={columns}
         getRowId={(row) => String(row.id)}
         sort={sort}

@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, ShoppingBag } from 'lucide-react';
+import { ArrowLeft, ShoppingBag, Copy, Check } from 'lucide-react';
 import { AdminLayout } from '@/shared/components/layout/AdminLayout';
 import { PageHeader } from '@/shared/components/layout/PageHeader';
 import { Button } from '@/shared/components/ui/Button';
@@ -21,6 +22,7 @@ export function OrderDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const orderId = Number(id);
+  const [copied, setCopied] = useState(false);
 
   const { data: order, isLoading, isError, refetch } = useOrder(orderId);
 
@@ -53,7 +55,26 @@ export function OrderDetailPage() {
                 title={`Order #${order.orderCode}`}
                 description={`Placed ${formatDateTime(order.createdAt)}`}
                 actions={
-                  <StatusBadge type="order" status={order.status as OrderStatus} />
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      aria-label={copied ? 'Copied' : 'Copy order code'}
+                      onClick={() => {
+                        void navigator.clipboard.writeText(order.orderCode).then(() => {
+                          setCopied(true);
+                          setTimeout(() => setCopied(false), 1500);
+                        });
+                      }}
+                      className="inline-flex h-7 w-7 items-center justify-center rounded text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+                    >
+                      {copied ? (
+                        <Check className="h-3.5 w-3.5 text-success-600" />
+                      ) : (
+                        <Copy className="h-3.5 w-3.5" />
+                      )}
+                    </button>
+                    <StatusBadge type="order" status={order.status as OrderStatus} />
+                  </div>
                 }
               />
             </div>

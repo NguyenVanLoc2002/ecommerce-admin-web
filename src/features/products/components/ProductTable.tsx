@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Package } from 'lucide-react';
+import { Package, Plus } from 'lucide-react';
 import { DataTable } from '@/shared/components/table/DataTable';
 import { TableToolbar } from '@/shared/components/table/TableToolbar';
 import { BulkActionBar } from '@/shared/components/table/BulkActionBar';
@@ -33,7 +33,7 @@ interface ProductTableProps {
   onBulkPublish: () => void;
   onBulkArchive: () => void;
   onBulkDelete: () => void;
-  isBulkPending: boolean;
+  pendingBulk: 'publish' | 'deactivate' | 'delete' | null;
   onCreateNew: () => void;
 }
 
@@ -53,9 +53,10 @@ export function ProductTable({
   onBulkPublish,
   onBulkArchive,
   onBulkDelete,
-  isBulkPending,
+  pendingBulk,
   onCreateNew,
 }: ProductTableProps) {
+  const isBulkPending = pendingBulk !== null;
   const columns = useMemo<ColumnDef<Product>[]>(
     () => [
       { id: 'select' },
@@ -79,8 +80,8 @@ export function ProductTable({
               )}
             </div>
             <div className="min-w-0">
-              <p className="truncate font-medium text-gray-900">{row.original.name}</p>
-              <p className="truncate text-xs text-gray-400">{row.original.slug}</p>
+              <p className="truncate text-sm font-semibold text-gray-900">{row.original.name}</p>
+              <p className="truncate font-mono text-xs text-gray-400">{row.original.slug}</p>
             </div>
           </div>
         ),
@@ -166,8 +167,8 @@ export function ProductTable({
           </Button>
         }
         actions={
-          <Button size="sm" onClick={onCreateNew}>
-            + New Product
+          <Button size="md" onClick={onCreateNew} leftIcon={<Plus className="h-4 w-4" />}>
+            New Product
           </Button>
         }
       />
@@ -189,7 +190,8 @@ export function ProductTable({
                 variant="secondary"
                 size="sm"
                 onClick={onBulkPublish}
-                isLoading={isBulkPending}
+                isLoading={pendingBulk === 'publish'}
+                disabled={isBulkPending}
               >
                 Publish
               </Button>
@@ -197,7 +199,8 @@ export function ProductTable({
                 variant="secondary"
                 size="sm"
                 onClick={onBulkArchive}
-                isLoading={isBulkPending}
+                isLoading={pendingBulk === 'deactivate'}
+                disabled={isBulkPending}
               >
                 Deactivate
               </Button>
@@ -205,7 +208,8 @@ export function ProductTable({
                 variant="danger"
                 size="sm"
                 onClick={onBulkDelete}
-                isLoading={isBulkPending}
+                isLoading={pendingBulk === 'delete'}
+                disabled={isBulkPending}
               >
                 Delete
               </Button>
@@ -213,6 +217,7 @@ export function ProductTable({
                 variant="ghost"
                 size="sm"
                 onClick={() => onRowSelectionChange({})}
+                disabled={isBulkPending}
               >
                 Deselect all
               </Button>
