@@ -18,7 +18,7 @@ import { PaymentDetail } from '../components/PaymentDetail';
 export function PaymentDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const paymentId = Number(id);
+  const paymentId = id ?? '';
   const { confirm } = useConfirmDialog();
 
   const { data: payment, isLoading, isError, refetch } = usePayment(paymentId);

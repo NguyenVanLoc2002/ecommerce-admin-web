@@ -1,3 +1,5 @@
+import type { EntityKey } from '@/shared/types/api.types';
+
 // Centralised TanStack Query key factory.
 // Each feature adds its own block here when implemented.
 // Use the factory pattern: keys at each level are stable references so
@@ -21,14 +23,14 @@ export const queryKeys = {
     lists: () => [...queryKeys.products.all, 'list'] as const,
     list: (params: object) =>
       [...queryKeys.products.lists(), params] as const,
-    detail: (id: number) => [...queryKeys.products.all, 'detail', id] as const,
+    detail: (id: EntityKey) => [...queryKeys.products.all, 'detail', id] as const,
   },
 
   variants: {
     all: ['variants'] as const,
-    byProduct: (productId: number) =>
+    byProduct: (productId: EntityKey) =>
       [...queryKeys.variants.all, 'byProduct', productId] as const,
-    detail: (id: number) => [...queryKeys.variants.all, 'detail', id] as const,
+    detail: (id: EntityKey) => [...queryKeys.variants.all, 'detail', id] as const,
   },
 
   // ── Phase 5: Categories & Brands ────────────────────────────────────────
@@ -58,7 +60,7 @@ export const queryKeys = {
     all: ['inventory'] as const,
     stock: (params: object) =>
       [...queryKeys.inventory.all, 'stock', params] as const,
-    byVariant: (variantId: number) =>
+    byVariant: (variantId: EntityKey) =>
       [...queryKeys.inventory.all, 'variant', variantId] as const,
     movements: (params: object) =>
       [...queryKeys.inventory.all, 'movements', params] as const,
@@ -72,7 +74,7 @@ export const queryKeys = {
     lists: () => [...queryKeys.orders.all, 'list'] as const,
     list: (params: object) =>
       [...queryKeys.orders.lists(), params] as const,
-    detail: (id: number) => [...queryKeys.orders.all, 'detail', id] as const,
+    detail: (id: EntityKey) => [...queryKeys.orders.all, 'detail', id] as const,
   },
 
   // ── Phase 8: Shipments ──────────────────────────────────────────────────
@@ -81,8 +83,8 @@ export const queryKeys = {
     lists: () => [...queryKeys.shipments.all, 'list'] as const,
     list: (params: object) =>
       [...queryKeys.shipments.lists(), params] as const,
-    detail: (id: number) => [...queryKeys.shipments.all, 'detail', id] as const,
-    events: (id: number) => [...queryKeys.shipments.all, 'events', id] as const,
+    detail: (id: EntityKey) => [...queryKeys.shipments.all, 'detail', id] as const,
+    events: (id: EntityKey) => [...queryKeys.shipments.all, 'events', id] as const,
   },
 
   // ── Phase 9: Payments ───────────────────────────────────────────────────
@@ -91,15 +93,18 @@ export const queryKeys = {
     lists: () => [...queryKeys.payments.all, 'list'] as const,
     list: (params: object) =>
       [...queryKeys.payments.lists(), params] as const,
-    detail: (id: number) => [...queryKeys.payments.all, 'detail', id] as const,
-    transactions: (id: number) =>
+    detail: (id: EntityKey) => [...queryKeys.payments.all, 'detail', id] as const,
+    transactions: (id: EntityKey) =>
       [...queryKeys.payments.all, 'transactions', id] as const,
   },
 
   // ── Phase 10: Invoices ──────────────────────────────────────────────────
   invoices: {
     all: ['invoices'] as const,
-    detail: (id: number) => [...queryKeys.invoices.all, 'detail', id] as const,
+    detail: (id: EntityKey) => [...queryKeys.invoices.all, 'detail', id] as const,
+    lists: () => [...queryKeys.invoices.all, 'list'] as const,
+    list: (params: object) =>
+      [...queryKeys.invoices.lists(), params] as const,
   },
 
   // ── Phase 11: Promotions & Vouchers ─────────────────────────────────────
@@ -108,7 +113,7 @@ export const queryKeys = {
     lists: () => [...queryKeys.promotions.all, 'list'] as const,
     list: (params: object) =>
       [...queryKeys.promotions.lists(), params] as const,
-    detail: (id: number) => [...queryKeys.promotions.all, 'detail', id] as const,
+    detail: (id: EntityKey) => [...queryKeys.promotions.all, 'detail', id] as const,
   },
 
   vouchers: {
@@ -116,8 +121,8 @@ export const queryKeys = {
     lists: () => [...queryKeys.vouchers.all, 'list'] as const,
     list: (params: object) =>
       [...queryKeys.vouchers.lists(), params] as const,
-    detail: (id: number) => [...queryKeys.vouchers.all, 'detail', id] as const,
-    usages: (id: number, params: object) =>
+    detail: (id: EntityKey) => [...queryKeys.vouchers.all, 'detail', id] as const,
+    usages: (id: EntityKey, params: object) =>
       [...queryKeys.vouchers.all, 'usages', id, params] as const,
   },
 
@@ -126,7 +131,7 @@ export const queryKeys = {
     all: ['reviews'] as const,
     pending: (params: object) =>
       [...queryKeys.reviews.all, 'pending', params] as const,
-    detail: (id: number) => [...queryKeys.reviews.all, 'detail', id] as const,
+    detail: (id: EntityKey) => [...queryKeys.reviews.all, 'detail', id] as const,
   },
 
   // ── Phase 13: Audit Log ─────────────────────────────────────────────────

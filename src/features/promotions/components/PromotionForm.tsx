@@ -14,7 +14,7 @@ import { useUpdatePromotion } from '../hooks/useUpdatePromotion';
 
 const DISCOUNT_TYPE_OPTIONS = [
   { value: 'PERCENTAGE', label: 'Percentage (%)' },
-  { value: 'FIXED_AMOUNT', label: 'Fixed Amount (₫)' },
+  { value: 'FIXED_AMOUNT', label: 'Fixed Amount (VND)' },
 ];
 
 const SCOPE_OPTIONS = [
@@ -32,52 +32,64 @@ interface PromotionFormProps {
 export function PromotionForm({ promotion, onSuccess }: PromotionFormProps) {
   const isEditMode = promotion !== undefined;
 
-  const defaultValues: PromotionFormValues = promotion
-    ? {
-        name: promotion.name,
-        description: promotion.description ?? '',
-        discountType: promotion.discountType,
-        discountValue: promotion.discountValue,
-        maxDiscountAmount: promotion.maxDiscountAmount ?? undefined,
-        minimumOrderAmount: promotion.minimumOrderAmount ?? undefined,
-        scope: promotion.scope,
-        startDate: promotion.startDate.slice(0, 16),
-        endDate: promotion.endDate.slice(0, 16),
-        usageLimit: promotion.usageLimit ?? undefined,
-        active: promotion.active,
-      }
-    : {
-        name: '',
-        description: '',
-        discountType: 'PERCENTAGE',
-        discountValue: undefined as unknown as number,
-        maxDiscountAmount: undefined,
-        minimumOrderAmount: undefined,
-        scope: 'ALL',
-        startDate: '',
-        endDate: '',
-        usageLimit: undefined,
-        active: true,
-      };
-
   const form = useForm<PromotionFormValues>({
     resolver: zodResolver(promotionSchema),
-    defaultValues,
+    defaultValues: promotion
+      ? {
+          name: promotion.name,
+          description: promotion.description ?? '',
+          discountType: promotion.discountType,
+          discountValue: promotion.discountValue,
+          maxDiscountAmount: promotion.maxDiscountAmount ?? undefined,
+          minimumOrderAmount: promotion.minimumOrderAmount ?? undefined,
+          scope: promotion.scope,
+          startDate: promotion.startDate.slice(0, 16),
+          endDate: promotion.endDate.slice(0, 16),
+          usageLimit: promotion.usageLimit ?? undefined,
+          active: promotion.active,
+        }
+      : {
+          name: '',
+          description: '',
+          discountType: 'PERCENTAGE',
+          discountValue: undefined as unknown as number,
+          maxDiscountAmount: undefined,
+          minimumOrderAmount: undefined,
+          scope: 'ALL',
+          startDate: '',
+          endDate: '',
+          usageLimit: undefined,
+          active: true,
+        },
   });
 
   const discountType = form.watch('discountType');
-  const isDirty = form.formState.isDirty;
-
-  useBeforeUnload(isDirty, 'Leave without saving?');
+  useBeforeUnload(form.formState.isDirty, 'Leave without saving?');
 
   const createPromotion = useCreatePromotion();
-  const updatePromotion = useUpdatePromotion(promotion?.id ?? 0);
+  const updatePromotion = useUpdatePromotion(promotion?.id ?? '');
 
-  const mutation = isEditMode ? updatePromotion : createPromotion;
+  const mutationOptions = {
+    onSuccess: () => {
+      toast.success(isEditMode ? 'Promotion updated.' : 'Promotion created.');
+      onSuccess();
+    },
+    onError: (error: Error) => {
+      const appError = error as AppError;
+      if (appError.fieldErrors?.length) {
+        appError.fieldErrors.forEach(({ field, message }) => {
+          form.setError(field as keyof PromotionFormValues, { message });
+        });
+      } else {
+        toast.error(appError.message ?? 'Something went wrong.');
+      }
+    },
+  };
 
   const handleSubmit = form.handleSubmit((values) => {
-    const payload = isEditMode
-      ? {
+    if (isEditMode) {
+      updatePromotion.mutate(
+        {
           name: values.name,
           description: values.description || undefined,
           discountValue: values.discountValue,
@@ -87,41 +99,32 @@ export function PromotionForm({ promotion, onSuccess }: PromotionFormProps) {
           endDate: values.endDate,
           usageLimit: values.usageLimit,
           active: values.active,
-        }
-      : {
-          name: values.name,
-          description: values.description || undefined,
-          discountType: values.discountType,
-          discountValue: values.discountValue,
-          maxDiscountAmount: values.maxDiscountAmount,
-          minimumOrderAmount: values.minimumOrderAmount,
-          scope: values.scope,
-          startDate: values.startDate,
-          endDate: values.endDate,
-          usageLimit: values.usageLimit,
-        };
+        },
+        mutationOptions,
+      );
+      return;
+    }
 
-    mutation.mutate(payload as Parameters<typeof mutation.mutate>[0], {
-      onSuccess: () => {
-        toast.success(isEditMode ? 'Promotion updated.' : 'Promotion created.');
-        onSuccess();
+    createPromotion.mutate(
+      {
+        name: values.name,
+        description: values.description || undefined,
+        discountType: values.discountType,
+        discountValue: values.discountValue,
+        maxDiscountAmount: values.maxDiscountAmount,
+        minimumOrderAmount: values.minimumOrderAmount,
+        scope: values.scope,
+        startDate: values.startDate,
+        endDate: values.endDate,
+        usageLimit: values.usageLimit,
       },
-      onError: (error) => {
-        const appError = error as AppError;
-        if (appError.fieldErrors?.length) {
-          appError.fieldErrors.forEach(({ field, message }) => {
-            form.setError(field as keyof PromotionFormValues, { message });
-          });
-        } else {
-          toast.error(appError.message ?? 'Something went wrong.');
-        }
-      },
-    });
+      mutationOptions,
+    );
   });
 
   return (
     <FormProvider {...form}>
-      <form onSubmit={(e) => void handleSubmit(e)} className="space-y-6">
+      <form onSubmit={(event) => void handleSubmit(event)} className="space-y-6">
         <div className="grid grid-cols-1 gap-4">
           <FormField name="name" label="Name" required placeholder="e.g. Summer Sale 20%" />
         </div>
@@ -132,7 +135,7 @@ export function PromotionForm({ promotion, onSuccess }: PromotionFormProps) {
             label="Description"
             multiline
             rows={3}
-            placeholder="Optional description…"
+            placeholder="Optional description..."
           />
         </div>
 
@@ -147,7 +150,7 @@ export function PromotionForm({ promotion, onSuccess }: PromotionFormProps) {
 
           <FormField
             name="discountValue"
-            label={discountType === 'PERCENTAGE' ? 'Discount Value (%)' : 'Discount Value (₫)'}
+            label={discountType === 'PERCENTAGE' ? 'Discount Value (%)' : 'Discount Value (VND)'}
             required
             type="number"
             placeholder={discountType === 'PERCENTAGE' ? 'e.g. 20' : 'e.g. 50000'}
@@ -158,7 +161,7 @@ export function PromotionForm({ promotion, onSuccess }: PromotionFormProps) {
           <div className="grid grid-cols-2 gap-4">
             <FormField
               name="maxDiscountAmount"
-              label="Max Discount Amount (₫)"
+              label="Max Discount Amount (VND)"
               type="number"
               placeholder="e.g. 100000"
               hint="Cap the discount amount in VND"
@@ -170,7 +173,7 @@ export function PromotionForm({ promotion, onSuccess }: PromotionFormProps) {
         <div className="grid grid-cols-2 gap-4">
           <FormField
             name="minimumOrderAmount"
-            label="Minimum Order Amount (₫)"
+            label="Minimum Order Amount (VND)"
             type="number"
             placeholder="e.g. 500000"
           />
@@ -185,18 +188,8 @@ export function PromotionForm({ promotion, onSuccess }: PromotionFormProps) {
         </div>
 
         <div className="grid grid-cols-2 gap-4">
-          <FormField
-            name="startDate"
-            label="Start Date"
-            required
-            type="datetime-local"
-          />
-          <FormField
-            name="endDate"
-            label="End Date"
-            required
-            type="datetime-local"
-          />
+          <FormField name="startDate" label="Start Date" required type="datetime-local" />
+          <FormField name="endDate" label="End Date" required type="datetime-local" />
         </div>
 
         <div className="grid grid-cols-2 gap-4">
@@ -215,7 +208,7 @@ export function PromotionForm({ promotion, onSuccess }: PromotionFormProps) {
         )}
 
         <FormActions
-          isSubmitting={mutation.isPending}
+          isSubmitting={createPromotion.isPending || updatePromotion.isPending}
           submitLabel={isEditMode ? 'Save changes' : 'Create promotion'}
         />
       </form>

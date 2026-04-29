@@ -1,4 +1,4 @@
-import type { PaginationParams } from '@/shared/types/api.types';
+import type { PaginationParams, EntityId } from '@/shared/types/api.types';
 import type { ShipmentStatus } from '@/shared/types/enums';
 
 export interface ShipmentAddress {
@@ -17,8 +17,8 @@ export interface ShipmentCustomer {
 }
 
 export interface ShipmentSummary {
-  id: number;
-  orderId: number;
+  id: EntityId;
+  orderId: EntityId;
   orderCode: string;
   customer: ShipmentCustomer;
   trackingNumber: string | null;
@@ -32,8 +32,8 @@ export interface ShipmentSummary {
 }
 
 export interface Shipment {
-  id: number;
-  orderId: number;
+  id: EntityId;
+  orderId: EntityId;
   orderCode: string;
   customer: ShipmentCustomer;
   shippingAddress: ShipmentAddress;
@@ -49,7 +49,7 @@ export interface Shipment {
 }
 
 export interface ShipmentEvent {
-  id: number;
+  id: EntityId;
   status: ShipmentStatus;
   note: string | null;
   createdAt: string;
@@ -60,14 +60,14 @@ export interface ShipmentListParams extends PaginationParams {
   orderCode?: string;
   carrier?: string;
   status?: string;
-  orderId?: number;
+  orderId?: EntityId;
   dateFrom?: string;
   dateTo?: string;
   direction?: string;
 }
 
 export interface CreateShipmentRequest {
-  orderId: number;
+  orderId: EntityId;
   carrier: string | null;
   trackingNumber: string | null;
   estimatedDeliveryDate: string | null;

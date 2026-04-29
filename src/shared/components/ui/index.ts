@@ -14,3 +14,4 @@ export { Drawer } from './Drawer';
 export { ConfirmDialogProvider } from './ConfirmDialog';
 export { MultiSelectDropdown } from './MultiSelectDropdown';
 export type { MultiSelectOption } from './MultiSelectDropdown';
+export { DropdownMenu } from './DropdownMenu';

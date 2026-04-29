@@ -10,7 +10,7 @@ import type { ProductVariant } from '../types/product.types';
 import { VariantRowActions } from './VariantRowActions';
 
 interface VariantTableProps {
-  productId: number;
+  productId: string;
   variants: ProductVariant[];
   onEdit: (variant: ProductVariant) => void;
   onAddNew: () => void;

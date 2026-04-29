@@ -14,7 +14,7 @@ import type { ProductVariant } from '../types/product.types';
 import type { VariantFormValues } from '../schemas/variantSchema';
 
 interface VariantPanelProps {
-  productId: number;
+  productId: string;
 }
 
 function entriesToAttributes(attributes: Array<{ key: string; value: string }>) {

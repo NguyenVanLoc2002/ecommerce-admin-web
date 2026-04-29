@@ -17,7 +17,7 @@ const RULE_TYPE_LABELS: Record<string, string> = {
 };
 
 interface RuleListProps {
-  promotionId: number;
+  promotionId: string;
   rules: PromotionRule[];
   canWrite: boolean;
 }
@@ -27,7 +27,7 @@ export function RuleList({ promotionId, rules, canWrite }: RuleListProps) {
   const { confirm } = useConfirmDialog();
   const deleteRule = useDeleteRule(promotionId);
 
-  const handleDeleteRule = async (ruleId: number) => {
+  const handleDeleteRule = async (ruleId: string) => {
     const ok = await confirm({
       title: 'Remove rule?',
       description: 'This rule will be removed from the promotion.',

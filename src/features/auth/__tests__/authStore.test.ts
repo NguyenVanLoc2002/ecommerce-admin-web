@@ -48,7 +48,7 @@ describe('authStore', () => {
 
     it('does not expose tokenType or expiresIn as state fields', () => {
       useAuthStore.getState().setTokens(mockTokens);
-      const state = useAuthStore.getState() as Record<string, unknown>;
+      const state = useAuthStore.getState() as unknown as Record<string, unknown>;
       expect(state['tokenType']).toBeUndefined();
       expect(state['expiresIn']).toBeUndefined();
     });

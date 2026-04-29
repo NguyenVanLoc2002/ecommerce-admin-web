@@ -21,7 +21,7 @@ import { OrderPaymentSummary } from '../components/OrderPaymentSummary';
 export function OrderDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const orderId = Number(id);
+  const orderId = id ?? '';
   const [copied, setCopied] = useState(false);
 
   const { data: order, isLoading, isError, refetch } = useOrder(orderId);

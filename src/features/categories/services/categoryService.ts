@@ -1,5 +1,5 @@
 import { apiClient } from '@/shared/lib/axios';
-import type { PaginatedResponse } from '@/shared/types/api.types';
+import type { EntityId, PaginatedResponse } from '@/shared/types/api.types';
 import type {
   Category,
   CategoryListParams,
@@ -9,17 +9,17 @@ import type {
 
 export const categoryService = {
   getList: (params: CategoryListParams) =>
-    apiClient.get<PaginatedResponse<Category>>('/categories', { params }),
+    apiClient.get<PaginatedResponse<Category>>('/admin/categories', { params }),
 
-  getById: (id: number) =>
+  getById: (id: EntityId) =>
     apiClient.get<Category>(`/categories/${id}`),
 
   create: (body: CreateCategoryRequest) =>
     apiClient.post<Category>('/admin/categories', body),
 
-  update: (id: number, body: UpdateCategoryRequest) =>
+  update: (id: EntityId, body: UpdateCategoryRequest) =>
     apiClient.patch<Category>(`/admin/categories/${id}`, body),
 
-  remove: (id: number) =>
+  remove: (id: EntityId) =>
     apiClient.delete(`/admin/categories/${id}`),
 };

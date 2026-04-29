@@ -35,7 +35,7 @@ export function VoucherForm({ voucher, promotionOptions, onSuccess }: VoucherFor
       }
     : {
         code: null,
-        promotionId: undefined as unknown as number,
+        promotionId: '',
         usageLimit: undefined,
         usageLimitPerUser: undefined,
         startDate: '',
@@ -51,7 +51,7 @@ export function VoucherForm({ voucher, promotionOptions, onSuccess }: VoucherFor
   useBeforeUnload(form.formState.isDirty, 'Leave without saving?');
 
   const createVoucher = useCreateVoucher();
-  const updateVoucher = useUpdateVoucher(voucher?.id ?? 0);
+  const updateVoucher = useUpdateVoucher(voucher?.id ?? '');
 
   const handleSubmit = form.handleSubmit((values) => {
     const onSuccess_ = () => {

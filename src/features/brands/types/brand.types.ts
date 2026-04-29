@@ -1,8 +1,8 @@
-import type { PaginationParams } from '@/shared/types/api.types';
+import type { PaginationParams, EntityId } from '@/shared/types/api.types';
 import type { EntityStatus } from '@/shared/types/enums';
 
 export interface Brand {
-  id: number;
+  id: EntityId;
   name: string;
   slug: string;
   description: string | null;
@@ -14,7 +14,7 @@ export interface Brand {
 }
 
 export interface BrandListParams extends PaginationParams {
-  keyword?: string;
+  name?: string;
   status?: string;
 }
 

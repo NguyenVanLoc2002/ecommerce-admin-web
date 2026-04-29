@@ -3,6 +3,8 @@
  * These tests call the real backend at localhost:8080 — the server must be running.
  */
 
+import { beforeAll, describe, expect, it } from 'vitest';
+
 const BASE = 'http://localhost:8080/api/v1';
 
 async function post(path: string, body: unknown) {

@@ -64,6 +64,15 @@ _instance.interceptors.request.use((config: InternalAxiosRequestConfig) => {
 // Response interceptor
 _instance.interceptors.response.use(
   (response) => {
+    if (
+      response.status === 204 ||
+      response.status === 205 ||
+      response.data === '' ||
+      response.data == null
+    ) {
+      return undefined as unknown as typeof response;
+    }
+
     // Unwrap ApiResponse<T> → return inner data T directly.
     // Services type their calls as apiClient.get<T>(...) and receive T, not AxiosResponse<T>.
     // The cast below is an intentional type boundary: body.data is unknown, cast to the

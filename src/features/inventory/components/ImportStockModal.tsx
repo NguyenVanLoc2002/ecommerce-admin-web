@@ -9,9 +9,9 @@ import { importStockSchema, type ImportStockFormValues } from '../schemas/import
 import type { Warehouse } from '../types/inventory.types';
 
 interface ImportStockContext {
-  warehouseId?: number;
+  warehouseId?: string;
   warehouseName?: string;
-  variantId?: number;
+  variantId?: string;
   variantSku?: string;
   variantName?: string;
 }
@@ -35,23 +35,31 @@ export function ImportStockModal({
 }: ImportStockModalProps) {
   const hasContext = context?.warehouseId !== undefined && context?.variantId !== undefined;
 
-  const warehouseOptions = warehouses.map((w) => ({ value: String(w.id), label: w.name }));
+  const warehouseOptions = warehouses.map((warehouse) => ({
+    value: warehouse.id,
+    label: warehouse.name,
+  }));
 
   const form = useForm<ImportStockFormValues>({
     resolver: zodResolver(importStockSchema),
-    defaultValues: { warehouseId: 0, variantId: 0, quantity: undefined as unknown as number, note: '' },
+    defaultValues: {
+      warehouseId: '',
+      variantId: '',
+      quantity: undefined as unknown as number,
+      note: '',
+    },
   });
 
   useEffect(() => {
-    if (open) {
-      form.reset({
-        warehouseId: context?.warehouseId ?? (0 as unknown as number),
-        variantId: context?.variantId ?? (0 as unknown as number),
-        quantity: undefined as unknown as number,
-        note: '',
-      });
-    }
-  }, [open, context, form]);
+    if (!open) return;
+
+    form.reset({
+      warehouseId: context?.warehouseId ?? '',
+      variantId: context?.variantId ?? '',
+      quantity: undefined as unknown as number,
+      note: '',
+    });
+  }, [context, form, open]);
 
   return (
     <Modal
@@ -67,7 +75,7 @@ export function ImportStockModal({
             Cancel
           </Button>
           <Button type="submit" form="import-stock-form" isLoading={isSubmitting}>
-            {isSubmitting ? 'Importing…' : 'Import'}
+            {isSubmitting ? 'Importing...' : 'Import'}
           </Button>
         </>
       }
@@ -77,7 +85,7 @@ export function ImportStockModal({
           <div className="space-y-4">
             {hasContext ? (
               <>
-                <div className="rounded-md bg-gray-50 px-4 py-3 text-sm space-y-1">
+                <div className="space-y-1 rounded-md bg-gray-50 px-4 py-3 text-sm">
                   <p className="text-gray-500">
                     Warehouse:{' '}
                     <span className="font-medium text-gray-800">{context?.warehouseName}</span>
@@ -85,11 +93,10 @@ export function ImportStockModal({
                   <p className="text-gray-500">
                     Variant:{' '}
                     <span className="font-medium text-gray-800">
-                      {context?.variantSku} — {context?.variantName}
+                      {context?.variantSku} - {context?.variantName}
                     </span>
                   </p>
                 </div>
-                {/* Hidden fields to carry pre-filled values through RHF */}
                 <input type="hidden" {...form.register('warehouseId')} />
                 <input type="hidden" {...form.register('variantId')} />
               </>
@@ -99,16 +106,15 @@ export function ImportStockModal({
                   name="warehouseId"
                   label="Warehouse"
                   required
-                  options={[{ value: '0', label: 'Select warehouse…' }, ...warehouseOptions]}
+                  options={[{ value: '', label: 'Select warehouse...' }, ...warehouseOptions]}
                   disabled={isSubmitting}
                 />
                 <FormField
                   name="variantId"
                   label="Variant ID"
                   required
-                  type="number"
-                  placeholder="Enter variant ID"
-                  hint="Find the variant ID on the Product Variants page."
+                  placeholder="Enter variant UUID"
+                  hint="Find the variant UUID on the Product Variants page."
                   disabled={isSubmitting}
                 />
               </>
@@ -127,7 +133,7 @@ export function ImportStockModal({
               label="Note"
               multiline
               rows={2}
-              placeholder="Optional note…"
+              placeholder="Optional note..."
               disabled={isSubmitting}
             />
           </div>

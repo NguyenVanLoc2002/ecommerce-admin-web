@@ -1,9 +1,9 @@
-import type { PaginationParams } from '@/shared/types/api.types';
+import type { PaginationParams, EntityId } from '@/shared/types/api.types';
 import type { DiscountType, PromotionScope, PromotionRuleType } from '@/shared/types/enums';
 
 export interface PromotionRule {
-  id: number;
-  promotionId: number;
+  id: EntityId;
+  promotionId: EntityId;
   ruleType: PromotionRuleType;
   ruleValue: string;
   description: string | null;
@@ -11,7 +11,7 @@ export interface PromotionRule {
 }
 
 export interface Promotion {
-  id: number;
+  id: EntityId;
   name: string;
   description: string | null;
   discountType: DiscountType;
@@ -30,7 +30,7 @@ export interface Promotion {
 }
 
 export interface PromotionSummary {
-  id: number;
+  id: EntityId;
   name: string;
   description: string | null;
   discountType: DiscountType;

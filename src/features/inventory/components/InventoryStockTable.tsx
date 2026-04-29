@@ -151,14 +151,14 @@ export function InventoryStockTable({
         onSearchChange={(keyword) => onFiltersChange({ keyword: keyword || undefined })}
         searchPlaceholder="Search by SKU or product name…"
         filters={
-          <Select
-            options={warehouseOptions}
-            value={String(filters.warehouseId ?? '')}
-            onChange={(e) =>
-              onFiltersChange({ warehouseId: e.target.value ? Number(e.target.value) : undefined })
-            }
-            className="h-9 w-44 text-sm"
-          />
+            <Select
+              options={warehouseOptions}
+              value={String(filters.warehouseId ?? '')}
+              onChange={(e) =>
+                onFiltersChange({ warehouseId: e.target.value || undefined })
+              }
+              className="h-9 w-44 text-sm"
+            />
         }
         actions={
           <Button size="sm" onClick={onImportNew} leftIcon={<Download className="h-4 w-4" />}>

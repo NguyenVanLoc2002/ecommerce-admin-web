@@ -26,8 +26,8 @@ export function CategoryListPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | undefined>();
 
-  const debouncedKeyword = useDebounce(filters.keyword ?? '', 300);
-  const queryParams: CategoryListParams = { ...filters, keyword: debouncedKeyword || undefined };
+  const debouncedName = useDebounce(filters.name ?? '', 300);
+  const queryParams: CategoryListParams = { ...filters, name: debouncedName || undefined };
 
   const { data, isLoading, isError, refetch } = useCategories(queryParams);
   const createCategory = useCreateCategory();

@@ -42,12 +42,12 @@ export function ProductListPage() {
   const { data: brandsData } = useBrandOptions();
 
   const selectedIds = Object.entries(rowSelection)
-    .filter(([, v]) => v)
-    .map(([id]) => Number(id));
+    .filter(([, value]) => value)
+    .map(([id]) => id);
 
-  const brandOptions: MultiSelectOption[] = (brandsData?.items ?? []).map((b) => ({
-    value: b.id,
-    label: b.name,
+  const brandOptions: MultiSelectOption[] = (brandsData ?? []).map((brand) => ({
+    value: brand.id,
+    label: brand.name,
   }));
 
   const handleSortChange = (newSort: SortState) => {

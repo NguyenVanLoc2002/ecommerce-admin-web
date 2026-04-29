@@ -16,14 +16,14 @@ export function PromotionEditPage() {
   const navigate = useNavigate();
   const canWrite = usePermission('promotions', 'write');
   const isEditMode = id !== undefined;
-  const promotionId = id ? Number(id) : undefined;
+  const promotionId = id;
 
   const {
     data: promotion,
     isLoading,
     isError,
     refetch,
-  } = usePromotion(promotionId ?? 0);
+  } = usePromotion(promotionId ?? '');
 
   const handleSuccess = () => {
     navigate(routes.promotions.list);

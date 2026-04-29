@@ -3,7 +3,7 @@ import { queryKeys } from '@/constants/queryKeys';
 import { promotionService } from '../services/promotionService';
 import type { CreateRuleRequest } from '../types/promotion.types';
 
-export function useCreateRule(promotionId: number) {
+export function useCreateRule(promotionId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({

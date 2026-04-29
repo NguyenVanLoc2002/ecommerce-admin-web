@@ -3,7 +3,7 @@ import { queryKeys } from '@/constants/queryKeys';
 import { voucherService } from '../services/voucherService';
 import type { UpdateVoucherRequest } from '../types/voucher.types';
 
-export function useUpdateVoucher(id: number) {
+export function useUpdateVoucher(id: string) {
   const queryClient = useQueryClient();
 
   return useMutation({

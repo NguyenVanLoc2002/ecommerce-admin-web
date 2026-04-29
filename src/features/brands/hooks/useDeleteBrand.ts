@@ -6,7 +6,7 @@ export function useDeleteBrand() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: number) => brandService.remove(id),
+    mutationFn: (id: string) => brandService.remove(id),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.brands.lists() });
       void queryClient.invalidateQueries({ queryKey: ['catalog', 'brands'] });

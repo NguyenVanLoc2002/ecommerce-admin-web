@@ -1,33 +1,16 @@
-import type { PaginationParams } from '@/shared/types/api.types';
+import type { PaginationParams, EntityId } from '@/shared/types/api.types';
 import type { ProductStatus, VariantStatus } from '@/shared/types/enums';
 
 export interface ProductCategory {
-  id: number;
+  id: EntityId;
   name: string;
   slug: string;
 }
 
 export interface ProductBrand {
-  id: number;
+  id: EntityId;
   name: string;
   slug: string;
-}
-
-export interface Product {
-  id: number;
-  name: string;
-  slug: string;
-  brand: ProductBrand | null;
-  categories: ProductCategory[];
-  shortDescription: string | null;
-  description: string | null;
-  status: ProductStatus;
-  featured: boolean;
-  variantCount: number;
-  activeVariantCount: number;
-  thumbnailUrl: string | null;
-  createdAt: string;
-  updatedAt: string;
 }
 
 export interface VariantAttribute {
@@ -36,32 +19,67 @@ export interface VariantAttribute {
 }
 
 export interface ProductVariant {
-  id: number;
-  productId: number;
+  id: EntityId;
+  productId: EntityId;
   sku: string;
+  barcode: string | null;
   variantName: string;
   basePrice: number;
   salePrice: number | null;
+  compareAtPrice: number | null;
   weightGram: number | null;
   status: VariantStatus;
   attributes: VariantAttribute[];
+}
+
+export interface ProductMedia {
+  id: EntityId;
+  mediaUrl: string;
+  mediaType: string;
+  sortOrder: number;
+  primary: boolean;
+  variantId: EntityId | null;
+}
+
+export interface ProductListItem {
+  id: EntityId;
+  name: string;
+  slug: string;
+  shortDescription: string | null;
+  thumbnailUrl: string | null;
+  minPrice: number | null;
+  maxPrice: number | null;
+  status: ProductStatus;
+  featured: boolean;
+  brandName: string | null;
+  categoryNames: string[];
   createdAt: string;
+  variantCount: number;
+  activeVariantCount: number;
+}
+
+export interface Product extends ProductListItem {
+  description: string | null;
+  brand: ProductBrand | null;
+  categories: ProductCategory[];
+  variants: ProductVariant[];
+  media: ProductMedia[];
   updatedAt: string;
 }
 
 export interface ProductListParams extends PaginationParams {
   keyword?: string;
   status?: string;
-  categoryId?: number;
-  brandId?: number;
+  categoryId?: EntityId;
+  brandId?: EntityId;
   featured?: string;
 }
 
 export interface CreateProductRequest {
   name: string;
   slug: string;
-  brandId: number | null;
-  categoryIds: number[];
+  brandId: EntityId | null;
+  categoryIds: EntityId[];
   shortDescription: string;
   description: string;
   status: ProductStatus;
@@ -72,9 +90,11 @@ export type UpdateProductRequest = Partial<CreateProductRequest>;
 
 export interface CreateVariantRequest {
   sku: string;
+  barcode?: string | null;
   variantName: string;
   basePrice: number;
   salePrice: number | null;
+  compareAtPrice?: number | null;
   weightGram: number | null;
   status: VariantStatus;
   attributes: VariantAttribute[];
@@ -83,13 +103,13 @@ export interface CreateVariantRequest {
 export type UpdateVariantRequest = Partial<CreateVariantRequest>;
 
 export interface CategoryOption {
-  id: number;
+  id: EntityId;
   name: string;
   slug: string;
 }
 
 export interface BrandOption {
-  id: number;
+  id: EntityId;
   name: string;
   slug: string;
 }

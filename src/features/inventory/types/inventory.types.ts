@@ -1,10 +1,10 @@
-import type { PaginationParams } from '@/shared/types/api.types';
+import type { PaginationParams, EntityId } from '@/shared/types/api.types';
 import type { StockMovementType, EntityStatus } from '@/shared/types/enums';
 
 // ─── Warehouse ────────────────────────────────────────────────────────────────
 
 export interface Warehouse {
-  id: number;
+  id: EntityId;
   name: string;
   code: string;
   location: string | null;
@@ -33,13 +33,13 @@ export interface UpdateWarehouseRequest {
 // ─── Inventory Stock ──────────────────────────────────────────────────────────
 
 export interface InventoryStock {
-  id: number;
-  warehouseId: number;
+  id: EntityId;
+  warehouseId: EntityId;
   warehouseName: string;
-  variantId: number;
+  variantId: EntityId;
   sku: string;
   variantName: string;
-  productId: number;
+  productId: EntityId;
   productName: string;
   onHand: number;
   reserved: number;
@@ -49,12 +49,12 @@ export interface InventoryStock {
 
 export interface InventoryStockParams extends PaginationParams {
   keyword?: string;
-  warehouseId?: number;
+  warehouseId?: EntityId;
 }
 
 export interface AdjustStockRequest {
-  warehouseId: number;
-  variantId: number;
+  warehouseId: EntityId;
+  variantId: EntityId;
   quantity: number;
   movementType: StockMovementType;
   note: string;
@@ -63,24 +63,24 @@ export interface AdjustStockRequest {
 // ─── Stock Movement ───────────────────────────────────────────────────────────
 
 export interface StockMovement {
-  id: number;
-  warehouseId: number;
+  id: EntityId;
+  warehouseId: EntityId;
   warehouseName: string;
-  variantId: number;
+  variantId: EntityId;
   variantSku: string;
   variantName: string;
   type: StockMovementType;
   quantity: number;
   reason: string | null;
   note: string | null;
-  referenceId: number | null;
+  referenceId: EntityId | null;
   createdAt: string;
   createdBy: string;
 }
 
 export interface StockMovementParams extends PaginationParams {
-  variantId?: number;
-  warehouseId?: number;
+  variantId?: EntityId;
+  warehouseId?: EntityId;
   movementType?: string;
 }
 
@@ -95,13 +95,13 @@ export const ReservationStatus = {
 export type ReservationStatus = (typeof ReservationStatus)[keyof typeof ReservationStatus];
 
 export interface Reservation {
-  id: number;
-  orderId: number;
+  id: EntityId;
+  orderId: EntityId;
   orderCode: string;
-  variantId: number;
+  variantId: EntityId;
   variantSku: string;
   variantName: string;
-  warehouseId: number;
+  warehouseId: EntityId;
   warehouseName: string;
   quantity: number;
   status: ReservationStatus;
@@ -110,8 +110,8 @@ export interface Reservation {
 }
 
 export interface ReservationParams extends PaginationParams {
-  orderId?: number;
-  variantId?: number;
-  warehouseId?: number;
+  orderId?: EntityId;
+  variantId?: EntityId;
+  warehouseId?: EntityId;
   status?: string;
 }

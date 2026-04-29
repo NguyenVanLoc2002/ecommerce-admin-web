@@ -1,3 +1,5 @@
+import type { EntityKey } from '@/shared/types/api.types';
+
 // All route paths for the admin application.
 // Always use these constants — never hardcode path strings in components.
 
@@ -8,8 +10,8 @@ export const routes = {
   products: {
     list: '/products',
     create: '/products/new',
-    edit: (id: number | ':id') => `/products/${id}`,
-    variants: (id: number | ':id') => `/products/${id}/variants`,
+    edit: (id: EntityKey | ':id') => `/products/${id}`,
+    variants: (id: EntityKey | ':id') => `/products/${id}/variants`,
   },
 
   categories: {
@@ -28,36 +30,36 @@ export const routes = {
 
   orders: {
     list: '/orders',
-    detail: (id: number | ':id') => `/orders/${id}`,
+    detail: (id: EntityKey | ':id') => `/orders/${id}`,
   },
 
   payments: {
     list: '/payments',
-    detail: (id: number | ':id') => `/payments/${id}`,
+    detail: (id: EntityKey | ':id') => `/payments/${id}`,
   },
 
   shipments: {
     list: '/shipments',
     create: '/shipments/new',
-    detail: (id: number | ':id') => `/shipments/${id}`,
+    detail: (id: EntityKey | ':id') => `/shipments/${id}`,
   },
 
   invoices: {
     list: '/invoices',
-    detail: (id: number | ':id') => `/invoices/${id}`,
+    detail: (id: EntityKey | ':id') => `/invoices/${id}`,
   },
 
   promotions: {
     list: '/promotions',
     create: '/promotions/new',
-    edit: (id: number | ':id') => `/promotions/${id}`,
+    edit: (id: EntityKey | ':id') => `/promotions/${id}`,
   },
 
   vouchers: {
     list: '/vouchers',
     create: '/vouchers/new',
-    edit: (id: number | ':id') => `/vouchers/${id}`,
-    usages: (id: number | ':id') => `/vouchers/${id}/usages`,
+    edit: (id: EntityKey | ':id') => `/vouchers/${id}`,
+    usages: (id: EntityKey | ':id') => `/vouchers/${id}/usages`,
   },
 
   reviews: {

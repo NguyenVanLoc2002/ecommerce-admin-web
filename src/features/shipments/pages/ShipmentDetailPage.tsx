@@ -20,7 +20,7 @@ import type { UpdateStatusFormValues } from '../schemas/updateStatusSchema';
 export function ShipmentDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const shipmentId = Number(id);
+  const shipmentId = id ?? '';
   const [statusModalOpen, setStatusModalOpen] = useState(false);
 
   const { data: shipment, isLoading, isError, refetch } = useShipment(shipmentId);

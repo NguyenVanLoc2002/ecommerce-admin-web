@@ -6,7 +6,7 @@ export function useDeletePromotion() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: number) => promotionService.remove(id),
+    mutationFn: (id: string) => promotionService.remove(id),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.promotions.lists() });
     },

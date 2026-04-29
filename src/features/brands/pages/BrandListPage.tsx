@@ -26,8 +26,8 @@ export function BrandListPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [editingBrand, setEditingBrand] = useState<Brand | undefined>();
 
-  const debouncedKeyword = useDebounce(filters.keyword ?? '', 300);
-  const queryParams: BrandListParams = { ...filters, keyword: debouncedKeyword || undefined };
+  const debouncedName = useDebounce(filters.name ?? '', 300);
+  const queryParams: BrandListParams = { ...filters, name: debouncedName || undefined };
 
   const { data, isLoading, isError, refetch } = useBrands(queryParams);
   const createBrand = useCreateBrand();

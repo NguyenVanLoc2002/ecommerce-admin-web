@@ -27,7 +27,7 @@ const RULE_VALUE_HINTS: Record<string, string> = {
 };
 
 interface RuleFormModalProps {
-  promotionId: number;
+  promotionId: string;
   open: boolean;
   onClose: () => void;
 }

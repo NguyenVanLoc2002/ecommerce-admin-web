@@ -1,302 +1,135 @@
-# API Common — Shared Conventions
+# API Common
 
-> **Generated from source code on 2026-04-19. Do not edit manually — regenerate when code changes.**
+This file defines the shared API contract used by the current backend source code.
+
+Source of truth:
+- `src/main/java/com/locnguyen/ecommerce/common/constants/AppConstants.java`
+- `src/main/java/com/locnguyen/ecommerce/common/config/SecurityConfig.java`
+- `src/main/java/com/locnguyen/ecommerce/common/config/WebMvcConfig.java`
+- `src/main/java/com/locnguyen/ecommerce/common/response/*`
+- `src/main/java/com/locnguyen/ecommerce/common/exception/*`
+- `src/main/java/com/locnguyen/ecommerce/common/filter/RequestLoggingFilter.java`
 
 ---
 
 ## 1. Base URL
 
-```
-/api/v1
-```
-
-All endpoints are prefixed with `/api/v1`. Breaking changes require a new version (`/api/v2`).
-
-**Local dev:**
-```
-http://localhost:8080/api/v1
-```
-
-**Swagger UI:**
-```
-http://localhost:8080/swagger-ui.html
-```
+- Base path for all application APIs: `/api/v1`
+- Admin APIs live under: `/api/v1/admin/**`
+- Customer/public APIs live under: `/api/v1/**` outside the `/admin` prefix
 
 ---
 
-## 2. Authentication
+## 2. Authentication and authorization
 
-### Mechanism
-Bearer JWT — stateless. All protected endpoints require:
+### 2.1 Header
 
+Use a Bearer access token in the `Authorization` header:
+
+```http
+Authorization: Bearer <accessToken>
 ```
-Authorization: Bearer <access_token>
+
+### 2.2 JWT model
+
+- The API is stateless JWT only.
+- No session or cookie auth is used by the backend.
+- Login/register/refresh responses return:
+  - `accessToken`
+  - `refreshToken`
+  - `tokenType`
+  - `expiresIn`
+
+### 2.3 Role hierarchy
+
+The active role hierarchy is:
+
+```text
+SUPER_ADMIN > ADMIN > STAFF > CUSTOMER
 ```
 
-### Token Types
+A higher role inherits lower-role permissions in both URL security and `@PreAuthorize`.
 
-| Token | Lifetime (default) | Purpose |
-|---|---|---|
-| Access token | 1 hour (3 600 000 ms) | Authenticate every API request |
-| Refresh token | 7 days (604 800 000 ms) | Obtain a new token pair |
+### 2.4 Public routes from `SecurityConfig`
 
-- Access tokens carry `sub` (email) + `roles` claims.
-- Refresh tokens carry only `sub`. They cannot be used as access tokens (rejected at filter level).
-- After logout, the access token is added to a **Redis blacklist** with TTL = remaining lifetime. Blacklisted tokens are rejected by the filter.
+These routes are currently unauthenticated at the filter-chain level:
 
-### Token Lifecycle Flow
+- `POST /api/v1/auth/register`
+- `POST /api/v1/auth/login`
+- `POST /api/v1/auth/refresh-token`
+- `GET /api/v1/products/**`
+- `GET /api/v1/categories/**`
+- `GET /api/v1/brands/**`
+- `GET /swagger-ui/**`
+- `GET /swagger-ui.html`
+- `GET /v3/api-docs/**`
+- `GET /actuator/health`
+- `GET /actuator/info`
 
-```
-POST /auth/register  ──► { accessToken, refreshToken }
-POST /auth/login     ──► { accessToken, refreshToken }
+### 2.5 Protected route rules
 
-GET /protected       ──► Authorization: Bearer <accessToken>
+- `/api/v1/admin/**` requires `STAFF` or higher at the URL layer.
+- Some admin endpoints are further restricted by `@PreAuthorize`, for example:
+  - admin-only mutation routes
+  - audit log access
+  - user creation
+- All other routes require authentication unless explicitly whitelisted above.
 
-POST /auth/refresh-token  body: { refreshToken } ──► { accessToken, refreshToken }
+### 2.6 Important current-code note
 
-POST /auth/logout    ──► Authorization: Bearer <accessToken>  (blacklists access token)
-```
+`POST /api/v1/payments/callback` is described in its controller as a gateway callback, but it is **not** whitelisted in `SecurityConfig`. In the current backend source, it therefore requires authentication.
 
 ---
 
-## 3. Response Envelope
+## 3. Success response format
 
-### 3.1 Success Response
+All successful controller responses use `ApiResponse<T>`.
+
+### 3.1 Standard shape
 
 ```json
 {
   "success": true,
   "code": "SUCCESS",
   "message": "Request processed successfully",
-  "data": { },
-  "timestamp": "2026-04-06T10:00:00Z"
+  "data": {},
+  "timestamp": "2026-04-28T12:00:00Z"
 }
 ```
 
-| Field | Type | Description |
-|---|---|---|
-| `success` | boolean | Always `true` for success responses |
-| `code` | string | Always `"SUCCESS"` |
-| `message` | string | Human-readable description |
-| `data` | object \| array \| null | Response payload |
-| `timestamp` | string (ISO-8601) | Server timestamp in UTC |
+### 3.2 Fields
 
-### 3.2 Created Response (HTTP 201)
+- `success`: always `true`
+- `code`: always `SUCCESS`
+- `message`: factory-dependent success message
+- `data`: endpoint payload, list payload, paged payload, or `null`
+- `timestamp`: `Instant.now().toString()` in UTC
 
-Same structure as success, `message` = `"Created successfully"`.
+### 3.3 Success message variants used by code
 
-### 3.3 Empty Response (no data)
+- `ApiResponse.success(data)` -> `Request processed successfully`
+- `ApiResponse.success(message, data)` -> custom message
+- `ApiResponse.created(data)` -> `Created successfully`
+- `ApiResponse.noContent()` -> `Operation completed successfully`
 
-```json
-{
-  "success": true,
-  "code": "SUCCESS",
-  "message": "Operation completed successfully",
-  "data": null,
-  "timestamp": "2026-04-06T10:00:00Z"
-}
-```
+### 3.4 No-content convention
 
-### 3.4 Error Response
+Most delete/mark-all endpoints still return HTTP `200` with `ApiResponse<Void>` and `data: null`.
 
-```json
-{
-  "success": false,
-  "code": "VALIDATION_ERROR",
-  "message": "Validation failed",
-  "errors": [
-    { "field": "email", "message": "Email is invalid" }
-  ],
-  "timestamp": "2026-04-06T10:00:00Z",
-  "path": "/api/v1/auth/register"
-}
-```
+Two promotion delete endpoints are exceptions because the controller is annotated with `204 No Content`:
 
-| Field | Type | Present when |
-|---|---|---|
-| `success` | boolean | Always `false` |
-| `code` | string | Always present — see error codes below |
-| `message` | string | Human-readable error |
-| `errors` | array | Only for `VALIDATION_ERROR` (field-level errors) |
-| `errors[].field` | string | Field name that failed validation |
-| `errors[].message` | string | Validation message |
-| `timestamp` | string (ISO-8601) | Always |
-| `path` | string | Request path that caused the error |
+- `DELETE /api/v1/admin/promotions/{id}`
+- `DELETE /api/v1/admin/promotions/{id}/rules/{ruleId}`
+
+Clients should treat those responses as empty bodies.
 
 ---
 
-## 4. HTTP Status Codes
+## 4. Pagination format
 
-| Code | Meaning |
-|---|---|
-| `200 OK` | Success (GET, PATCH, POST non-create, DELETE) |
-| `201 Created` | Resource created |
-| `400 Bad Request` | Malformed request or missing required param |
-| `401 Unauthorized` | No/invalid/blacklisted access token |
-| `403 Forbidden` | Authenticated but insufficient role |
-| `404 Not Found` | Resource does not exist |
-| `409 Conflict` | Duplicate email, phone, SKU, etc. |
-| `422 Unprocessable Entity` | DTO validation failed OR business rule violation |
-| `500 Internal Server Error` | Unexpected server-side error |
+Paged endpoints return `ApiResponse<PagedResponse<T>>`.
 
----
-
-## 5. Error Codes Reference
-
-### General
-
-| Code | HTTP | Description |
-|---|---|---|
-| `SUCCESS` | 200 | Success |
-| `BAD_REQUEST` | 400 | Malformed or incomplete request |
-| `UNAUTHORIZED` | 401 | Not authenticated |
-| `FORBIDDEN` | 403 | Insufficient role/permission |
-| `NOT_FOUND` | 404 | Resource not found |
-| `VALIDATION_ERROR` | 422 | DTO validation failed |
-| `CONFLICT` | 409 | Data conflict |
-| `INTERNAL_SERVER_ERROR` | 500 | Unhandled server error |
-
-### Auth
-
-| Code | HTTP | Description |
-|---|---|---|
-| `INVALID_CREDENTIALS` | 401 | Wrong email or password |
-| `TOKEN_EXPIRED` | 401 | Access token has expired |
-| `TOKEN_INVALID` | 401 | Token is malformed or wrong type |
-| `TOKEN_BLACKLISTED` | 401 | Token was invalidated via logout |
-| `REFRESH_TOKEN_INVALID` | 401 | Refresh token is invalid or expired |
-| `ACCOUNT_DISABLED` | 403 | Account is disabled/locked |
-| `ACCOUNT_ALREADY_EXISTS` | 409 | Email already registered |
-
-### User / Customer
-
-| Code | HTTP | Description |
-|---|---|---|
-| `USER_NOT_FOUND` | 404 | User not found |
-| `CUSTOMER_NOT_FOUND` | 404 | Customer profile not found |
-| `EMAIL_ALREADY_EXISTS` | 409 | Email already registered |
-| `PHONE_ALREADY_EXISTS` | 409 | Phone number already registered |
-
-### Address
-
-| Code | HTTP | Description |
-|---|---|---|
-| `ADDRESS_NOT_FOUND` | 404 | Address not found or does not belong to user |
-
-### Catalog
-
-| Code | HTTP | Description |
-|---|---|---|
-| `CATEGORY_NOT_FOUND` | 404 | Category not found |
-| `BRAND_NOT_FOUND` | 404 | Brand not found |
-| `SLUG_ALREADY_EXISTS` | 409 | Slug already in use |
-
-### Product / Variant
-
-| Code | HTTP | Description |
-|---|---|---|
-| `PRODUCT_NOT_FOUND` | 404 | Product not found |
-| `PRODUCT_INACTIVE` | 422 | Product is not published |
-| `PRODUCT_VARIANT_NOT_FOUND` | 404 | Variant not found |
-| `PRODUCT_VARIANT_INACTIVE` | 422 | Variant is inactive |
-| `SKU_ALREADY_EXISTS` | 409 | SKU already in use |
-
-### Inventory
-
-| Code | HTTP | Description |
-|---|---|---|
-| `INVENTORY_NOT_FOUND` | 404 | Inventory record not found |
-| `INVENTORY_NOT_ENOUGH` | 422 | Not enough stock |
-| `VARIANT_OUT_OF_STOCK` | 422 | Variant is out of stock |
-| `STOCK_RESERVATION_FAILED` | 422 | Stock reservation failed |
-| `WAREHOUSE_NOT_FOUND` | 404 | Warehouse not found |
-
-### Cart
-
-| Code | HTTP | Description |
-|---|---|---|
-| `CART_NOT_FOUND` | 404 | Cart not found |
-| `CART_ITEM_NOT_FOUND` | 404 | Cart item not found |
-| `CART_ITEM_QUANTITY_INVALID` | 422 | Quantity must be > 0 |
-
-### Order
-
-| Code | HTTP | Description |
-|---|---|---|
-| `ORDER_NOT_FOUND` | 404 | Order not found |
-| `ORDER_STATUS_INVALID` | 422 | Invalid status transition |
-| `ORDER_CANNOT_CANCEL` | 422 | Order cannot be cancelled at this status |
-| `ORDER_CANNOT_COMPLETE` | 422 | Order cannot be completed at this status |
-| `ORDER_EMPTY` | 422 | Cart is empty |
-
-### Payment
-
-| Code | HTTP | Description |
-|---|---|---|
-| `PAYMENT_NOT_FOUND` | 404 | Payment not found |
-| `PAYMENT_FAILED` | 422 | Payment processing failed |
-| `PAYMENT_ALREADY_PROCESSED` | 409 | Payment already processed |
-| `PAYMENT_CALLBACK_INVALID` | 400 | Invalid gateway callback |
-
-### Promotion / Voucher
-
-| Code | HTTP | Description |
-|---|---|---|
-| `VOUCHER_NOT_FOUND` | 404 | Voucher not found |
-| `VOUCHER_INVALID` | 422 | Voucher is invalid |
-| `VOUCHER_EXPIRED` | 422 | Voucher has expired |
-| `VOUCHER_USAGE_LIMIT_EXCEEDED` | 422 | Global usage limit reached |
-| `VOUCHER_NOT_APPLICABLE` | 422 | Voucher not applicable to this order |
-| `VOUCHER_MIN_ORDER_NOT_MET` | 422 | Order amount below minimum |
-| `VOUCHER_CODE_ALREADY_EXISTS` | 409 | Voucher code already in use |
-| `VOUCHER_USER_LIMIT_EXCEEDED` | 422 | Per-user limit reached |
-| `PROMOTION_NOT_FOUND` | 404 | Promotion not found |
-| `PROMOTION_RULE_NOT_FOUND` | 404 | Promotion rule not found |
-
-### Shipment / Invoice
-
-| Code | HTTP | Description |
-|---|---|---|
-| `SHIPMENT_NOT_FOUND` | 404 | Shipment not found |
-| `SHIPMENT_ALREADY_EXISTS` | 409 | Shipment already exists for this order |
-| `SHIPMENT_STATUS_INVALID` | 422 | Invalid shipment status transition |
-| `INVOICE_NOT_FOUND` | 404 | Invoice not found |
-| `INVOICE_ALREADY_EXISTS` | 409 | Invoice already exists for this order |
-| `INVOICE_STATUS_INVALID` | 422 | Invalid invoice status transition |
-
-### Review / Notification
-
-| Code | HTTP | Description |
-|---|---|---|
-| `REVIEW_NOT_FOUND` | 404 | Review not found |
-| `REVIEW_NOT_ELIGIBLE` | 422 | Review only allowed for completed order items |
-| `REVIEW_ALREADY_EXISTS` | 409 | Already reviewed this product |
-| `REVIEW_ALREADY_MODERATED` | 409 | Review already moderated |
-| `NOTIFICATION_NOT_FOUND` | 404 | Notification not found |
-
----
-
-## 6. Pagination
-
-### Request Parameters
-
-| Param | Type | Default | Max | Description |
-|---|---|---|---|---|
-| `page` | integer | `0` | — | Zero-based page index |
-| `size` | integer | `20` | `100` | Items per page |
-| `sort` | string | `createdAt,desc` | — | `field,direction` |
-
-Example:
-```
-GET /api/v1/products?page=0&size=20&sort=createdAt,desc
-```
-
-Multiple sorts:
-```
-GET /api/v1/products?sort=price,asc&sort=createdAt,desc
-```
-
-### Paginated Response Structure
+### 4.1 Exact payload shape
 
 ```json
 {
@@ -307,271 +140,362 @@ GET /api/v1/products?sort=price,asc&sort=createdAt,desc
     "items": [],
     "page": 0,
     "size": 20,
-    "totalItems": 125,
-    "totalPages": 7,
+    "totalItems": 100,
+    "totalPages": 5,
     "hasNext": true,
     "hasPrevious": false
   },
-  "timestamp": "2026-04-06T10:00:00Z"
+  "timestamp": "2026-04-28T12:00:00Z"
 }
 ```
 
-| Field | Type | Description |
-|---|---|---|
-| `items` | array | Current page items |
-| `page` | integer | Current page (0-based) |
-| `size` | integer | Requested page size |
-| `totalItems` | long | Total matching records |
-| `totalPages` | integer | Total pages |
-| `hasNext` | boolean | More pages available |
-| `hasPrevious` | boolean | Previous pages available |
+### 4.2 PagedResponse fields
+
+- `items`
+- `page`
+- `size`
+- `totalItems`
+- `totalPages`
+- `hasNext`
+- `hasPrevious`
+
+The backend does **not** return a top-level `total` field.
 
 ---
 
-## 7. Date / Time Format
+## 5. Error response format
 
-- All timestamps use **ISO-8601 UTC**: `2026-04-06T10:00:00Z`
-- Date-only fields (birthDate, startDate, endDate): `2026-04-06`
-- **Do not** send or parse `06/04/2026` or `04-06-2026` formats.
+All structured errors use `ErrorResponse`.
 
----
-
-## 8. Enum Dictionaries
-
-### UserStatus
-| Value | Description |
-|---|---|
-| `ACTIVE` | Account is active |
-| `INACTIVE` | Account is deactivated |
-| `BANNED` | Account is banned |
-
-### RoleName
-| Value | Description |
-|---|---|
-| `SUPER_ADMIN` | Full system access |
-| `ADMIN` | Admin access (inherits STAFF + CUSTOMER) |
-| `STAFF` | Staff access (inherits CUSTOMER) |
-| `CUSTOMER` | Regular customer |
-
-**Role hierarchy (Spring Security):**
-```
-SUPER_ADMIN > ADMIN > STAFF > CUSTOMER
+```json
+{
+  "success": false,
+  "code": "VALIDATION_ERROR",
+  "message": "Validation failed",
+  "errors": [
+    {
+      "field": "email",
+      "message": "Email is required"
+    }
+  ],
+  "timestamp": "2026-04-28T12:00:00Z",
+  "path": "/api/v1/auth/register"
+}
 ```
 
-### Gender
-| Value | Description |
-|---|---|
-| `MALE` | Male |
-| `FEMALE` | Female |
-| `OTHER` | Other |
+### 5.1 Fields
 
-### AddressType
-| Value | Description |
-|---|---|
-| `SHIPPING` | Delivery address |
-| `BILLING` | Billing address |
+- `success`: always `false`
+- `code`: stable machine-readable error code
+- `message`: user-facing error message
+- `errors`: optional field-level validation list
+- `timestamp`: UTC ISO-8601 string
+- `path`: request URI
 
-### ProductStatus
-| Value | Description |
-|---|---|
-| `DRAFT` | Not visible to public |
-| `PUBLISHED` | Visible and purchasable |
-| `ARCHIVED` | No longer sold, hidden from storefront |
+### 5.2 Validation errors
 
-### ProductVariantStatus
-| Value | Description |
-|---|---|
-| `ACTIVE` | Available for purchase |
-| `INACTIVE` | Unavailable |
+Validation failures from `@Valid` and `@Validated` return:
 
-### CategoryStatus / BrandStatus
-| Value | Description |
-|---|---|
-| `ACTIVE` | Visible |
-| `INACTIVE` | Hidden |
-
-### MediaType
-| Value | Description |
-|---|---|
-| `IMAGE` | Product image |
-| `VIDEO` | Product video |
-
-### AttributeType
-| Value | Description |
-|---|---|
-| `COLOR` | Color attribute |
-| `SIZE` | Size attribute |
-| `MATERIAL` | Material attribute |
-
-### OrderStatus (state machine)
-| Value | Transitions to | Description |
-|---|---|---|
-| `PENDING` | `AWAITING_PAYMENT`, `CANCELLED` | Just created |
-| `AWAITING_PAYMENT` | `CONFIRMED`, `CANCELLED` | Waiting for payment |
-| `CONFIRMED` | `PROCESSING`, `CANCELLED` | Payment confirmed |
-| `PROCESSING` | `SHIPPED` | Being picked/packed |
-| `SHIPPED` | `DELIVERED` | Handed to carrier |
-| `DELIVERED` | `COMPLETED` | Delivered to customer |
-| `COMPLETED` | `REFUNDED` | Order fulfilled |
-| `CANCELLED` | _(terminal)_ | Cancelled |
-| `REFUNDED` | _(terminal)_ | Refunded |
-
-### PaymentMethod
-| Value | Description |
-|---|---|
-| `COD` | Cash on delivery |
-| `ONLINE` | Online gateway payment |
-
-### PaymentStatus (on Order)
-| Value | Description |
-|---|---|
-| `PENDING` | Not yet paid |
-| `PAID` | Payment confirmed |
-| `FAILED` | Payment failed |
-| `REFUNDED` | Refunded |
-
-### PaymentRecordStatus (on Payment entity)
-| Value | Description |
-|---|---|
-| `PENDING` | Created, not initiated |
-| `INITIATED` | Gateway request sent |
-| `PAID` | Payment received |
-| `FAILED` | Payment failed |
-| `REFUNDED` | Full refund |
-| `PARTIALLY_REFUNDED` | Partial refund |
-
-### ShipmentStatus (state machine)
-| Value | Transitions to | Description |
-|---|---|---|
-| `PENDING` | `IN_TRANSIT`, `FAILED` | Awaiting carrier pickup |
-| `IN_TRANSIT` | `OUT_FOR_DELIVERY`, `FAILED` | With carrier |
-| `OUT_FOR_DELIVERY` | `DELIVERED`, `FAILED` | Final delivery attempt |
-| `DELIVERED` | _(terminal)_ | Delivered |
-| `FAILED` | `RETURNED` | Delivery failed |
-| `RETURNED` | _(terminal)_ | Returned to sender |
-
-### InvoiceStatus (state machine)
-| Value | Transitions to | Description |
-|---|---|---|
-| `ISSUED` | `PAID`, `VOIDED` | Issued to customer |
-| `PAID` | _(terminal)_ | Payment confirmed |
-| `VOIDED` | _(terminal)_ | Cancelled |
-
-### StockMovementType
-| Value | Description |
-|---|---|
-| `IMPORT` | Receive goods from supplier |
-| `EXPORT` | Write-off / remove stock |
-| `ADJUSTMENT` | Manual correction |
-| `RETURN` | Customer return |
-
-### WarehouseStatus
-| Value | Description |
-|---|---|
-| `ACTIVE` | Operational |
-| `INACTIVE` | Not in use |
-
-### DiscountType
-| Value | Description |
-|---|---|
-| `PERCENTAGE` | Percentage off (e.g., 20 = 20%) |
-| `FIXED_AMOUNT` | Fixed amount off (e.g., 50000 VND) |
-
-### PromotionScope
-| Value | Description |
-|---|---|
-| `ALL` | Applies to all products |
-| `CATEGORY` | Applies to specific categories |
-| `BRAND` | Applies to specific brands |
-| `PRODUCT` | Applies to specific products |
-
-### ReviewStatus
-| Value | Description |
-|---|---|
-| `PENDING` | Awaiting moderation |
-| `APPROVED` | Visible on product page |
-| `REJECTED` | Hidden, customer notified |
-
-### NotificationType
-| Value | Description |
-|---|---|
-| `ORDER_PLACED` | Order created |
-| `ORDER_CONFIRMED` | Order confirmed |
-| `ORDER_CANCELLED` | Order cancelled |
-| `ORDER_SHIPPED` | Order shipped |
-| `ORDER_DELIVERED` | Order delivered |
-| `ORDER_COMPLETED` | Order completed |
-| `REVIEW_SUBMITTED` | Review submitted |
-| `REVIEW_APPROVED` | Review approved |
-| `REVIEW_REJECTED` | Review rejected |
-| `PAYMENT_RECEIVED` | Payment received |
-| `PAYMENT_FAILED` | Payment failed |
-| `VOUCHER_RECEIVED` | Voucher received |
-| `SYSTEM` | System notification |
+- HTTP status: `422 Unprocessable Entity`
+- `code`: `VALIDATION_ERROR`
+- `message`: `Validation failed`
+- `errors`: array of `{ field, message }`
 
 ---
 
-## 9. Validation Rules (Common)
+## 6. HTTP status conventions
 
-- Email: valid format, max 255 chars
-- Password: 8–64 chars, must contain at least 1 uppercase, 1 lowercase, 1 digit
-- Phone: Vietnamese phone format (`@PhoneNumber` custom validator)
-- Names: max 100 chars
-- Text fields: size limits enforced per DTO (see individual endpoint docs)
-- Monetary values: `DECIMAL(18,2)` — use `BigDecimal` with 2 decimal places
-- Quantity: minimum 1 where applicable
+Current backend mappings:
 
-Validation errors return HTTP 422 with `code: "VALIDATION_ERROR"` and a field-level `errors` array.
-
----
-
-## 10. File Upload Convention
-
-> **NOT IMPLEMENTED YET** — no file upload endpoints exist in current code.
-
-When implemented, will use `multipart/form-data`.
-
----
-
-## 11. Role / Permission Matrix Summary
-
-| Endpoint Group | PUBLIC | CUSTOMER | STAFF | ADMIN | SUPER_ADMIN |
-|---|:---:|:---:|:---:|:---:|:---:|
-| auth/register, login, refresh | ✓ | ✓ | ✓ | ✓ | ✓ |
-| auth/logout | — | ✓ | ✓ | ✓ | ✓ |
-| GET products, categories, brands | ✓ | ✓ | ✓ | ✓ | ✓ |
-| GET reviews/product/* | ✓ | ✓ | ✓ | ✓ | ✓ |
-| /me, /addresses | — | ✓ | — | — | — |
-| /cart, /orders, /payments (customer) | — | ✓ | — | — | — |
-| /vouchers/validate | — | ✓ | — | — | — |
-| /reviews (create/my) | — | ✓ | — | — | — |
-| /notifications | — | ✓ | — | — | — |
-| /shipments/order/* (customer) | — | ✓ | — | — | — |
-| /invoices/order/* (customer) | — | ✓ | — | — | — |
-| admin/* (read) | — | — | ✓ | ✓ | ✓ |
-| admin/* (create/update) | — | — | — | ✓ | ✓ |
-| admin/* (destructive/cancel) | — | — | — | ✓ | ✓ |
-| admin/users (create) | — | — | — | ✓ | ✓ |
-| /reviews/pending, moderate | — | — | ✓ | ✓ | ✓ |
-| payment/callback | ✓ | ✓ | ✓ | ✓ | ✓ |
+- `200 OK`
+  - successful reads
+  - successful updates
+  - many successful create actions without `@ResponseStatus(CREATED)`
+  - no-content helper responses that still return a body
+- `201 Created`
+  - only endpoints explicitly annotated with `@ResponseStatus(HttpStatus.CREATED)`
+- `204 No Content`
+  - only the two admin promotion delete endpoints noted above
+- `400 Bad Request`
+  - malformed JSON
+  - missing required request parameter
+  - query/path type mismatch
+  - unsupported enum text in query/path binding
+  - business rules that throw `AppException(ErrorCode.BAD_REQUEST, ...)`
+- `401 Unauthorized`
+  - missing/invalid token at filter-chain level
+  - auth business errors such as invalid credentials or invalid token
+- `403 Forbidden`
+  - authenticated but not authorized
+- `404 Not Found`
+  - missing resources
+  - ownership-protected lookups that intentionally mask foreign resources
+- `405 Method Not Allowed`
+- `409 Conflict`
+  - uniqueness and already-processed conflicts
+- `415 Unsupported Media Type`
+- `422 Unprocessable Entity`
+  - bean validation failures
+  - business rule violations mapped to 422 error codes
+- `500 Internal Server Error`
+  - uncaught exceptions
 
 ---
 
-## 12. Missing / Not Yet Implemented
+## 7. Error code catalogue
 
-The following features are referenced in CLAUDE.md or domain design but **do not have API endpoints in the current codebase**:
+The current `ErrorCode` enum defines these domain codes.
 
-| Feature | Status |
-|---|---|
-| Forgot password / Reset password | NOT IMPLEMENTED |
-| Change password | NOT IMPLEMENTED |
-| Wishlist | NOT IMPLEMENTED |
-| Admin customer management (list/get/disable customers) | NOT IMPLEMENTED |
-| Product media management (upload/delete images) | NOT IMPLEMENTED |
-| Product attribute management (CRUD) | NOT IMPLEMENTED |
-| Admin user list / get / disable | NOT IMPLEMENTED (only create exists) |
-| Refund API | NOT IMPLEMENTED |
-| Dashboard / reports | NOT IMPLEMENTED |
-| CMS / banners | NOT IMPLEMENTED |
-| Loyalty points | NOT IMPLEMENTED |
-| Recommendation engine | NOT IMPLEMENTED |
+### 7.1 General
+
+- `BAD_REQUEST`
+- `UNAUTHORIZED`
+- `FORBIDDEN`
+- `NOT_FOUND`
+- `VALIDATION_ERROR`
+- `CONFLICT`
+- `INTERNAL_SERVER_ERROR`
+
+### 7.2 Auth
+
+- `INVALID_CREDENTIALS`
+- `TOKEN_EXPIRED`
+- `TOKEN_INVALID`
+- `REFRESH_TOKEN_INVALID`
+- `TOKEN_BLACKLISTED`
+- `ACCOUNT_DISABLED`
+- `ACCOUNT_ALREADY_EXISTS`
+
+### 7.3 User and customer
+
+- `USER_NOT_FOUND`
+- `CUSTOMER_NOT_FOUND`
+- `EMAIL_ALREADY_EXISTS`
+- `PHONE_ALREADY_EXISTS`
+
+### 7.4 Address
+
+- `ADDRESS_NOT_FOUND`
+
+### 7.5 Catalog
+
+- `CATEGORY_NOT_FOUND`
+- `BRAND_NOT_FOUND`
+- `SLUG_ALREADY_EXISTS`
+- `PRODUCT_NOT_FOUND`
+- `PRODUCT_INACTIVE`
+- `PRODUCT_VARIANT_NOT_FOUND`
+- `PRODUCT_VARIANT_INACTIVE`
+- `SKU_ALREADY_EXISTS`
+
+### 7.6 Inventory
+
+- `INVENTORY_NOT_FOUND`
+- `INVENTORY_NOT_ENOUGH`
+- `VARIANT_OUT_OF_STOCK`
+- `STOCK_RESERVATION_FAILED`
+- `WAREHOUSE_NOT_FOUND`
+
+### 7.7 Cart
+
+- `CART_NOT_FOUND`
+- `CART_ITEM_NOT_FOUND`
+- `CART_ITEM_QUANTITY_INVALID`
+
+### 7.8 Order
+
+- `ORDER_NOT_FOUND`
+- `ORDER_STATUS_INVALID`
+- `ORDER_CANNOT_CANCEL`
+- `ORDER_CANNOT_COMPLETE`
+- `ORDER_EMPTY`
+
+### 7.9 Payment
+
+- `PAYMENT_NOT_FOUND`
+- `PAYMENT_FAILED`
+- `PAYMENT_ALREADY_PROCESSED`
+- `PAYMENT_CALLBACK_INVALID`
+
+### 7.10 Promotion and voucher
+
+- `VOUCHER_NOT_FOUND`
+- `VOUCHER_INVALID`
+- `VOUCHER_EXPIRED`
+- `VOUCHER_USAGE_LIMIT_EXCEEDED`
+- `VOUCHER_NOT_APPLICABLE`
+- `VOUCHER_MIN_ORDER_NOT_MET`
+- `VOUCHER_CODE_ALREADY_EXISTS`
+- `VOUCHER_USER_LIMIT_EXCEEDED`
+- `PROMOTION_NOT_FOUND`
+- `PROMOTION_RULE_NOT_FOUND`
+
+### 7.11 Shipment and invoice
+
+- `SHIPMENT_NOT_FOUND`
+- `SHIPMENT_ALREADY_EXISTS`
+- `SHIPMENT_STATUS_INVALID`
+- `INVOICE_NOT_FOUND`
+- `INVOICE_ALREADY_EXISTS`
+- `INVOICE_STATUS_INVALID`
+
+### 7.12 Review
+
+- `REVIEW_NOT_FOUND`
+- `REVIEW_NOT_ELIGIBLE`
+- `REVIEW_ALREADY_EXISTS`
+- `REVIEW_ALREADY_MODERATED`
+
+### 7.13 Notification
+
+- `NOTIFICATION_NOT_FOUND`
+
+---
+
+## 8. Query parameter conventions
+
+### 8.1 Pagination and sorting
+
+Most pageable endpoints use Spring Data `Pageable` binding:
+
+- `page`
+- `size`
+- `sort`
+
+Examples:
+
+- `?page=0&size=20`
+- `?sort=createdAt,desc`
+- `?sort=createdAt,desc&sort=id,asc`
+
+### 8.2 Defaults
+
+- `page` is zero-based
+- When an endpoint uses `@PageableDefault`, the default size is usually `20`
+- `AppConstants.DEFAULT_PAGE_SIZE = 20`
+- Some endpoints also define default sort fields in `@PageableDefault`
+
+### 8.3 Direction parameter
+
+`direction` is **not** a global query parameter. It is explicitly exposed only by:
+
+- `GET /api/v1/admin/reviews`
+
+That endpoint uses:
+
+- `page`
+- `size`
+- `sort`
+- `direction`
+
+All other pageable routes use Spring `sort=field,direction`.
+
+### 8.4 No universal controller clamp
+
+The codebase contains `PaginationUtils` and `MAX_PAGE_SIZE = 100`, but current controllers bind `Pageable` directly. There is no shared controller-layer clamp applied across all endpoints.
+
+---
+
+## 9. Enum handling
+
+Enum values are string-based in both requests and responses.
+
+### 9.1 Query/path binding
+
+`WebMvcConfig` installs a case-insensitive `String -> Enum` converter for:
+
+- `@RequestParam`
+- `@ModelAttribute`
+- `@PathVariable`
+
+Examples:
+
+- `?status=ACTIVE`
+- `?status=active`
+- `?status=Active`
+
+All bind to the same enum value.
+
+Unknown enum text in query/path binding results in `400 Bad Request`.
+
+### 9.2 JSON body binding
+
+`spring.jackson.mapper.accept-case-insensitive-enums=true` is enabled.
+
+Examples:
+
+- `"status": "active"`
+- `"status": "ACTIVE"`
+
+Both are accepted for JSON enums.
+
+### 9.3 Response format
+
+Enum values are returned as strings. Some DTOs expose enum-typed fields directly; others map enums to string fields in response DTOs.
+
+---
+
+## 10. Naming and data conventions
+
+- All entity IDs exposed by the API are UUIDs.
+- Business codes such as `orderCode`, `paymentCode`, `invoiceCode`, and `shipmentCode` are strings.
+- `LocalDate` fields are serialized as `yyyy-MM-dd`.
+- `LocalDateTime` and `Instant` values are serialized as ISO-8601 date-time strings.
+- Money fields are JSON numbers backed by `BigDecimal`.
+- Boolean flags use normal JSON booleans.
+
+---
+
+## 11. Validation conventions
+
+Current code uses Jakarta Bean Validation on request DTOs.
+
+Common rules used across the API:
+
+- `@NotBlank`
+- `@NotNull`
+- `@NotEmpty`
+- `@Size`
+- `@Email`
+- `@Pattern`
+- `@Min`
+- `@Max`
+- `@Positive`
+- `@DecimalMin`
+- `@Digits`
+
+### 11.1 Phone number validation
+
+Fields annotated with `@PhoneNumber` accept:
+
+- `0xxxxxxxxx`
+- `+84xxxxxxxxx`
+
+The current validator regex is:
+
+```text
+^(0|\+84)[3-9][0-9]{8}$
+```
+
+Blank/null values pass `@PhoneNumber` itself and must be paired with `@NotBlank` when the field is required.
+
+---
+
+## 12. Request tracing
+
+`RequestLoggingFilter` manages `X-Request-ID`.
+
+- If the client sends `X-Request-ID`, the server reuses it.
+- Otherwise the server generates a UUID.
+- The response echoes `X-Request-ID`.
+- The same ID is also used in request logging and audit logging.
+
+---
+
+## 13. Media type
+
+The API expects JSON request bodies for body-based endpoints.
+
+- Use `Content-Type: application/json`
+- Unsupported body content types return `415 Unsupported Media Type`
+

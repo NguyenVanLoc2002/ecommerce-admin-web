@@ -46,7 +46,7 @@ export function ProductFiltersDrawer({
   const handleApply = () => {
     onApply({
       status: localStatus.length > 0 ? localStatus.join(',') : undefined,
-      brandId: localBrandId ? Number(localBrandId) : undefined,
+      brandId: localBrandId || undefined,
       featured: localFeatured || undefined,
       page: 0,
     });

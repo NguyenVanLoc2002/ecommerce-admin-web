@@ -14,7 +14,7 @@ import { VariantPanel } from '../components/VariantPanel';
 export function ProductVariantsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const productId = Number(id);
+  const productId = id ?? '';
 
   const { data: product, isLoading, isError, error, refetch } = useProduct(productId);
 

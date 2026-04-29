@@ -13,7 +13,7 @@ import { useVoucher } from '../hooks/useVoucher';
 import { VoucherForm } from '../components/VoucherForm';
 
 interface PromotionOption {
-  id: number;
+  id: string;
   name: string;
 }
 
@@ -21,7 +21,7 @@ export function VoucherEditPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const isEditMode = id !== undefined;
-  const voucherId = id ? Number(id) : 0;
+  const voucherId = id;
 
   const {
     data: voucher,

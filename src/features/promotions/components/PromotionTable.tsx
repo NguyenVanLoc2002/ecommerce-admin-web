@@ -130,7 +130,7 @@ export function PromotionTable({
           row.original.active ? (
             <Badge variant="success">Active</Badge>
           ) : (
-            <Badge variant="neutral">Inactive</Badge>
+            <Badge variant="default">Inactive</Badge>
           ),
       },
       {

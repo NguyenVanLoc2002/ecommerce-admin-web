@@ -15,9 +15,9 @@ const MOVEMENT_TYPE_OPTIONS = [
 ];
 
 interface AdjustStockContext {
-  warehouseId?: number;
+  warehouseId?: string;
   warehouseName?: string;
-  variantId?: number;
+  variantId?: string;
   variantSku?: string;
   variantName?: string;
 }
@@ -41,30 +41,33 @@ export function AdjustStockModal({
 }: AdjustStockModalProps) {
   const hasContext = context?.warehouseId !== undefined && context?.variantId !== undefined;
 
-  const warehouseOptions = warehouses.map((w) => ({ value: String(w.id), label: w.name }));
+  const warehouseOptions = warehouses.map((warehouse) => ({
+    value: warehouse.id,
+    label: warehouse.name,
+  }));
 
   const form = useForm<AdjustStockFormValues>({
     resolver: zodResolver(adjustStockSchema),
     defaultValues: {
-      warehouseId: 0,
-      variantId: 0,
+      warehouseId: '',
+      variantId: '',
       quantity: undefined as unknown as number,
-      movementType: 'ADJUSTMENT' as const,
+      movementType: 'ADJUSTMENT',
       note: '',
     },
   });
 
   useEffect(() => {
-    if (open) {
-      form.reset({
-        warehouseId: context?.warehouseId ?? (0 as unknown as number),
-        variantId: context?.variantId ?? (0 as unknown as number),
-        quantity: undefined as unknown as number,
-        movementType: 'ADJUSTMENT',
-        note: '',
-      });
-    }
-  }, [open, context, form]);
+    if (!open) return;
+
+    form.reset({
+      warehouseId: context?.warehouseId ?? '',
+      variantId: context?.variantId ?? '',
+      quantity: undefined as unknown as number,
+      movementType: 'ADJUSTMENT',
+      note: '',
+    });
+  }, [context, form, open]);
 
   return (
     <Modal
@@ -80,7 +83,7 @@ export function AdjustStockModal({
             Cancel
           </Button>
           <Button type="submit" form="adjust-stock-form" isLoading={isSubmitting}>
-            {isSubmitting ? 'Applying…' : 'Apply adjustment'}
+            {isSubmitting ? 'Applying...' : 'Apply adjustment'}
           </Button>
         </>
       }
@@ -90,7 +93,7 @@ export function AdjustStockModal({
           <div className="space-y-4">
             {hasContext ? (
               <>
-                <div className="rounded-md bg-gray-50 px-4 py-3 text-sm space-y-1">
+                <div className="space-y-1 rounded-md bg-gray-50 px-4 py-3 text-sm">
                   <p className="text-gray-500">
                     Warehouse:{' '}
                     <span className="font-medium text-gray-800">{context?.warehouseName}</span>
@@ -98,7 +101,7 @@ export function AdjustStockModal({
                   <p className="text-gray-500">
                     Variant:{' '}
                     <span className="font-medium text-gray-800">
-                      {context?.variantSku} — {context?.variantName}
+                      {context?.variantSku} - {context?.variantName}
                     </span>
                   </p>
                 </div>
@@ -111,16 +114,15 @@ export function AdjustStockModal({
                   name="warehouseId"
                   label="Warehouse"
                   required
-                  options={[{ value: '0', label: 'Select warehouse…' }, ...warehouseOptions]}
+                  options={[{ value: '', label: 'Select warehouse...' }, ...warehouseOptions]}
                   disabled={isSubmitting}
                 />
                 <FormField
                   name="variantId"
                   label="Variant ID"
                   required
-                  type="number"
-                  placeholder="Enter variant ID"
-                  hint="Find the variant ID on the Product Variants page."
+                  placeholder="Enter variant UUID"
+                  hint="Find the variant UUID on the Product Variants page."
                   disabled={isSubmitting}
                 />
               </>
@@ -147,7 +149,7 @@ export function AdjustStockModal({
               label="Note"
               multiline
               rows={2}
-              placeholder="Optional note…"
+              placeholder="Optional note..."
               disabled={isSubmitting}
             />
           </div>

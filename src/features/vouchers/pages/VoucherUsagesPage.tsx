@@ -17,7 +17,7 @@ import { VoucherUsageTable } from '../components/VoucherUsageTable';
 export function VoucherUsagesPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const voucherId = id ? Number(id) : 0;
+  const voucherId = id;
 
   const [page, setPage] = useState(0);
   const [size] = useState(20);
@@ -96,7 +96,7 @@ export function VoucherUsagesPage() {
                   {voucher.active ? (
                     <Badge variant="success">Active</Badge>
                   ) : (
-                    <Badge variant="neutral">Inactive</Badge>
+                    <Badge variant="default">Inactive</Badge>
                   )}
                 </div>
               </div>

@@ -1,16 +1,16 @@
-import type { PaginationParams } from '@/shared/types/api.types';
+import type { PaginationParams, EntityId } from '@/shared/types/api.types';
 import type { PaymentMethod, PaymentStatus } from '@/shared/types/enums';
 
 export interface PaymentCustomer {
-  id: number;
+  id: EntityId;
   fullName: string;
   email: string;
   phone: string;
 }
 
 export interface PaymentSummary {
-  id: number;
-  orderId: number;
+  id: EntityId;
+  orderId: EntityId;
   orderCode: string;
   customer: PaymentCustomer;
   method: PaymentMethod;
@@ -23,8 +23,8 @@ export interface PaymentSummary {
 }
 
 export interface Payment {
-  id: number;
-  orderId: number;
+  id: EntityId;
+  orderId: EntityId;
   orderCode: string;
   customer: PaymentCustomer;
   method: PaymentMethod;
@@ -38,8 +38,8 @@ export interface Payment {
 }
 
 export interface PaymentTransaction {
-  id: number;
-  paymentId: number;
+  id: EntityId;
+  paymentId: EntityId;
   type: string;
   amount: number;
   status: string;

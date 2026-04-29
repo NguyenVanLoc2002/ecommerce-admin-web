@@ -3,7 +3,7 @@ import { queryKeys } from '@/constants/queryKeys';
 import { orderService } from '../services/orderService';
 import type { OrderAction } from '../types/order.types';
 
-export function useOrderAction(orderId: number) {
+export function useOrderAction(orderId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({

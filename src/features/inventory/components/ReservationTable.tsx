@@ -141,7 +141,7 @@ export function ReservationTable({
               value={String(filters.warehouseId ?? '')}
               onChange={(e) =>
                 onFiltersChange({
-                  warehouseId: e.target.value ? Number(e.target.value) : undefined,
+                  warehouseId: e.target.value || undefined,
                 })
               }
               className="h-9 w-44 text-sm"

@@ -6,7 +6,7 @@ import { useBeforeUnload } from '@/shared/hooks/useBeforeUnload';
 import { createShipmentSchema, type CreateShipmentFormValues } from '../schemas/createShipmentSchema';
 
 const DEFAULT_VALUES: CreateShipmentFormValues = {
-  orderId: 0,
+  orderId: '',
   carrier: null,
   trackingNumber: null,
   estimatedDeliveryDate: null,
@@ -41,9 +41,8 @@ export function CreateShipmentForm({
               name="orderId"
               label="Order ID"
               required
-              type="number"
-              placeholder="e.g. 1042"
-              hint="Enter the numeric ID of the order to ship."
+              placeholder="Enter order UUID"
+              hint="Enter the UUID of the order to ship."
             />
           </div>
 
@@ -74,13 +73,13 @@ export function CreateShipmentForm({
             <FormField
               name="notes"
               label="Notes"
-              placeholder="Internal notes about this shipment…"
+              placeholder="Internal notes about this shipment..."
               multiline
               rows={3}
             />
           </div>
 
-          <div className="border-t border-gray-100 pt-4 flex justify-end gap-3">
+          <div className="flex justify-end gap-3 border-t border-gray-100 pt-4">
             <Button
               type="button"
               variant="secondary"
@@ -90,7 +89,7 @@ export function CreateShipmentForm({
               Cancel
             </Button>
             <Button type="submit" isLoading={isSubmitting}>
-              {isSubmitting ? 'Creating…' : 'Create Shipment'}
+              {isSubmitting ? 'Creating...' : 'Create Shipment'}
             </Button>
           </div>
         </div>

@@ -160,8 +160,8 @@ export function BrandTable({
   return (
     <div className="space-y-4">
       <TableToolbar
-        searchValue={filters.keyword ?? ''}
-        onSearchChange={(keyword) => onFiltersChange({ keyword: keyword || undefined })}
+        searchValue={filters.name ?? ''}
+        onSearchChange={(name) => onFiltersChange({ name: name || undefined })}
         searchPlaceholder="Search brands…"
         filters={
           <Select

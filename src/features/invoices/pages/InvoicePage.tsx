@@ -20,7 +20,7 @@ import { VoidInvoiceModal } from '../components/VoidInvoiceModal';
 export function InvoicePage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const invoiceId = Number(id);
+  const invoiceId = id ?? '';
   const { confirm } = useConfirmDialog();
   const [voidModalOpen, setVoidModalOpen] = useState(false);
 

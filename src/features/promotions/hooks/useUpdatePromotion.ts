@@ -3,7 +3,7 @@ import { queryKeys } from '@/constants/queryKeys';
 import { promotionService } from '../services/promotionService';
 import type { UpdatePromotionRequest } from '../types/promotion.types';
 
-export function useUpdatePromotion(id: number) {
+export function useUpdatePromotion(id: string) {
   const queryClient = useQueryClient();
 
   return useMutation({

@@ -1,10 +1,26 @@
+import type { EntityId } from '@/shared/types/api.types';
 import type { InvoiceStatus } from '@/shared/types/enums';
 
 export type { InvoiceStatus };
 
+export interface InvoiceSummary {
+  id: EntityId;
+  invoiceCode: string;
+  orderId: EntityId;
+  orderCode: string;
+  status: InvoiceStatus;
+  issuedAt: string;
+  paidAt: string | null;
+  totalAmount: number;
+  receiverName: string;
+  receiverPhone: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface InvoiceLineItem {
-  id: number;
-  variantId: number;
+  id: EntityId;
+  variantId: EntityId;
   productName: string;
   variantName: string;
   sku: string;
@@ -15,9 +31,9 @@ export interface InvoiceLineItem {
 }
 
 export interface Invoice {
-  id: number;
+  id: EntityId;
   invoiceCode: string;
-  orderId: number;
+  orderId: EntityId;
   orderCode: string;
   status: InvoiceStatus;
   issuedAt: string;

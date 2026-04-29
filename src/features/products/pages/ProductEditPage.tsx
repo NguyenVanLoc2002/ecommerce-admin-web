@@ -21,16 +21,13 @@ export function ProductEditPage() {
   const navigate = useNavigate();
 
   const isEditMode = id !== undefined;
-  const productId = isEditMode ? Number(id) : 0;
+  const productId = isEditMode ? id : undefined;
 
   const { data: product, isLoading, isError, error, refetch } = useProduct(productId);
   const createProduct = useCreateProduct();
   const updateProduct = useUpdateProduct(productId);
-  const { data: categoriesData } = useCategoryOptions();
-  const { data: brandsData } = useBrandOptions();
-
-  const brands = brandsData?.items ?? [];
-  const categories = categoriesData?.items ?? [];
+  const { data: categories = [] } = useCategoryOptions();
+  const { data: brands = [] } = useBrandOptions();
 
   const isSubmitting = createProduct.isPending || updateProduct.isPending;
 
@@ -72,10 +69,7 @@ export function ProductEditPage() {
   };
 
   const isNotFound =
-    isEditMode &&
-    isError &&
-    error instanceof AppError &&
-    error.code === 'PRODUCT_NOT_FOUND';
+    isEditMode && isError && error instanceof AppError && error.code === 'PRODUCT_NOT_FOUND';
 
   if (isEditMode && isLoading) {
     return (
@@ -108,7 +102,10 @@ export function ProductEditPage() {
   }
 
   const showNoVariantsWarning =
-    isEditMode && ((product?.activeVariantCount ?? 0) === 0);
+    isEditMode &&
+    ((product?.activeVariantCount
+      ?? product?.variants.filter((variant) => variant.status === 'ACTIVE').length
+      ?? 0) === 0);
 
   return (
     <AdminLayout>
@@ -117,7 +114,7 @@ export function ProductEditPage() {
           title={isEditMode ? (product?.name ?? 'Edit Product') : 'New Product'}
           description={isEditMode ? `Product ID: ${productId}` : 'Add a product to your catalog.'}
           actions={
-            isEditMode ? (
+            isEditMode && productId ? (
               <Button
                 variant="secondary"
                 size="sm"

@@ -4,7 +4,7 @@ import { productService } from '../services/productService';
 import type { ProductStatus } from '@/shared/types/enums';
 
 interface BulkStatusUpdate {
-  ids: number[];
+  ids: string[];
   status: ProductStatus;
 }
 
@@ -29,7 +29,7 @@ export function useBulkDeleteProducts() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (ids: number[]) => {
+    mutationFn: async (ids: string[]) => {
       const results = await Promise.allSettled(ids.map((id) => productService.remove(id)));
       const failed = results.filter((r) => r.status === 'rejected').length;
       return { total: ids.length, failed, succeeded: ids.length - failed };

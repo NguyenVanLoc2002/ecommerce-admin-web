@@ -151,15 +151,15 @@ export function StockMovementsTable({
               value={String(filters.warehouseId ?? '')}
               onChange={(e) =>
                 onFiltersChange({
-                  warehouseId: e.target.value ? Number(e.target.value) : undefined,
+                  warehouseId: e.target.value || undefined,
                 })
               }
               className="h-9 w-44 text-sm"
             />
             <Select
               options={MOVEMENT_TYPE_OPTIONS}
-              value={filters.type ?? ''}
-              onChange={(e) => onFiltersChange({ type: e.target.value || undefined })}
+              value={filters.movementType ?? ''}
+              onChange={(e) => onFiltersChange({ movementType: e.target.value || undefined })}
               className="h-9 w-36 text-sm"
             />
           </>

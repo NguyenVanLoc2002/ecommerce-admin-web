@@ -1,4 +1,4 @@
-import type { PaginationParams } from '@/shared/types/api.types';
+import type { PaginationParams, EntityId } from '@/shared/types/api.types';
 import type {
   OrderStatus,
   PaymentStatus,
@@ -6,8 +6,8 @@ import type {
 } from '@/shared/types/enums';
 
 export interface OrderItem {
-  id: number;
-  variantId: number;
+  id: EntityId;
+  variantId: EntityId;
   productName: string;
   variantName: string;
   sku: string;
@@ -19,9 +19,9 @@ export interface OrderItem {
 }
 
 export interface Order {
-  id: number;
+  id: EntityId;
   orderCode: string;
-  customerId: number;
+  customerId: EntityId;
   status: OrderStatus;
   paymentMethod: PaymentMethod;
   paymentStatus: PaymentStatus | null;
@@ -44,9 +44,9 @@ export interface Order {
 }
 
 export interface OrderSummary {
-  id: number;
+  id: EntityId;
   orderCode: string;
-  customerId: number;
+  customerId: EntityId;
   status: OrderStatus;
   paymentStatus: PaymentStatus | null;
   paymentMethod: PaymentMethod | null;
@@ -55,7 +55,7 @@ export interface OrderSummary {
 }
 
 export interface OrderListParams extends PaginationParams {
-  customerId?: number;
+  customerId?: EntityId;
   status?: string;
   paymentStatus?: string;
   keyword?: string;

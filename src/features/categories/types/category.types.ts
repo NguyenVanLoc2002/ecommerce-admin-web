@@ -1,12 +1,12 @@
-import type { PaginationParams } from '@/shared/types/api.types';
+import type { PaginationParams, EntityId } from '@/shared/types/api.types';
 import type { EntityStatus } from '@/shared/types/enums';
 
 export interface Category {
-  id: number;
+  id: EntityId;
   name: string;
   slug: string;
   description: string | null;
-  parentId: number | null;
+  parentId: EntityId | null;
   status: EntityStatus;
   productCount: number;
   createdAt: string;
@@ -14,7 +14,7 @@ export interface Category {
 }
 
 export interface CategoryListParams extends PaginationParams {
-  keyword?: string;
+  name?: string;
   status?: string;
 }
 
@@ -22,7 +22,7 @@ export interface CreateCategoryRequest {
   name: string;
   slug: string;
   description: string;
-  parentId?: number | null;
+  parentId?: EntityId | null;
   status: EntityStatus;
 }
 

@@ -1,3 +1,6 @@
+export type EntityId = string;
+export type EntityKey = string | number;
+
 export interface ApiResponse<T> {
   success: boolean;
   code: string;

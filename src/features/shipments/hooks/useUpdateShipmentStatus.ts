@@ -3,7 +3,7 @@ import { queryKeys } from '@/constants/queryKeys';
 import { shipmentService } from '../services/shipmentService';
 import type { UpdateShipmentStatusRequest } from '../types/shipment.types';
 
-export function useUpdateShipmentStatus(shipmentId: number) {
+export function useUpdateShipmentStatus(shipmentId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({

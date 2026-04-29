@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import type { PaginationParams } from '@/shared/types/api.types';
 
-export type TableFilters = PaginationParams & Record<string, string | number | undefined>;
+export type TableFilters = PaginationParams & Record<string, string | number | boolean | undefined>;
 
 type AnyFilters = PaginationParams & Record<string, unknown>;
 
@@ -25,6 +25,8 @@ function fromSearchParams(params: URLSearchParams, defaults: AnyFilters): AnyFil
     if (typeof defaultVal === 'number') {
       const parsed = Number(raw);
       result[key] = isNaN(parsed) ? defaultVal : parsed;
+    } else if (typeof defaultVal === 'boolean') {
+      result[key] = raw === 'true';
     } else {
       result[key] = raw;
     }

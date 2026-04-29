@@ -1,10 +1,10 @@
-import type { PaginationParams } from '@/shared/types/api.types';
+import type { PaginationParams, EntityId } from '@/shared/types/api.types';
 import type { DiscountType } from '@/shared/types/enums';
 
 export interface Voucher {
-  id: number;
+  id: EntityId;
   code: string;
-  promotionId: number;
+  promotionId: EntityId;
   promotionName: string;
   discountType: DiscountType;
   discountValue: number;
@@ -20,10 +20,10 @@ export interface Voucher {
 }
 
 export interface VoucherUsage {
-  id: number;
-  orderId: number;
+  id: EntityId;
+  orderId: EntityId;
   orderCode: string;
-  customerId: number;
+  customerId: EntityId;
   customerName: string;
   usedAt: string;
   discountAmount: number;
@@ -31,7 +31,7 @@ export interface VoucherUsage {
 
 export interface VoucherListParams extends PaginationParams {
   code?: string;
-  promotionId?: number;
+  promotionId?: EntityId;
   active?: boolean;
   dateFrom?: string;
   dateTo?: string;
@@ -39,7 +39,7 @@ export interface VoucherListParams extends PaginationParams {
 
 export interface CreateVoucherRequest {
   code?: string | null;
-  promotionId: number;
+  promotionId: EntityId;
   usageLimit?: number;
   usageLimitPerUser?: number;
   startDate: string;

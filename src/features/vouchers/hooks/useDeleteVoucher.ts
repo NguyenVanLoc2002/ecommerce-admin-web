@@ -6,7 +6,7 @@ export function useDeleteVoucher() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: number) => voucherService.remove(id),
+    mutationFn: (id: string) => voucherService.remove(id),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.vouchers.lists() });
     },

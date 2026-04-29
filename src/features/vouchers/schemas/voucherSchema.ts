@@ -13,10 +13,7 @@ export const voucherSchema = z
       .regex(/^[A-Za-z0-9_-]*$/, 'Only letters, numbers, underscores, and hyphens allowed')
       .optional()
       .transform((v) => (v === '' ? null : (v ?? null))),
-    promotionId: z.preprocess(
-      (v) => (v === '' || v == null ? undefined : Number(v)),
-      z.number({ required_error: 'Promotion is required' }).int().positive('Promotion is required'),
-    ),
+    promotionId: z.string().min(1, 'Promotion is required'),
     usageLimit: optionalPositiveInt,
     usageLimitPerUser: optionalPositiveInt,
     startDate: z.string().min(1, 'Start date is required'),
