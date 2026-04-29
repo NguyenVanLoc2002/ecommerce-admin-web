@@ -18,10 +18,11 @@ const DISCOUNT_TYPE_OPTIONS = [
 ];
 
 const SCOPE_OPTIONS = [
-  { value: 'ALL', label: 'All orders' },
+  { value: 'ORDER', label: 'Order' },
   { value: 'CATEGORY', label: 'Category' },
   { value: 'BRAND', label: 'Brand' },
   { value: 'PRODUCT', label: 'Product' },
+  { value: 'SHIPPING', label: 'Shipping' },
 ];
 
 interface PromotionFormProps {
@@ -55,7 +56,7 @@ export function PromotionForm({ promotion, onSuccess }: PromotionFormProps) {
           discountValue: undefined as unknown as number,
           maxDiscountAmount: undefined,
           minimumOrderAmount: undefined,
-          scope: 'ALL',
+          scope: 'ORDER',
           startDate: '',
           endDate: '',
           usageLimit: undefined,

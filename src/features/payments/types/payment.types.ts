@@ -50,8 +50,8 @@ export interface PaymentTransaction {
 
 export interface PaymentListParams extends PaginationParams {
   orderCode?: string;
-  method?: string;
-  status?: string;
+  method?: PaymentMethod;
+  status?: PaymentStatus;
   dateFrom?: string;
   dateTo?: string;
 }

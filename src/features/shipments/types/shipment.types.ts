@@ -59,11 +59,10 @@ export interface ShipmentEvent {
 export interface ShipmentListParams extends PaginationParams {
   orderCode?: string;
   carrier?: string;
-  status?: string;
+  status?: ShipmentStatus;
   orderId?: EntityId;
   dateFrom?: string;
   dateTo?: string;
-  direction?: string;
 }
 
 export interface CreateShipmentRequest {

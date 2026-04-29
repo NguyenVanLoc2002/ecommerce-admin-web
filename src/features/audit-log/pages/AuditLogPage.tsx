@@ -11,26 +11,33 @@ import type { AuditLogListParams } from '../types/auditLog.types';
 const DEFAULT_FILTERS: AuditLogListParams = {
   page: 0,
   size: 20,
-  sort: 'performedAt,desc',
+  sort: 'createdAt,desc',
+};
+
+const DEFAULT_SORT: SortState = {
+  column: 'createdAt',
+  direction: 'desc',
 };
 
 export function AuditLogPage() {
   const [filters, setFilters, resetFilters] = useTableFilters<AuditLogListParams>(DEFAULT_FILTERS);
-  const [sort, setSort] = useState<SortState | undefined>({
-    column: 'performedAt',
-    direction: 'desc',
-  });
+  const [sort, setSort] = useState<SortState | undefined>(DEFAULT_SORT);
   const [filtersOpen, setFiltersOpen] = useState(false);
 
   const { data, isLoading, isError, refetch } = useAuditLogs(filters);
 
   const handleSortChange = (newSort: SortState) => {
     setSort(newSort);
-    setFilters({ sort: `${newSort.column},${newSort.direction}` });
+    setFilters({ sort: `${newSort.column},${newSort.direction}`, page: 0 });
   };
 
   const handleFiltersApply = (updates: Partial<AuditLogListParams>) => {
     setFilters({ ...updates, page: 0 });
+  };
+
+  const handleFiltersReset = () => {
+    setSort(DEFAULT_SORT);
+    resetFilters();
   };
 
   return (
@@ -59,7 +66,7 @@ export function AuditLogPage() {
         onClose={() => setFiltersOpen(false)}
         filters={filters}
         onApply={handleFiltersApply}
-        onReset={resetFilters}
+        onReset={handleFiltersReset}
       />
     </AdminLayout>
   );

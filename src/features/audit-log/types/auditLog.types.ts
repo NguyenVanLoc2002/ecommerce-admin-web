@@ -1,25 +1,25 @@
-import type { PaginationParams } from '@/shared/types/api.types';
+import type { EntityId, PaginationParams } from '@/shared/types/api.types';
 import type { AuditAction } from '@/shared/types/enums';
 
-export interface AuditLogChanges {
-  before: Record<string, unknown> | null;
-  after: Record<string, unknown> | null;
-}
+export type AuditLogDetails = Record<string, unknown> | string | null;
 
 export interface AuditLog {
-  id: number;
+  id: EntityId;
   action: AuditAction;
   entityType: string;
-  entityId: number;
-  performedBy: string;
-  performedAt: string;
-  changes: AuditLogChanges | null;
+  entityId: EntityId | null;
+  actor: string;
+  ipAddress: string | null;
+  requestId: string | null;
+  details: AuditLogDetails;
+  createdAt: string;
 }
 
 export interface AuditLogListParams extends PaginationParams {
   action?: AuditAction;
   entityType?: string;
-  performedBy?: string;
-  from?: string;
-  to?: string;
+  entityId?: EntityId;
+  actor?: string;
+  fromDate?: string;
+  toDate?: string;
 }

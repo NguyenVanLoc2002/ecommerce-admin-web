@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Drawer } from '@/shared/components/ui/Drawer';
 import { Button } from '@/shared/components/ui/Button';
 import { Select } from '@/shared/components/ui/Select';
+import type { OrderPaymentStatus, OrderStatus } from '@/shared/types/enums';
 import type { OrderListParams } from '../types/order.types';
 
 const STATUS_OPTIONS = [
@@ -23,6 +24,7 @@ const PAYMENT_STATUS_OPTIONS = [
   { value: 'PAID', label: 'Paid' },
   { value: 'FAILED', label: 'Failed' },
   { value: 'REFUNDED', label: 'Refunded' },
+  { value: 'CANCELLED', label: 'Cancelled' },
 ];
 
 interface OrderFiltersDrawerProps {
@@ -83,7 +85,9 @@ export function OrderFiltersDrawer({
             id="filter-status"
             options={STATUS_OPTIONS}
             value={merged.status ?? ''}
-            onChange={(e) => set({ status: e.target.value || undefined })}
+            onChange={(e) =>
+              set({ status: (e.target.value as OrderStatus) || undefined })
+            }
           />
         </div>
 
@@ -93,7 +97,11 @@ export function OrderFiltersDrawer({
             id="filter-payment-status"
             options={PAYMENT_STATUS_OPTIONS}
             value={merged.paymentStatus ?? ''}
-            onChange={(e) => set({ paymentStatus: e.target.value || undefined })}
+            onChange={(e) =>
+              set({
+                paymentStatus: (e.target.value as OrderPaymentStatus) || undefined,
+              })
+            }
           />
         </div>
       </div>

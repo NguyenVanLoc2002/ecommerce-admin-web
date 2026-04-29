@@ -5,7 +5,7 @@ import { DataTable } from '@/shared/components/table/DataTable';
 import { TableToolbar } from '@/shared/components/table/TableToolbar';
 import { Pagination } from '@/shared/components/table/Pagination';
 import { Button } from '@/shared/components/ui/Button';
-import { Badge } from '@/shared/components/ui/Badge';
+import { StatusBadge } from '@/shared/components/ui/StatusBadge';
 import { SkeletonTable } from '@/shared/components/feedback/Skeleton';
 import { ErrorCard } from '@/shared/components/feedback/ErrorCard';
 import { EmptyState } from '@/shared/components/feedback/EmptyState';
@@ -16,29 +16,7 @@ import type { PaginatedResponse } from '@/shared/types/api.types';
 import type { AuditLog, AuditLogListParams } from '../types/auditLog.types';
 import { AuditLogChangesCell } from './AuditLogChangesCell';
 
-// Maps action prefixes to badge variants
-type BadgeVariant = 'primary' | 'success' | 'warning' | 'danger' | 'info' | 'default';
-
-function actionBadgeVariant(action: string): BadgeVariant {
-  if (action.startsWith('ORDER_')) return 'primary';
-  if (action.startsWith('PRODUCT_')) return 'info';
-  if (action.startsWith('STOCK_')) return 'warning';
-  if (action.startsWith('VOUCHER_')) return 'success';
-  if (action.startsWith('PAYMENT_')) return 'primary';
-  if (action.startsWith('REVIEW_')) return 'warning';
-  if (action.startsWith('USER_')) return 'danger';
-  return 'default';
-}
-
-function formatActionLabel(action: string): string {
-  return action
-    .toLowerCase()
-    .replace(/_/g, ' ')
-    .replace(/\b\w/g, (c) => c.toUpperCase());
-}
-
-// Maps entityType → route function for entity ID links
-function buildEntityHref(entityType: string, entityId: number): string | null {
+function buildEntityHref(entityType: string, entityId: string): string | null {
   switch (entityType) {
     case 'ORDER':
       return routes.orders.detail(entityId);
@@ -68,9 +46,10 @@ interface AuditLogTableProps {
 const hasActiveFilters = (filters: AuditLogListParams) =>
   filters.action !== undefined ||
   filters.entityType !== undefined ||
-  filters.performedBy !== undefined ||
-  filters.from !== undefined ||
-  filters.to !== undefined;
+  filters.entityId !== undefined ||
+  filters.actor !== undefined ||
+  filters.fromDate !== undefined ||
+  filters.toDate !== undefined;
 
 export function AuditLogTable({
   data,
@@ -88,62 +67,61 @@ export function AuditLogTable({
   const columns = useMemo<ColumnDef<AuditLog>[]>(
     () => [
       {
-        id: 'performedAt',
+        id: 'createdAt',
         header: 'Time',
         enableSorting: true,
         cell: ({ row }) => (
-          <span className="text-xs text-gray-500 whitespace-nowrap tabular-nums">
-            {formatDateTimeSeconds(row.original.performedAt)}
+          <span className="whitespace-nowrap text-xs tabular-nums text-gray-500">
+            {formatDateTimeSeconds(row.original.createdAt)}
           </span>
         ),
       },
       {
         id: 'action',
         header: 'Action',
-        cell: ({ row }) => (
-          <Badge variant={actionBadgeVariant(row.original.action)}>
-            {formatActionLabel(row.original.action)}
-          </Badge>
-        ),
+        cell: ({ row }) => <StatusBadge type="audit-action" status={row.original.action} />,
       },
       {
         id: 'entity',
         header: 'Entity',
         cell: ({ row }) => {
           const { entityType, entityId } = row.original;
-          const href = buildEntityHref(entityType, entityId);
+          const href = entityId ? buildEntityHref(entityType, entityId) : null;
+
           return (
             <div className="flex flex-col">
               <span className="text-xs font-medium uppercase tracking-wide text-gray-400">
                 {entityType}
               </span>
-              {href ? (
+              {entityId && href ? (
                 <button
                   type="button"
                   onClick={() => navigate(href)}
-                  className="text-sm font-mono text-primary-600 hover:text-primary-700 hover:underline text-left"
+                  className="text-left text-sm font-mono text-primary-600 hover:text-primary-700 hover:underline"
                 >
                   #{entityId}
                 </button>
               ) : (
-                <span className="font-mono text-sm text-gray-700">#{entityId}</span>
+                <span className="font-mono text-sm text-gray-700">
+                  {entityId ? `#${entityId}` : '-'}
+                </span>
               )}
             </div>
           );
         },
       },
       {
-        id: 'performedBy',
+        id: 'actor',
         header: 'Performed By',
         cell: ({ row }) => (
-          <span className="text-sm text-gray-700">{row.original.performedBy}</span>
+          <span className="text-sm text-gray-700">{row.original.actor || '-'}</span>
         ),
       },
       {
-        id: 'changes',
-        header: 'Changes',
+        id: 'details',
+        header: 'Details',
         className: 'min-w-[200px] max-w-[400px]',
-        cell: ({ row }) => <AuditLogChangesCell changes={row.original.changes} />,
+        cell: ({ row }) => <AuditLogChangesCell details={row.original.details} />,
       },
     ],
     [navigate],
@@ -177,7 +155,7 @@ export function AuditLogTable({
       <DataTable
         data={data?.items ?? []}
         columns={columns}
-        getRowId={(row) => String(row.id)}
+        getRowId={(row) => row.id}
         sort={sort}
         onSortChange={onSortChange}
         emptyState={
@@ -196,8 +174,8 @@ export function AuditLogTable({
       {data && data.totalPages > 1 && (
         <Pagination
           pagination={data}
-          onPageChange={(page) => onFiltersChange({ page } as Partial<AuditLogListParams>)}
-          onPageSizeChange={(size) => onFiltersChange({ size } as Partial<AuditLogListParams>)}
+          onPageChange={(page) => onFiltersChange({ page })}
+          onPageSizeChange={(size) => onFiltersChange({ size })}
         />
       )}
     </div>

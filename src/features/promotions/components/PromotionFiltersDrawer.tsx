@@ -7,10 +7,11 @@ import type { PromotionListParams } from '../types/promotion.types';
 
 const SCOPE_OPTIONS = [
   { value: '', label: 'All scopes' },
-  { value: 'ALL', label: 'All orders' },
+  { value: 'ORDER', label: 'Order' },
   { value: 'CATEGORY', label: 'Category' },
   { value: 'BRAND', label: 'Brand' },
   { value: 'PRODUCT', label: 'Product' },
+  { value: 'SHIPPING', label: 'Shipping' },
 ];
 
 const ACTIVE_OPTIONS = [

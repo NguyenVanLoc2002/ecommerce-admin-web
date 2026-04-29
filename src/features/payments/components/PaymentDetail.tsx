@@ -12,6 +12,10 @@ import type { Payment, PaymentTransaction } from '../types/payment.types';
 const METHOD_LABELS: Record<string, string> = {
   COD: 'Cash on Delivery',
   ONLINE: 'Online Payment',
+  MOMO: 'MoMo',
+  ZALO_PAY: 'ZaloPay',
+  VNPAY: 'VNPay',
+  BANK_TRANSFER: 'Bank Transfer',
 };
 
 interface PaymentDetailProps {

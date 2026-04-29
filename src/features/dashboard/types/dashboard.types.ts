@@ -1,4 +1,4 @@
-import type { OrderStatus, PaymentStatus, ReviewStatus } from '@/shared/types/enums';
+import type { OrderStatus, OrderPaymentStatus, ReviewStatus } from '@/shared/types/enums';
 
 export interface DashboardOrder {
   id: number;
@@ -6,7 +6,7 @@ export interface DashboardOrder {
   customerName: string;
   customerEmail: string;
   status: OrderStatus;
-  paymentStatus: PaymentStatus;
+  paymentStatus: OrderPaymentStatus;
   totalAmount: number;
   createdAt: string;
 }

@@ -15,12 +15,16 @@ import { formatDateTime } from '@/shared/utils/formatDate';
 import { routes } from '@/constants/routes';
 import type { ColumnDef, SortState } from '@/shared/components/table/types';
 import type { PaginatedResponse } from '@/shared/types/api.types';
-import type { OrderStatus, PaymentStatus } from '@/shared/types/enums';
+import type { OrderStatus, OrderPaymentStatus } from '@/shared/types/enums';
 import type { OrderSummary, OrderListParams } from '../types/order.types';
 
 const PAYMENT_METHOD_LABEL: Record<string, string> = {
   COD: 'COD',
   ONLINE: 'Online',
+  MOMO: 'MoMo',
+  ZALO_PAY: 'ZaloPay',
+  VNPAY: 'VNPay',
+  BANK_TRANSFER: 'Bank Transfer',
 };
 
 interface OrderTableProps {
@@ -79,7 +83,10 @@ export function OrderTable({
         cell: ({ row }) => (
           <div className="flex flex-col gap-1">
             {row.original.paymentStatus && (
-              <StatusBadge type="payment" status={row.original.paymentStatus as PaymentStatus} />
+              <StatusBadge
+                type="order-payment"
+                status={row.original.paymentStatus as OrderPaymentStatus}
+              />
             )}
             {row.original.paymentMethod && (
               <Badge variant="default">
@@ -90,7 +97,7 @@ export function OrderTable({
         ),
       },
       {
-        id: 'total',
+        id: 'totalAmount',
         header: 'Total',
         enableSorting: true,
         headerClassName: 'text-right',

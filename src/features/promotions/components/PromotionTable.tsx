@@ -18,10 +18,11 @@ import type { PromotionSummary, PromotionListParams } from '../types/promotion.t
 import { PromotionRowActions } from './PromotionRowActions';
 
 const SCOPE_LABELS: Record<string, string> = {
-  ALL: 'All orders',
+  ORDER: 'Order',
   CATEGORY: 'Category',
   BRAND: 'Brand',
   PRODUCT: 'Product',
+  SHIPPING: 'Shipping',
 };
 
 interface PromotionTableProps {

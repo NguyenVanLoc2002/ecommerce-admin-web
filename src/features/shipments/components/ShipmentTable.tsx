@@ -179,7 +179,9 @@ export function ShipmentTable({
     <div className="space-y-4">
       <TableToolbar
         searchValue={filters.orderCode ?? ''}
-        onSearchChange={(orderCode) => onFiltersChange({ orderCode: orderCode || undefined })}
+        onSearchChange={(orderCode) =>
+          onFiltersChange({ orderCode: orderCode || undefined, page: 0 })
+        }
         searchPlaceholder="Search by tracking code or order…"
         actions={
           <>

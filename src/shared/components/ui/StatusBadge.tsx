@@ -1,6 +1,8 @@
 import { Badge } from './Badge';
 import type {
+  AuditAction,
   OrderStatus,
+  OrderPaymentStatus,
   PaymentStatus,
   ShipmentStatus,
   InvoiceStatus,
@@ -9,6 +11,7 @@ import type {
   VariantStatus,
   EntityStatus,
 } from '@/shared/types/enums';
+import { formatEnumLabel } from '@/shared/utils/formatEnumLabel';
 
 type BadgeVariant = 'default' | 'primary' | 'success' | 'warning' | 'danger' | 'info';
 
@@ -31,10 +34,20 @@ const paymentStatusMap: Record<PaymentStatus, { label: string; variant: BadgeVar
   FAILED: { label: 'Failed', variant: 'danger' },
   REFUNDED: { label: 'Refunded', variant: 'default' },
   PARTIALLY_REFUNDED: { label: 'Partially Refunded', variant: 'warning' },
+  CANCELLED: { label: 'Cancelled', variant: 'danger' },
+};
+
+const orderPaymentStatusMap: Record<OrderPaymentStatus, { label: string; variant: BadgeVariant }> = {
+  PENDING: { label: 'Pending', variant: 'warning' },
+  PAID: { label: 'Paid', variant: 'success' },
+  FAILED: { label: 'Failed', variant: 'danger' },
+  REFUNDED: { label: 'Refunded', variant: 'default' },
+  CANCELLED: { label: 'Cancelled', variant: 'danger' },
 };
 
 const shipmentStatusMap: Record<ShipmentStatus, { label: string; variant: BadgeVariant }> = {
   PENDING: { label: 'Pending', variant: 'warning' },
+  PICKING: { label: 'Picking', variant: 'info' },
   IN_TRANSIT: { label: 'In Transit', variant: 'primary' },
   OUT_FOR_DELIVERY: { label: 'Out for Delivery', variant: 'info' },
   DELIVERED: { label: 'Delivered', variant: 'success' },
@@ -70,70 +83,130 @@ const entityStatusMap: Record<EntityStatus, { label: string; variant: BadgeVaria
   INACTIVE: { label: 'Inactive', variant: 'default' },
 };
 
+const auditActionVariantMap: Record<AuditAction, BadgeVariant> = {
+  LOGIN_SUCCESS: 'success',
+  LOGIN_FAILURE: 'danger',
+  LOGOUT: 'default',
+  TOKEN_REFRESH: 'info',
+  USER_REGISTERED: 'info',
+  USER_CREATED: 'info',
+  USER_UPDATED: 'primary',
+  USER_DISABLED: 'danger',
+  USER_ENABLED: 'success',
+  PRODUCT_CREATED: 'info',
+  PRODUCT_UPDATED: 'primary',
+  PRODUCT_PUBLISHED: 'success',
+  PRODUCT_DELETED: 'danger',
+  CATEGORY_CREATED: 'info',
+  CATEGORY_UPDATED: 'primary',
+  CATEGORY_DELETED: 'danger',
+  BRAND_CREATED: 'info',
+  BRAND_UPDATED: 'primary',
+  BRAND_DELETED: 'danger',
+  ORDER_CREATED: 'info',
+  ORDER_CONFIRMED: 'primary',
+  ORDER_PROCESSING: 'primary',
+  ORDER_SHIPPED: 'primary',
+  ORDER_DELIVERED: 'success',
+  ORDER_CANCELLED: 'danger',
+  ORDER_COMPLETED: 'success',
+  PAYMENT_CREATED: 'info',
+  PAYMENT_COD_COMPLETED: 'success',
+  PAYMENT_CALLBACK_SUCCESS: 'success',
+  PAYMENT_CALLBACK_FAILED: 'danger',
+  INVENTORY_ADJUSTED: 'warning',
+  PROMOTION_CREATED: 'info',
+  PROMOTION_UPDATED: 'primary',
+  PROMOTION_DELETED: 'danger',
+  VOUCHER_CREATED: 'info',
+  VOUCHER_UPDATED: 'primary',
+  VOUCHER_APPLIED: 'success',
+  VOUCHER_RELEASED: 'warning',
+  SHIPMENT_CREATED: 'info',
+  SHIPMENT_STATUS_UPDATED: 'primary',
+  INVOICE_GENERATED: 'info',
+  INVOICE_STATUS_UPDATED: 'primary',
+  REVIEW_SUBMITTED: 'info',
+  REVIEW_APPROVED: 'success',
+  REVIEW_REJECTED: 'danger',
+};
+
 type StatusBadgeProps =
-  | { type: 'order'; status: OrderStatus }
-  | { type: 'payment'; status: PaymentStatus }
-  | { type: 'shipment'; status: ShipmentStatus }
-  | { type: 'invoice'; status: InvoiceStatus }
-  | { type: 'review'; status: ReviewStatus }
-  | { type: 'product'; status: ProductStatus }
-  | { type: 'variant'; status: VariantStatus }
-  | { type: 'entity'; status: EntityStatus };
+  | { type: 'audit-action'; status: AuditAction | string | null | undefined }
+  | { type: 'order'; status: OrderStatus | string | null | undefined }
+  | { type: 'order-payment'; status: OrderPaymentStatus | string | null | undefined }
+  | { type: 'payment'; status: PaymentStatus | string | null | undefined }
+  | { type: 'shipment'; status: ShipmentStatus | string | null | undefined }
+  | { type: 'invoice'; status: InvoiceStatus | string | null | undefined }
+  | { type: 'review'; status: ReviewStatus | string | null | undefined }
+  | { type: 'product'; status: ProductStatus | string | null | undefined }
+  | { type: 'variant'; status: VariantStatus | string | null | undefined }
+  | { type: 'entity'; status: EntityStatus | string | null | undefined };
+
+function fallbackStatus(status: string | null | undefined) {
+  return {
+    label: formatEnumLabel(status),
+    variant: 'default' as const,
+  };
+}
+
+function isAuditAction(status: string): status is AuditAction {
+  return Object.prototype.hasOwnProperty.call(auditActionVariantMap, status);
+}
 
 export function StatusBadge(props: StatusBadgeProps) {
-  let label: string;
-  let variant: BadgeVariant;
+  let resolved: { label: string; variant: BadgeVariant };
 
   switch (props.type) {
+    case 'audit-action': {
+      if (typeof props.status === 'string' && isAuditAction(props.status)) {
+        resolved = {
+          label: formatEnumLabel(props.status),
+          variant: auditActionVariantMap[props.status],
+        };
+      } else {
+        resolved = fallbackStatus(props.status);
+      }
+      break;
+    }
     case 'order': {
-      const m = orderStatusMap[props.status];
-      label = m.label;
-      variant = m.variant;
+      resolved = orderStatusMap[props.status as OrderStatus] ?? fallbackStatus(props.status);
+      break;
+    }
+    case 'order-payment': {
+      resolved =
+        orderPaymentStatusMap[props.status as OrderPaymentStatus] ?? fallbackStatus(props.status);
       break;
     }
     case 'payment': {
-      const m = paymentStatusMap[props.status];
-      label = m.label;
-      variant = m.variant;
+      resolved = paymentStatusMap[props.status as PaymentStatus] ?? fallbackStatus(props.status);
       break;
     }
     case 'shipment': {
-      const m = shipmentStatusMap[props.status];
-      label = m.label;
-      variant = m.variant;
+      resolved = shipmentStatusMap[props.status as ShipmentStatus] ?? fallbackStatus(props.status);
       break;
     }
     case 'invoice': {
-      const m = invoiceStatusMap[props.status];
-      label = m.label;
-      variant = m.variant;
+      resolved = invoiceStatusMap[props.status as InvoiceStatus] ?? fallbackStatus(props.status);
       break;
     }
     case 'review': {
-      const m = reviewStatusMap[props.status];
-      label = m.label;
-      variant = m.variant;
+      resolved = reviewStatusMap[props.status as ReviewStatus] ?? fallbackStatus(props.status);
       break;
     }
     case 'product': {
-      const m = productStatusMap[props.status];
-      label = m.label;
-      variant = m.variant;
+      resolved = productStatusMap[props.status as ProductStatus] ?? fallbackStatus(props.status);
       break;
     }
     case 'variant': {
-      const m = variantStatusMap[props.status];
-      label = m.label;
-      variant = m.variant;
+      resolved = variantStatusMap[props.status as VariantStatus] ?? fallbackStatus(props.status);
       break;
     }
     case 'entity': {
-      const m = entityStatusMap[props.status];
-      label = m.label;
-      variant = m.variant;
+      resolved = entityStatusMap[props.status as EntityStatus] ?? fallbackStatus(props.status);
       break;
     }
   }
 
-  return <Badge variant={variant} dot>{label}</Badge>;
+  return <Badge variant={resolved.variant} dot>{resolved.label}</Badge>;
 }

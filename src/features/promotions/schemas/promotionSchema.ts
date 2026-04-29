@@ -19,7 +19,7 @@ export const promotionSchema = z
     ),
     maxDiscountAmount: optionalPositiveNumber(0.01),
     minimumOrderAmount: optionalPositiveNumber(0),
-    scope: z.enum(['ALL', 'CATEGORY', 'BRAND', 'PRODUCT'], {
+    scope: z.enum(['ORDER', 'PRODUCT', 'CATEGORY', 'BRAND', 'SHIPPING'], {
       required_error: 'Scope is required',
     }),
     startDate: z.string().min(1, 'Start date is required'),

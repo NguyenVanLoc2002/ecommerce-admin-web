@@ -20,6 +20,10 @@ import { PaymentRowActions } from './PaymentRowActions';
 const METHOD_LABELS: Record<string, string> = {
   COD: 'COD',
   ONLINE: 'Online',
+  MOMO: 'MoMo',
+  ZALO_PAY: 'ZaloPay',
+  VNPAY: 'VNPay',
+  BANK_TRANSFER: 'Bank Transfer',
 };
 
 interface PaymentTableProps {
@@ -142,7 +146,9 @@ export function PaymentTable({
     <div className="space-y-4">
       <TableToolbar
         searchValue={filters.orderCode ?? ''}
-        onSearchChange={(orderCode) => onFiltersChange({ orderCode: orderCode || undefined })}
+        onSearchChange={(orderCode) =>
+          onFiltersChange({ orderCode: orderCode || undefined, page: 0 })
+        }
         searchPlaceholder="Search by order code…"
         actions={
           <Button

@@ -1,28 +1,18 @@
 import { useState } from 'react';
 import { Drawer } from '@/shared/components/ui/Drawer';
 import { Button } from '@/shared/components/ui/Button';
-import { Select } from '@/shared/components/ui/Select';
+import { Select, type SelectOption } from '@/shared/components/ui/Select';
 import { Input } from '@/shared/components/ui/Input';
 import { AuditAction } from '@/shared/types/enums';
+import { formatEnumLabel } from '@/shared/utils/formatEnumLabel';
 import type { AuditLogListParams } from '../types/auditLog.types';
 
-const ACTION_OPTIONS = [
+const ACTION_OPTIONS: SelectOption[] = [
   { value: '', label: 'All actions' },
-  { value: AuditAction.ORDER_CREATED, label: 'Order Created' },
-  { value: AuditAction.ORDER_CONFIRMED, label: 'Order Confirmed' },
-  { value: AuditAction.ORDER_CANCELLED, label: 'Order Cancelled' },
-  { value: AuditAction.ORDER_COMPLETED, label: 'Order Completed' },
-  { value: AuditAction.PRODUCT_CREATED, label: 'Product Created' },
-  { value: AuditAction.PRODUCT_UPDATED, label: 'Product Updated' },
-  { value: AuditAction.PRODUCT_DELETED, label: 'Product Deleted' },
-  { value: AuditAction.STOCK_IMPORTED, label: 'Stock Imported' },
-  { value: AuditAction.STOCK_ADJUSTED, label: 'Stock Adjusted' },
-  { value: AuditAction.VOUCHER_CREATED, label: 'Voucher Created' },
-  { value: AuditAction.VOUCHER_UPDATED, label: 'Voucher Updated' },
-  { value: AuditAction.VOUCHER_DELETED, label: 'Voucher Deleted' },
-  { value: AuditAction.PAYMENT_COMPLETED, label: 'Payment Completed' },
-  { value: AuditAction.REVIEW_MODERATED, label: 'Review Moderated' },
-  { value: AuditAction.USER_DISABLED, label: 'User Disabled' },
+  ...Object.values(AuditAction).map((value) => ({
+    value,
+    label: formatEnumLabel(value),
+  })),
 ];
 
 const ENTITY_TYPE_OPTIONS = [
@@ -56,7 +46,12 @@ export function AuditLogFilters({
   const merged = { ...filters, ...local };
 
   const set = (updates: Partial<AuditLogListParams>) =>
-    setLocal((prev) => ({ ...prev, ...updates }));
+    setLocal((previous) => ({ ...previous, ...updates }));
+
+  const setAndApply = (updates: Partial<AuditLogListParams>) => {
+    set(updates);
+    onApply(updates);
+  };
 
   const handleApply = () => {
     onApply(local);
@@ -93,9 +88,9 @@ export function AuditLogFilters({
           <Select
             options={ACTION_OPTIONS}
             value={merged.action ?? ''}
-            onChange={(e) =>
-              set({
-                action: (e.target.value as AuditLogListParams['action']) || undefined,
+            onChange={(event) =>
+              setAndApply({
+                action: (event.target.value as AuditLogListParams['action']) || undefined,
               })
             }
           />
@@ -106,16 +101,26 @@ export function AuditLogFilters({
           <Select
             options={ENTITY_TYPE_OPTIONS}
             value={merged.entityType ?? ''}
-            onChange={(e) => set({ entityType: e.target.value || undefined })}
+            onChange={(event) => setAndApply({ entityType: event.target.value || undefined })}
           />
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-medium text-gray-700">Performed By</label>
+          <label className="text-sm font-medium text-gray-700">Entity ID</label>
           <Input
             type="text"
-            value={merged.performedBy ?? ''}
-            onChange={(e) => set({ performedBy: e.target.value || undefined })}
+            value={merged.entityId ?? ''}
+            onChange={(event) => set({ entityId: event.target.value || undefined })}
+            placeholder="UUID"
+          />
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <label className="text-sm font-medium text-gray-700">Actor</label>
+          <Input
+            type="text"
+            value={merged.actor ?? ''}
+            onChange={(event) => set({ actor: event.target.value || undefined })}
             placeholder="Admin username or email"
           />
         </div>
@@ -124,8 +129,8 @@ export function AuditLogFilters({
           <label className="text-sm font-medium text-gray-700">From Date</label>
           <Input
             type="date"
-            value={merged.from ?? ''}
-            onChange={(e) => set({ from: e.target.value || undefined })}
+            value={merged.fromDate ?? ''}
+            onChange={(event) => set({ fromDate: event.target.value || undefined })}
           />
         </div>
 
@@ -133,8 +138,8 @@ export function AuditLogFilters({
           <label className="text-sm font-medium text-gray-700">To Date</label>
           <Input
             type="date"
-            value={merged.to ?? ''}
-            onChange={(e) => set({ to: e.target.value || undefined })}
+            value={merged.toDate ?? ''}
+            onChange={(event) => set({ toDate: event.target.value || undefined })}
           />
         </div>
       </div>

@@ -14,8 +14,7 @@ import type { ShipmentListParams } from '../types/shipment.types';
 const DEFAULT_FILTERS: ShipmentListParams = {
   page: 0,
   size: 20,
-  sort: 'createdAt',
-  direction: 'desc',
+  sort: 'createdAt,desc',
 };
 
 export function ShipmentListPage() {
@@ -31,7 +30,7 @@ export function ShipmentListPage() {
 
   const handleSortChange = (newSort: SortState) => {
     setSort(newSort);
-    setFilters({ sort: newSort.column, direction: newSort.direction });
+    setFilters({ sort: `${newSort.column},${newSort.direction}` });
   };
 
   const handleFiltersApply = (updates: Partial<ShipmentListParams>) => {
