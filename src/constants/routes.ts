@@ -10,8 +10,8 @@ export const routes = {
   products: {
     list: '/products',
     create: '/products/new',
-    edit: (id: EntityKey | ':id') => `/products/${id}`,
-    variants: (id: EntityKey | ':id') => `/products/${id}/variants`,
+    edit: (id: EntityKey) => `/products/${id}`,
+    variants: (id: EntityKey) => `/products/${id}/variants`,
   },
 
   productAttributes: {
@@ -38,40 +38,44 @@ export const routes = {
 
   orders: {
     list: '/orders',
-    detail: (id: EntityKey | ':id') => `/orders/${id}`,
+    detail: (id: EntityKey) => `/orders/${id}`,
   },
 
   payments: {
     list: '/payments',
-    detail: (id: EntityKey | ':id') => `/payments/${id}`,
+    detail: (id: EntityKey) => `/payments/${id}`,
   },
 
   shipments: {
     list: '/shipments',
     create: '/shipments/new',
-    detail: (id: EntityKey | ':id') => `/shipments/${id}`,
+    detail: (id: EntityKey) => `/shipments/${id}`,
   },
 
   invoices: {
     list: '/invoices',
-    detail: (id: EntityKey | ':id') => `/invoices/${id}`,
+    detail: (id: EntityKey) => `/invoices/${id}`,
   },
 
   promotions: {
     list: '/promotions',
     create: '/promotions/new',
-    edit: (id: EntityKey | ':id') => `/promotions/${id}`,
+    edit: (id: EntityKey) => `/promotions/${id}`,
   },
 
   vouchers: {
     list: '/vouchers',
     create: '/vouchers/new',
-    edit: (id: EntityKey | ':id') => `/vouchers/${id}`,
-    usages: (id: EntityKey | ':id') => `/vouchers/${id}/usages`,
+    edit: (id: EntityKey) => `/vouchers/${id}`,
+    usages: (id: EntityKey) => `/vouchers/${id}/usages`,
   },
 
   reviews: {
     list: '/reviews',
+  },
+
+  users: {
+    list: '/users',
   },
 
   auditLog: {

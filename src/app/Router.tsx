@@ -16,6 +16,7 @@ import { InvoiceListPage, InvoicePage } from '@/features/invoices';
 import { PromotionListPage, PromotionEditPage } from '@/features/promotions';
 import { VoucherListPage, VoucherEditPage, VoucherUsagesPage } from '@/features/vouchers';
 import { ReviewModerationPage } from '@/features/reviews';
+import { UserListPage } from '@/features/users';
 import { AuditLogPage } from '@/features/audit-log';
 import { ForbiddenPage } from './pages/ForbiddenPage';
 import { NotFoundPage } from './pages/NotFoundPage';
@@ -101,6 +102,7 @@ export function Router() {
           <Route path={routes.reviews.list} element={<ReviewModerationPage />} />
 
           <Route element={<RoleGuard required={['ADMIN', 'SUPER_ADMIN']} />}>
+            <Route path={routes.users.list} element={<UserListPage />} />
             <Route path={routes.auditLog.list} element={<AuditLogPage />} />
           </Route>
         </Route>

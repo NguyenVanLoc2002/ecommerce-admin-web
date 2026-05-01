@@ -60,6 +60,11 @@ export const permissions = {
     write: ['ADMIN', 'SUPER_ADMIN'] as const,
     delete: ['ADMIN', 'SUPER_ADMIN'] as const,
   },
+  users: {
+    read: ['ADMIN', 'SUPER_ADMIN'] as const,
+    write: ['ADMIN', 'SUPER_ADMIN'] as const,
+    delete: ['ADMIN', 'SUPER_ADMIN'] as const,
+  },
   auditLog: {
     read: ['ADMIN', 'SUPER_ADMIN'] as const,
   },
