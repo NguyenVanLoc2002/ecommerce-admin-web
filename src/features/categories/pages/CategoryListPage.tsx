@@ -4,7 +4,7 @@ import { PageHeader } from '@/shared/components/layout/PageHeader';
 import { useTableFilters } from '@/shared/hooks/useTableFilters';
 import { useDebounce } from '@/shared/hooks/useDebounce';
 import { toast } from '@/shared/stores/uiStore';
-import { AppError } from '@/shared/types/api.types';
+import { AppError, SoftDeleteState } from '@/shared/types/api.types';
 import type { SortState } from '@/shared/components/table/types';
 import { useCategories } from '../hooks/useCategories';
 import { useCreateCategory } from '../hooks/useCreateCategory';
@@ -18,6 +18,11 @@ const DEFAULT_FILTERS: CategoryListParams = {
   page: 0,
   size: 20,
   sort: 'name,asc',
+  name: undefined,
+  slug: undefined,
+  parentId: undefined,
+  status: undefined,
+  deletedState: SoftDeleteState.ACTIVE,
 };
 
 export function CategoryListPage() {

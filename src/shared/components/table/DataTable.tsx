@@ -78,7 +78,7 @@ export function DataTable<T>({
   const hasSelectColumn = columns.some((c) => c.id === 'select');
 
   return (
-    <div className={cn('overflow-x-auto rounded-lg border border-gray-200', className)}>
+    <div className={cn('min-w-0 w-full overflow-x-auto rounded-lg border border-gray-200', className)}>
       <table className="min-w-full divide-y divide-gray-200 text-sm">
         <thead className="bg-gray-50">
           <tr>

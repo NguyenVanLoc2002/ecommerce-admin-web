@@ -11,6 +11,7 @@ export function useUpdateVariant(productId?: string) {
       variantService.update(productId ?? '', variantId, body),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.variants.byProduct(productId ?? '') });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.products.detail(productId ?? '') });
     },
   });
 }

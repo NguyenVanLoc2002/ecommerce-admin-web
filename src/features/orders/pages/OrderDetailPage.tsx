@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, ShoppingBag, Copy, Check } from 'lucide-react';
 import { AdminLayout } from '@/shared/components/layout/AdminLayout';
 import { PageHeader } from '@/shared/components/layout/PageHeader';
+import { useBreadcrumbLabel } from '@/shared/components/layout';
 import { Button } from '@/shared/components/ui/Button';
 import { SkeletonDetail } from '@/shared/components/feedback/Skeleton';
 import { ErrorCard } from '@/shared/components/feedback/ErrorCard';
@@ -25,6 +26,11 @@ export function OrderDetailPage() {
   const [copied, setCopied] = useState(false);
 
   const { data: order, isLoading, isError, refetch } = useOrder(orderId);
+
+  useBreadcrumbLabel(
+    routes.orders.detail(orderId),
+    isLoading ? 'Loading...' : (order?.orderCode ?? (isError ? 'Loading...' : 'Not found')),
+  );
 
   return (
     <AdminLayout>

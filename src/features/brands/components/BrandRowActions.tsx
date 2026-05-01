@@ -32,7 +32,7 @@ export function BrandRowActions({ brand, onEdit }: BrandRowActionsProps) {
     setMenuOpen(false);
     const ok = await confirm({
       title: 'Delete brand?',
-      description: `"${brand.name}" will be removed. This action cannot be undone.`,
+      description: `"${brand.name}" will be marked as deleted and hidden from active lists.`,
       confirmLabel: 'Delete',
       variant: 'destructive',
     });
@@ -40,7 +40,7 @@ export function BrandRowActions({ brand, onEdit }: BrandRowActionsProps) {
 
     try {
       await deleteBrand.mutateAsync(brand.id);
-      toast.success('Brand deleted.');
+      toast.success('Brand deleted successfully.');
     } catch (err) {
       if (err instanceof AppError) {
         toast.error(err.message);

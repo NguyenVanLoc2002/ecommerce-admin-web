@@ -3,47 +3,45 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, FileText } from 'lucide-react';
 import { AdminLayout } from '@/shared/components/layout/AdminLayout';
 import { PageHeader } from '@/shared/components/layout/PageHeader';
+import { useBreadcrumbLabel } from '@/shared/components/layout';
 import { Button } from '@/shared/components/ui/Button';
+import { CopyValueButton } from '@/shared/components/ui/CopyValueButton';
 import { SkeletonDetail } from '@/shared/components/feedback/Skeleton';
 import { ErrorCard } from '@/shared/components/feedback/ErrorCard';
 import { EmptyState } from '@/shared/components/feedback/EmptyState';
-import { useConfirmDialog } from '@/shared/hooks/useConfirmDialog';
 import { toast } from '@/shared/stores/uiStore';
 import { AppError } from '@/shared/types/api.types';
 import { routes } from '@/constants/routes';
 import { useInvoice } from '../hooks/useInvoice';
-import { useMarkInvoicePaid } from '../hooks/useMarkInvoicePaid';
-import { useVoidInvoice } from '../hooks/useVoidInvoice';
+import { useUpdateInvoiceStatus } from '../hooks/useUpdateInvoiceStatus';
 import { InvoiceView } from '../components/InvoiceView';
-import { VoidInvoiceModal } from '../components/VoidInvoiceModal';
+import { InvoiceStatusUpdateModal } from '../components/InvoiceStatusUpdateModal';
+import type { UpdateInvoiceStatusFormValues } from '../schemas/updateInvoiceStatusSchema';
 
 export function InvoicePage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const invoiceId = id ?? '';
-  const { confirm } = useConfirmDialog();
-  const [voidModalOpen, setVoidModalOpen] = useState(false);
+  const [statusModalOpen, setStatusModalOpen] = useState(false);
 
-  const { data: invoice, isLoading, isError, refetch } = useInvoice(invoiceId);
-  const markPaid = useMarkInvoicePaid(invoiceId);
-  const voidInvoice = useVoidInvoice(invoiceId);
+  const { data: invoice, isLoading, isError, error, refetch } = useInvoice(invoiceId);
+  const updateInvoiceStatus = useUpdateInvoiceStatus(invoiceId);
+  const isNotFound = error instanceof AppError && error.code === 'INVOICE_NOT_FOUND';
 
-  const handleMarkPaid = async () => {
-    const ok = await confirm({
-      title: 'Mark invoice as paid?',
-      description: 'This will record the invoice as collected. This action cannot be undone.',
-      confirmLabel: 'Mark as Paid',
-      variant: 'default',
-    });
-    if (!ok) return;
+  useBreadcrumbLabel(
+    routes.invoices.detail(invoiceId),
+    isLoading ? 'Loading...' : (invoice?.invoiceCode ?? 'Not found'),
+  );
 
+  const handleStatusUpdate = async (values: UpdateInvoiceStatusFormValues) => {
     try {
-      await markPaid.mutateAsync();
-      toast.success('Invoice marked as paid.');
+      await updateInvoiceStatus.mutateAsync(values);
+      toast.success('Invoice status updated.');
+      setStatusModalOpen(false);
     } catch (err) {
       if (err instanceof AppError) {
         if (err.code === 'INVOICE_STATUS_INVALID') {
-          toast.error('Invoice was updated by another user. Refreshing…');
+          toast.error('Invoice was updated by another user. Refreshing...');
           setTimeout(() => void refetch(), 1_000);
         } else {
           toast.error(err.message || 'Failed to update invoice.');
@@ -54,31 +52,29 @@ export function InvoicePage() {
     }
   };
 
-  const handleVoid = async (note: string) => {
-    try {
-      await voidInvoice.mutateAsync(note);
-      toast.success('Invoice voided successfully.');
-      setVoidModalOpen(false);
-    } catch (err) {
-      if (err instanceof AppError) {
-        if (err.code === 'INVOICE_STATUS_INVALID') {
-          toast.error('Invoice was updated by another user. Refreshing…');
-          setTimeout(() => void refetch(), 1_000);
-          setVoidModalOpen(false);
-        } else {
-          toast.error(err.message || 'Failed to void invoice.');
-        }
-      } else {
-        toast.error('Failed to void invoice. Please try again.');
-      }
-    }
-  };
-
   if (isLoading) {
     return (
       <AdminLayout>
         <div className="p-6">
           <SkeletonDetail />
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  if (isNotFound) {
+    return (
+      <AdminLayout>
+        <div className="p-6">
+          <EmptyState
+            icon={<FileText className="h-10 w-10" />}
+            title="Invoice not found"
+            message="This invoice does not exist or has been removed."
+            action={{
+              label: 'Back to Invoices',
+              onClick: () => navigate(routes.invoices.list),
+            }}
+          />
         </div>
       </AdminLayout>
     );
@@ -101,10 +97,10 @@ export function InvoicePage() {
           <EmptyState
             icon={<FileText className="h-10 w-10" />}
             title="Invoice not found"
-            message="This invoice doesn't exist or has been removed."
+            message="This invoice does not exist or has been removed."
             action={{
-              label: 'Back to Orders',
-              onClick: () => navigate(routes.orders.list),
+              label: 'Back to Invoices',
+              onClick: () => navigate(routes.invoices.list),
             }}
           />
         </div>
@@ -119,31 +115,43 @@ export function InvoicePage() {
           <Button
             variant="ghost"
             size="icon-sm"
-            onClick={() => navigate(routes.orders.detail(invoice.orderId))}
-            aria-label="Back to order"
+            onClick={() => navigate(routes.invoices.list)}
+            aria-label="Back to invoices"
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <PageHeader
             title={invoice.invoiceCode}
-            description={`Order #${invoice.orderCode}`}
+            description={
+              invoice.customerName
+                ? `${invoice.customerName} - Order #${invoice.orderCode}`
+                : `Order #${invoice.orderCode}`
+            }
+            actions={
+              <>
+                <CopyValueButton value={invoice.id} label="Copy ID" />
+                <Button size="sm" onClick={() => setStatusModalOpen(true)}>
+                  Update Status
+                </Button>
+              </>
+            }
           />
         </div>
 
         <InvoiceView
           invoice={invoice}
-          isMarkingPaid={markPaid.isPending}
-          isVoiding={voidInvoice.isPending}
-          onMarkPaid={() => void handleMarkPaid()}
-          onVoid={() => setVoidModalOpen(true)}
+          isUpdatingStatus={updateInvoiceStatus.isPending}
+          onUpdateStatus={() => setStatusModalOpen(true)}
         />
       </div>
 
-      <VoidInvoiceModal
-        open={voidModalOpen}
-        onClose={() => setVoidModalOpen(false)}
-        isSubmitting={voidInvoice.isPending}
-        onSubmit={(note) => void handleVoid(note)}
+      <InvoiceStatusUpdateModal
+        open={statusModalOpen}
+        onClose={() => setStatusModalOpen(false)}
+        currentStatus={invoice.status}
+        currentNotes={invoice.notes}
+        isSubmitting={updateInvoiceStatus.isPending}
+        onSubmit={(values) => void handleStatusUpdate(values)}
       />
     </AdminLayout>
   );

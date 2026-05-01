@@ -5,6 +5,7 @@ import { DataTable } from '@/shared/components/table/DataTable';
 import { TableToolbar } from '@/shared/components/table/TableToolbar';
 import { Pagination } from '@/shared/components/table/Pagination';
 import { Button } from '@/shared/components/ui/Button';
+import { CopyValueButton } from '@/shared/components/ui/CopyValueButton';
 import { StatusBadge } from '@/shared/components/ui/StatusBadge';
 import { SkeletonTable } from '@/shared/components/feedback/Skeleton';
 import { ErrorCard } from '@/shared/components/feedback/ErrorCard';
@@ -28,6 +29,36 @@ function buildEntityHref(entityType: string, entityId: string): string | null {
       return routes.payments.detail(entityId);
     default:
       return null;
+  }
+}
+
+function getEntityLabel(entityType: string): string {
+  switch (entityType) {
+    case 'ORDER':
+      return 'Order record';
+    case 'PRODUCT':
+      return 'Product record';
+    case 'VOUCHER':
+      return 'Voucher record';
+    case 'PAYMENT':
+      return 'Payment record';
+    default:
+      return `${entityType.toLowerCase()} record`;
+  }
+}
+
+function getEntityActionLabel(entityType: string): string {
+  switch (entityType) {
+    case 'ORDER':
+      return 'View order';
+    case 'PRODUCT':
+      return 'View product';
+    case 'VOUCHER':
+      return 'View voucher';
+    case 'PAYMENT':
+      return 'View payment';
+    default:
+      return 'Open record';
   }
 }
 
@@ -93,19 +124,21 @@ export function AuditLogTable({
               <span className="text-xs font-medium uppercase tracking-wide text-gray-400">
                 {entityType}
               </span>
-              {entityId && href ? (
-                <button
-                  type="button"
-                  onClick={() => navigate(href)}
-                  className="text-left text-sm font-mono text-primary-600 hover:text-primary-700 hover:underline"
-                >
-                  #{entityId}
-                </button>
-              ) : (
-                <span className="font-mono text-sm text-gray-700">
-                  {entityId ? `#${entityId}` : '-'}
-                </span>
-              )}
+              <span className="text-sm font-medium text-gray-900">
+                {entityId ? getEntityLabel(entityType) : 'Unknown record'}
+              </span>
+              <div className="mt-1 flex items-center gap-2">
+                {entityId && href && (
+                  <button
+                    type="button"
+                    onClick={() => navigate(href)}
+                    className="text-left text-xs font-medium text-primary-600 hover:text-primary-700 hover:underline"
+                  >
+                    {getEntityActionLabel(entityType)}
+                  </button>
+                )}
+                {entityId && <CopyValueButton value={entityId} label="Copy ID" />}
+              </div>
             </div>
           );
         },

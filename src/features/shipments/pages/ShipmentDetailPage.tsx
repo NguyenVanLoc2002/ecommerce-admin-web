@@ -3,7 +3,9 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Truck } from 'lucide-react';
 import { AdminLayout } from '@/shared/components/layout/AdminLayout';
 import { PageHeader } from '@/shared/components/layout/PageHeader';
+import { useBreadcrumbLabel } from '@/shared/components/layout';
 import { Button } from '@/shared/components/ui/Button';
+import { CopyValueButton } from '@/shared/components/ui/CopyValueButton';
 import { SkeletonDetail } from '@/shared/components/feedback/Skeleton';
 import { ErrorCard } from '@/shared/components/feedback/ErrorCard';
 import { EmptyState } from '@/shared/components/feedback/EmptyState';
@@ -32,12 +34,23 @@ export function ShipmentDetailPage() {
   } = useShipmentEvents(shipmentId);
   const updateStatus = useUpdateShipmentStatus(shipmentId);
 
+  useBreadcrumbLabel(
+    routes.shipments.detail(shipmentId),
+    isLoading
+      ? 'Loading...'
+      : (shipment?.shipmentCode
+        ?? shipment?.trackingNumber
+        ?? (isError ? 'Loading...' : 'Not found')),
+  );
+
   const handleUpdateStatus = async (values: UpdateStatusFormValues) => {
     try {
       await updateStatus.mutateAsync({ status: values.status, description: values.note });
 
       if (values.status === 'DELIVERED') {
-        toast.success('Shipment delivered. The linked order has been automatically marked as delivered.');
+        toast.success(
+          'Shipment delivered. The linked order has been automatically marked as delivered.',
+        );
       } else {
         toast.success('Shipment status updated.');
       }
@@ -46,7 +59,7 @@ export function ShipmentDetailPage() {
     } catch (err) {
       if (err instanceof AppError) {
         if (err.code === 'ORDER_STATUS_INVALID') {
-          toast.error('Shipment was updated by another user. Refreshing…');
+          toast.error('Shipment was updated by another user. Refreshing...');
           setTimeout(() => void refetch(), 1_000);
         } else {
           toast.error(err.message || 'Failed to update shipment status.');
@@ -105,8 +118,13 @@ export function ShipmentDetailPage() {
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <PageHeader
-            title={shipment.trackingNumber ?? `Shipment #${shipment.id}`}
-            description={`Order #${shipment.orderCode}`}
+            title={shipment.shipmentCode || shipment.trackingNumber || 'Shipment Details'}
+            description={
+              shipment.carrier
+                ? `Order #${shipment.orderCode} - ${shipment.carrier}`
+                : `Order #${shipment.orderCode}`
+            }
+            actions={<CopyValueButton value={shipment.id} label="Copy ID" />}
           />
         </div>
 

@@ -1,15 +1,15 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/constants/queryKeys';
 import { toast } from '@/shared/stores/uiStore';
-import type { AppError } from '@/shared/types/api.types';
+import type { AppError, EntityId } from '@/shared/types/api.types';
 import { reviewService } from '../services/reviewService';
 
 export function useRejectReview() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, adminNote }: { id: number; adminNote: string }) =>
-      reviewService.moderate(id, { action: 'REJECTED', adminNote }),
+    mutationFn: ({ id, adminNote }: { id: EntityId; adminNote: string }) =>
+      reviewService.moderate(id, { status: 'REJECTED', adminNote }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.reviews.all });
     },

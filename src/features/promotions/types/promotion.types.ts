@@ -1,4 +1,9 @@
-import type { PaginationParams, EntityId } from '@/shared/types/api.types';
+import type {
+  PaginationParams,
+  EntityId,
+  SoftDeleteFilterParams,
+  SoftDeletableRecord,
+} from '@/shared/types/api.types';
 import type { DiscountType, PromotionScope, PromotionRuleType } from '@/shared/types/enums';
 
 export interface PromotionRule {
@@ -10,7 +15,7 @@ export interface PromotionRule {
   createdAt: string;
 }
 
-export interface Promotion {
+export interface Promotion extends SoftDeletableRecord {
   id: EntityId;
   name: string;
   description: string | null;
@@ -29,7 +34,7 @@ export interface Promotion {
   updatedAt: string;
 }
 
-export interface PromotionSummary {
+export interface PromotionSummary extends SoftDeletableRecord {
   id: EntityId;
   name: string;
   description: string | null;
@@ -47,7 +52,7 @@ export interface PromotionSummary {
   updatedAt: string;
 }
 
-export interface PromotionListParams extends PaginationParams {
+export interface PromotionListParams extends PaginationParams, SoftDeleteFilterParams {
   name?: string;
   scope?: string;
   active?: boolean;

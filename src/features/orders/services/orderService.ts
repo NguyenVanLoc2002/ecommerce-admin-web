@@ -1,5 +1,6 @@
 import { apiClient } from '@/shared/lib/axios';
 import type { EntityId, PaginatedResponse } from '@/shared/types/api.types';
+import { cleanParams } from '@/shared/utils/cleanParams';
 import type { Order, OrderSummary, OrderListParams } from '../types/order.types';
 
 export const orderService = {
@@ -34,16 +35,14 @@ export const orderService = {
 };
 
 function sanitizeOrderParams(params: OrderListParams) {
-  const customerId = normalizeString(params.customerId);
-
-  return {
+  return cleanParams({
     page: params.page,
     size: params.size,
-    ...(params.sort ? { sort: params.sort } : {}),
-    ...(customerId ? { customerId } : {}),
-    ...(params.status ? { status: params.status } : {}),
-    ...(params.paymentStatus ? { paymentStatus: params.paymentStatus } : {}),
-  };
+    sort: params.sort,
+    customerId: normalizeString(params.customerId),
+    status: params.status,
+    paymentStatus: params.paymentStatus,
+  });
 }
 
 function normalizeOrderSummary(input: unknown): OrderSummary {

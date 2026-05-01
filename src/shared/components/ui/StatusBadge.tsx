@@ -15,6 +15,11 @@ import { formatEnumLabel } from '@/shared/utils/formatEnumLabel';
 
 type BadgeVariant = 'default' | 'primary' | 'success' | 'warning' | 'danger' | 'info';
 
+const softDeleteStatusMap = {
+  ACTIVE: { label: 'Active', variant: 'success' as const },
+  DELETED: { label: 'Deleted', variant: 'danger' as const },
+};
+
 const orderStatusMap: Record<OrderStatus, { label: string; variant: BadgeVariant }> = {
   PENDING: { label: 'Pending', variant: 'warning' },
   AWAITING_PAYMENT: { label: 'Awaiting Payment', variant: 'warning' },
@@ -141,7 +146,8 @@ type StatusBadgeProps =
   | { type: 'review'; status: ReviewStatus | string | null | undefined }
   | { type: 'product'; status: ProductStatus | string | null | undefined }
   | { type: 'variant'; status: VariantStatus | string | null | undefined }
-  | { type: 'entity'; status: EntityStatus | string | null | undefined };
+  | { type: 'entity'; status: EntityStatus | string | null | undefined }
+  | { type: 'soft-delete'; status: boolean | 'ACTIVE' | 'DELETED' | string | null | undefined };
 
 function fallbackStatus(status: string | null | undefined) {
   return {
@@ -204,6 +210,17 @@ export function StatusBadge(props: StatusBadgeProps) {
     }
     case 'entity': {
       resolved = entityStatusMap[props.status as EntityStatus] ?? fallbackStatus(props.status);
+      break;
+    }
+    case 'soft-delete': {
+      const state =
+        props.status === true
+          ? 'DELETED'
+          : props.status === false
+            ? 'ACTIVE'
+            : props.status;
+      resolved =
+        softDeleteStatusMap[state as keyof typeof softDeleteStatusMap] ?? fallbackStatus(state);
       break;
     }
   }

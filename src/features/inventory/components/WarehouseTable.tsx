@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { Plus, Warehouse as WarehouseIcon } from 'lucide-react';
 import { DataTable } from '@/shared/components/table/DataTable';
 import { TableToolbar } from '@/shared/components/table/TableToolbar';
-import { Pagination } from '@/shared/components/table/Pagination';
+import { SoftDeleteFilter } from '@/shared/components/ui/SoftDeleteFilter';
 import { StatusBadge } from '@/shared/components/ui/StatusBadge';
 import { Button } from '@/shared/components/ui/Button';
 import { Select } from '@/shared/components/ui/Select';
@@ -10,9 +10,8 @@ import { SkeletonTable } from '@/shared/components/feedback/Skeleton';
 import { ErrorCard } from '@/shared/components/feedback/ErrorCard';
 import { EmptyState } from '@/shared/components/feedback/EmptyState';
 import { formatDate } from '@/shared/utils/formatDate';
-import type { ColumnDef, SortState } from '@/shared/components/table/types';
-import type { PaginatedResponse } from '@/shared/types/api.types';
-import type { VariantStatus } from '@/shared/types/enums';
+import type { ColumnDef } from '@/shared/components/table/types';
+import { SoftDeleteState } from '@/shared/types/api.types';
 import type { Warehouse, WarehouseListParams } from '../types/inventory.types';
 import { WarehouseRowActions } from './WarehouseRowActions';
 
@@ -23,14 +22,13 @@ const STATUS_FILTER_OPTIONS = [
 ];
 
 interface WarehouseTableProps {
-  data: PaginatedResponse<Warehouse> | undefined;
+  data: Warehouse[] | undefined;
   isLoading: boolean;
   isError: boolean;
   onRetry: () => void;
   filters: WarehouseListParams;
   onFiltersChange: (updates: Partial<WarehouseListParams>) => void;
-  sort: SortState | undefined;
-  onSortChange: (sort: SortState) => void;
+  canWrite: boolean;
   onEdit: (warehouse: Warehouse) => void;
   onCreateNew: () => void;
 }
@@ -42,8 +40,7 @@ export function WarehouseTable({
   onRetry,
   filters,
   onFiltersChange,
-  sort,
-  onSortChange,
+  canWrite,
   onEdit,
   onCreateNew,
 }: WarehouseTableProps) {
@@ -52,9 +49,8 @@ export function WarehouseTable({
       {
         id: 'name',
         header: 'Name',
-        enableSorting: true,
         cell: ({ row }) => (
-          <p className="font-medium text-gray-900">{row.original.name}</p>
+          <p className="truncate text-sm font-semibold text-gray-900">{row.original.name}</p>
         ),
       },
       {
@@ -68,8 +64,8 @@ export function WarehouseTable({
         id: 'location',
         header: 'Location',
         cell: ({ row }) => (
-          <span className="text-gray-500 text-sm">
-            {row.original.location ?? '—'}
+          <span className="text-sm text-gray-500">
+            {row.original.location ?? 'Not set'}
           </span>
         ),
       },
@@ -77,15 +73,16 @@ export function WarehouseTable({
         id: 'status',
         header: 'Status',
         cell: ({ row }) => (
-          <StatusBadge type="variant" status={row.original.status as VariantStatus} />
+          <StatusBadge type="entity" status={row.original.status} />
         ),
       },
       {
         id: 'createdAt',
         header: 'Created',
-        enableSorting: true,
         cell: ({ row }) => (
-          <span className="text-gray-500 text-sm">{formatDate(row.original.createdAt)}</span>
+          <span className="whitespace-nowrap text-xs text-gray-500">
+            {formatDate(row.original.createdAt)}
+          </span>
         ),
       },
       {
@@ -93,11 +90,13 @@ export function WarehouseTable({
         header: '',
         className: 'w-12',
         cell: ({ row }) => (
-          <WarehouseRowActions warehouse={row.original} onEdit={onEdit} />
+          filters.deletedState === SoftDeleteState.DELETED
+            ? null
+            : <WarehouseRowActions warehouse={row.original} onEdit={onEdit} />
         ),
       },
     ],
-    [onEdit],
+    [filters.deletedState, onEdit],
   );
 
   if (isLoading) return <SkeletonTable rows={6} />;
@@ -106,47 +105,51 @@ export function WarehouseTable({
   return (
     <div className="space-y-4">
       <TableToolbar
-        searchValue={filters.keyword ?? ''}
-        onSearchChange={(keyword) => onFiltersChange({ keyword: keyword || undefined })}
-        searchPlaceholder="Search warehouses…"
         filters={
-          <Select
-            options={STATUS_FILTER_OPTIONS}
-            value={filters.status ?? ''}
-            onChange={(e) => onFiltersChange({ status: e.target.value || undefined })}
-            className="h-9 w-36 text-sm"
-          />
+          <>
+            <Select
+              options={STATUS_FILTER_OPTIONS}
+              value={filters.status ?? ''}
+              onChange={(e) => onFiltersChange({ status: e.target.value || undefined })}
+              className="h-9 w-36 text-sm"
+            />
+            <SoftDeleteFilter
+              value={filters.deletedState ?? SoftDeleteState.ACTIVE}
+              onChange={(deletedState) => onFiltersChange({ deletedState })}
+              className="h-9 w-32 text-sm"
+            />
+          </>
         }
-        actions={
+        actions={canWrite ? (
           <Button size="sm" onClick={onCreateNew} leftIcon={<Plus className="h-4 w-4" />}>
             Add Warehouse
           </Button>
-        }
+        ) : undefined}
       />
 
       <DataTable
-        data={data?.items ?? []}
+        data={data ?? []}
         columns={columns}
         getRowId={(row) => String(row.id)}
-        sort={sort}
-        onSortChange={onSortChange}
         emptyState={
           <EmptyState
             icon={<WarehouseIcon className="h-10 w-10" />}
-            title="No warehouses yet"
-            message="Add your first warehouse to start tracking inventory."
-            action={{ label: 'Add Warehouse', onClick: onCreateNew }}
+            title={
+              filters.deletedState === SoftDeleteState.DELETED
+                ? 'No deleted warehouses'
+                : filters.deletedState === SoftDeleteState.ALL
+                  ? 'No warehouses yet'
+                  : 'No active warehouses'
+            }
+            message={
+              filters.deletedState === SoftDeleteState.DELETED
+                ? 'Deleted warehouses will appear here.'
+                : 'Add your first warehouse to start tracking inventory.'
+            }
+            action={canWrite ? { label: 'Add Warehouse', onClick: onCreateNew } : undefined}
           />
         }
       />
-
-      {data && data.totalPages > 1 && (
-        <Pagination
-          pagination={data}
-          onPageChange={(page) => onFiltersChange({ page } as Partial<WarehouseListParams>)}
-          onPageSizeChange={(size) => onFiltersChange({ size } as Partial<WarehouseListParams>)}
-        />
-      )}
     </div>
   );
 }

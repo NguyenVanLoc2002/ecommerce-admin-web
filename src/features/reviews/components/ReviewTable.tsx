@@ -2,15 +2,16 @@ import { useMemo } from 'react';
 import { Star } from 'lucide-react';
 import { DataTable } from '@/shared/components/table/DataTable';
 import { Pagination } from '@/shared/components/table/Pagination';
-import { Badge } from '@/shared/components/ui/Badge';
 import { Select } from '@/shared/components/ui/Select';
+import { SoftDeleteFilter } from '@/shared/components/ui/SoftDeleteFilter';
+import { StatusBadge } from '@/shared/components/ui/StatusBadge';
 import { SkeletonTable } from '@/shared/components/feedback/Skeleton';
 import { ErrorCard } from '@/shared/components/feedback/ErrorCard';
 import { EmptyState } from '@/shared/components/feedback/EmptyState';
 import { formatDateTime } from '@/shared/utils/formatDate';
-import type { ColumnDef } from '@/shared/components/table/types';
-import type { RowSelectionState } from '@/shared/components/table/types';
-import type { PaginatedResponse } from '@/shared/types/api.types';
+import { resolveSoftDeleteState } from '@/shared/utils/softDelete';
+import type { ColumnDef, RowSelectionState } from '@/shared/components/table/types';
+import { SoftDeleteState, type PaginatedResponse } from '@/shared/types/api.types';
 import type { Review, ReviewListParams } from '../types/review.types';
 import { ReviewRowActions } from './ReviewRowActions';
 
@@ -19,15 +20,6 @@ const STATUS_OPTIONS = [
   { value: 'APPROVED', label: 'Approved' },
   { value: 'REJECTED', label: 'Rejected' },
 ];
-
-const STATUS_BADGE_VARIANT: Record<
-  Review['status'],
-  'warning' | 'success' | 'danger'
-> = {
-  PENDING: 'warning',
-  APPROVED: 'success',
-  REJECTED: 'danger',
-};
 
 const RATING_OPTIONS = [
   { value: '', label: 'All ratings' },
@@ -90,7 +82,7 @@ export function ReviewTable({
         cell: ({ row }) => (
           <div>
             <p className="text-sm font-medium text-gray-900">{row.original.customerName}</p>
-            <p className="text-xs text-gray-400 mt-0.5">{formatDateTime(row.original.createdAt)}</p>
+            <p className="mt-0.5 text-xs text-gray-400">{formatDateTime(row.original.createdAt)}</p>
           </div>
         ),
       },
@@ -99,8 +91,10 @@ export function ReviewTable({
         header: 'Product',
         cell: ({ row }) => (
           <div>
-            <p className="text-sm text-gray-700 line-clamp-1">{row.original.productName}</p>
-            <p className="text-xs text-gray-400 mt-0.5">{row.original.variantName}</p>
+            <p className="line-clamp-1 text-sm text-gray-700">{row.original.productName}</p>
+            <p className="mt-0.5 text-xs text-gray-400">
+              {row.original.variantName ?? row.original.sku ?? 'Variant not specified'}
+            </p>
           </div>
         ),
       },
@@ -119,24 +113,28 @@ export function ReviewTable({
         ),
       },
       {
+        id: 'recordStatus',
+        header: 'Record Status',
+        cell: ({ row }) => (
+          <StatusBadge
+            type="soft-delete"
+            status={resolveSoftDeleteState(row.original, filters.deletedState)}
+          />
+        ),
+      },
+      {
         id: 'status',
         header: 'Status',
-        cell: ({ row }) => (
-          <Badge variant={STATUS_BADGE_VARIANT[row.original.status]}>
-            {row.original.status.charAt(0) + row.original.status.slice(1).toLowerCase()}
-          </Badge>
-        ),
+        cell: ({ row }) => <StatusBadge type="review" status={row.original.status} />,
       },
       {
         id: 'actions',
         header: '',
         className: 'w-20',
-        cell: ({ row }) => (
-          <ReviewRowActions review={row.original} onReject={onReject} />
-        ),
+        cell: ({ row }) => <ReviewRowActions review={row.original} onReject={onReject} />,
       },
     ],
-    [onReject],
+    [filters.deletedState, onReject],
   );
 
   if (isLoading) return <SkeletonTable rows={8} />;
@@ -146,16 +144,13 @@ export function ReviewTable({
 
   return (
     <div className="space-y-3">
-      {/* Inline filter toolbar */}
       <div className="flex items-center gap-3">
         <div className="flex gap-1 rounded-lg border border-gray-200 bg-gray-50 p-1">
           {STATUS_OPTIONS.map((opt) => (
             <button
               key={opt.value}
               type="button"
-              onClick={() =>
-                onFiltersChange({ status: opt.value as Review['status'], page: 0 })
-              }
+              onClick={() => onFiltersChange({ status: opt.value as Review['status'], page: 0 })}
               className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
                 currentStatus === opt.value
                   ? 'bg-white text-gray-900 shadow-sm'
@@ -180,6 +175,12 @@ export function ReviewTable({
           }}
           className="w-36 text-xs"
         />
+
+        <SoftDeleteFilter
+          value={filters.deletedState ?? SoftDeleteState.ACTIVE}
+          onChange={(deletedState) => onFiltersChange({ deletedState, page: 0 })}
+          className="w-32 text-xs"
+        />
       </div>
 
       <DataTable
@@ -195,12 +196,16 @@ export function ReviewTable({
             icon={<Star className="h-10 w-10" />}
             title={
               currentStatus === 'PENDING'
-                ? 'No reviews pending — you\'re all caught up!'
+                ? filters.deletedState === SoftDeleteState.DELETED
+                  ? 'No deleted pending reviews'
+                  : 'No reviews pending, you are all caught up!'
                 : `No ${currentStatus.toLowerCase()} reviews`
             }
             message={
               currentStatus === 'PENDING'
-                ? 'All reviews have been moderated.'
+                ? filters.deletedState === SoftDeleteState.DELETED
+                  ? 'Deleted reviews that match this filter will appear here.'
+                  : 'All reviews have been moderated.'
                 : undefined
             }
           />
@@ -211,7 +216,9 @@ export function ReviewTable({
         <Pagination
           pagination={data}
           onPageChange={(page) => onFiltersChange({ page } as Partial<ReviewListParams>)}
-          onPageSizeChange={(size) => onFiltersChange({ size } as Partial<ReviewListParams>)}
+          onPageSizeChange={(size) =>
+            onFiltersChange({ size, page: 0 } as Partial<ReviewListParams>)
+          }
         />
       )}
     </div>

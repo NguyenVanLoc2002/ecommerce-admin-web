@@ -11,7 +11,7 @@ export function useUpdateWarehouse() {
     mutationFn: ({ id, body }: { id: EntityId; body: UpdateWarehouseRequest }) =>
       warehouseService.update(id, body),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.warehouses.lists() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.warehouses.all });
     },
   });
 }

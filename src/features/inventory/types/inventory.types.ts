@@ -1,9 +1,14 @@
-import type { PaginationParams, EntityId } from '@/shared/types/api.types';
+import type {
+  PaginationParams,
+  EntityId,
+  SoftDeleteFilterParams,
+  SoftDeletableRecord,
+} from '@/shared/types/api.types';
 import type { StockMovementType, EntityStatus } from '@/shared/types/enums';
 
 // ─── Warehouse ────────────────────────────────────────────────────────────────
 
-export interface Warehouse {
+export interface Warehouse extends SoftDeletableRecord {
   id: EntityId;
   name: string;
   code: string;
@@ -13,9 +18,8 @@ export interface Warehouse {
   updatedAt: string;
 }
 
-export interface WarehouseListParams extends PaginationParams {
-  keyword?: string;
-  status?: string;
+export interface WarehouseListParams extends SoftDeleteFilterParams {
+  status?: EntityStatus;
 }
 
 export interface CreateWarehouseRequest {
@@ -48,8 +52,15 @@ export interface InventoryStock {
 }
 
 export interface InventoryStockParams extends PaginationParams {
+  variantId?: EntityId;
   keyword?: string;
   warehouseId?: EntityId;
+  productId?: EntityId;
+  sku?: string;
+  variantStatus?: string;
+  outOfStock?: boolean;
+  lowStock?: boolean;
+  lowStockThreshold?: number;
 }
 
 export interface AdjustStockRequest {
@@ -67,13 +78,19 @@ export interface StockMovement {
   warehouseId: EntityId;
   warehouseName: string;
   variantId: EntityId;
-  variantSku: string;
+  sku: string;
   variantName: string;
-  type: StockMovementType;
+  movementType: string;
   quantity: number;
-  reason: string | null;
   note: string | null;
+  referenceType: string | null;
   referenceId: EntityId | null;
+  beforeOnHand: number | null;
+  beforeReserved: number | null;
+  beforeAvailable: number | null;
+  afterOnHand: number | null;
+  afterReserved: number | null;
+  afterAvailable: number | null;
   createdAt: string;
   createdBy: string;
 }
@@ -81,7 +98,7 @@ export interface StockMovement {
 export interface StockMovementParams extends PaginationParams {
   variantId?: EntityId;
   warehouseId?: EntityId;
-  movementType?: string;
+  movementType?: StockMovementType;
 }
 
 // ─── Reservation ──────────────────────────────────────────────────────────────

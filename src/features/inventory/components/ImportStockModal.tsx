@@ -7,6 +7,7 @@ import { FormField } from '@/shared/components/form/FormField';
 import { FormSelect } from '@/shared/components/form/FormSelect';
 import { importStockSchema, type ImportStockFormValues } from '../schemas/importStockSchema';
 import type { Warehouse } from '../types/inventory.types';
+import { InventoryVariantSelector } from './InventoryVariantSelector';
 
 interface ImportStockContext {
   warehouseId?: string;
@@ -81,7 +82,13 @@ export function ImportStockModal({
       }
     >
       <FormProvider {...form}>
-        <form id="import-stock-form" onSubmit={form.handleSubmit(onSubmit)} noValidate>
+        <form
+          id="import-stock-form"
+          onSubmit={(event) => {
+            void form.handleSubmit(onSubmit)(event);
+          }}
+          noValidate
+        >
           <div className="space-y-4">
             {hasContext ? (
               <>
@@ -109,14 +116,7 @@ export function ImportStockModal({
                   options={[{ value: '', label: 'Select warehouse...' }, ...warehouseOptions]}
                   disabled={isSubmitting}
                 />
-                <FormField
-                  name="variantId"
-                  label="Variant ID"
-                  required
-                  placeholder="Enter variant UUID"
-                  hint="Find the variant UUID on the Product Variants page."
-                  disabled={isSubmitting}
-                />
+                <InventoryVariantSelector open={open} disabled={isSubmitting} />
               </>
             )}
 

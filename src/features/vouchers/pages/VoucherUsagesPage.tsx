@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { AdminLayout } from '@/shared/components/layout/AdminLayout';
 import { PageHeader } from '@/shared/components/layout/PageHeader';
+import { useBreadcrumbLabel } from '@/shared/components/layout';
 import { Button } from '@/shared/components/ui/Button';
 import { Badge } from '@/shared/components/ui/Badge';
 import { SkeletonTable } from '@/shared/components/feedback/Skeleton';
@@ -10,6 +11,7 @@ import { ErrorCard } from '@/shared/components/feedback/ErrorCard';
 import { formatMoney } from '@/shared/utils/formatMoney';
 import { formatDate } from '@/shared/utils/formatDate';
 import { routes } from '@/constants/routes';
+import { AppError } from '@/shared/types/api.types';
 import { useVoucher } from '../hooks/useVoucher';
 import { useVoucherUsages } from '../hooks/useVoucherUsages';
 import { VoucherUsageTable } from '../components/VoucherUsageTable';
@@ -25,7 +27,8 @@ export function VoucherUsagesPage() {
   const {
     data: voucher,
     isLoading: voucherLoading,
-    isError: voucherError,
+    isError: hasVoucherError,
+    error: voucherError,
     refetch: refetchVoucher,
   } = useVoucher(voucherId);
 
@@ -36,11 +39,21 @@ export function VoucherUsagesPage() {
     refetch: refetchUsages,
   } = useVoucherUsages(voucherId, { page, size });
 
+  const isNotFound = voucherError instanceof AppError && voucherError.code === 'VOUCHER_NOT_FOUND';
+  const pageTitle = voucherLoading
+    ? 'Loading...'
+    : (voucher?.code ?? (isNotFound ? 'Not found' : 'Voucher Usages'));
+
+  useBreadcrumbLabel(
+    voucherId ? routes.vouchers.edit(voucherId) : undefined,
+    voucherLoading ? 'Loading...' : (voucher?.code ?? (isNotFound ? 'Not found' : 'Voucher')),
+  );
+
   return (
     <AdminLayout>
       <div className="space-y-6 p-6">
         <PageHeader
-          title="Voucher Usages"
+          title={pageTitle}
           description="All redemptions recorded for this voucher code."
           actions={
             <Button
@@ -54,11 +67,11 @@ export function VoucherUsagesPage() {
         />
 
         {voucherLoading && <SkeletonTable rows={3} />}
-        {!voucherLoading && voucherError && (
+        {!voucherLoading && hasVoucherError && (
           <ErrorCard onRetry={() => void refetchVoucher()} />
         )}
 
-        {!voucherLoading && !voucherError && voucher && (
+        {!voucherLoading && !hasVoucherError && voucher && (
           <div className="bg-white border border-gray-200 rounded-lg p-5">
             <div className="flex flex-wrap items-center gap-4">
               <div>

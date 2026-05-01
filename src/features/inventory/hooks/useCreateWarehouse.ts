@@ -6,9 +6,9 @@ export function useCreateWarehouse() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: warehouseService.create,
+    mutationFn: (body) => warehouseService.create(body),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.warehouses.lists() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.warehouses.all });
     },
   });
 }

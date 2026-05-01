@@ -20,6 +20,7 @@ export interface ShipmentSummary {
   id: EntityId;
   orderId: EntityId;
   orderCode: string;
+  shipmentCode: string;
   customer: ShipmentCustomer;
   trackingNumber: string | null;
   carrier: string | null;
@@ -35,6 +36,7 @@ export interface Shipment {
   id: EntityId;
   orderId: EntityId;
   orderCode: string;
+  shipmentCode: string;
   customer: ShipmentCustomer;
   shippingAddress: ShipmentAddress;
   trackingNumber: string | null;

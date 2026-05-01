@@ -1,7 +1,12 @@
-import type { PaginationParams, EntityId } from '@/shared/types/api.types';
+import type {
+  PaginationParams,
+  EntityId,
+  SoftDeleteFilterParams,
+  SoftDeletableRecord,
+} from '@/shared/types/api.types';
 import type { EntityStatus } from '@/shared/types/enums';
 
-export interface Category {
+export interface Category extends SoftDeletableRecord {
   id: EntityId;
   name: string;
   slug: string;
@@ -13,7 +18,7 @@ export interface Category {
   updatedAt: string;
 }
 
-export interface CategoryListParams extends PaginationParams {
+export interface CategoryListParams extends PaginationParams, SoftDeleteFilterParams {
   name?: string;
   status?: string;
 }

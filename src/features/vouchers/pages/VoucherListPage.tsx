@@ -8,6 +8,7 @@ import { useTableFilters } from '@/shared/hooks/useTableFilters';
 import { useDebounce } from '@/shared/hooks/useDebounce';
 import { usePermission } from '@/constants/permissions';
 import { routes } from '@/constants/routes';
+import { SoftDeleteState } from '@/shared/types/api.types';
 import { useVouchers } from '../hooks/useVouchers';
 import { VoucherTable } from '../components/VoucherTable';
 import { VoucherFiltersDrawer } from '../components/VoucherFiltersDrawer';
@@ -17,12 +18,20 @@ const DEFAULT_FILTERS: VoucherListParams = {
   page: 0,
   size: 20,
   sort: 'createdAt,desc',
+  code: undefined,
+  promotionId: undefined,
+  active: undefined,
+  dateFrom: undefined,
+  dateTo: undefined,
+  deletedState: SoftDeleteState.ACTIVE,
 };
 
 export function VoucherListPage() {
   const navigate = useNavigate();
   const canWrite = usePermission('vouchers', 'write');
-  const [filters, setFilters, resetFilters] = useTableFilters<VoucherListParams>(DEFAULT_FILTERS);
+  const [filters, setFilters, resetFilters] = useTableFilters<VoucherListParams>(DEFAULT_FILTERS, {
+    booleanKeys: ['active'],
+  });
   const [filtersOpen, setFiltersOpen] = useState(false);
 
   const debouncedCode = useDebounce(filters.code ?? '', 300);

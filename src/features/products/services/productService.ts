@@ -12,10 +12,20 @@ import type {
   UpdateProductRequest,
 } from '../types/product.types';
 import type { ProductStatus } from '@/shared/types/enums';
+import { cleanParams } from '@/shared/utils/cleanParams';
+import { toSoftDeleteQuery } from '@/shared/utils/softDelete';
 
 export const productService = {
-  async getList(params: ProductListParams): Promise<PaginatedResponse<ProductListItem>> {
-    const response = await apiClient.get<PaginatedResponse<unknown>>('/admin/products', { params });
+  async getList({
+    deletedState,
+    ...params
+  }: ProductListParams): Promise<PaginatedResponse<ProductListItem>> {
+    const response = await apiClient.get<PaginatedResponse<unknown>>('/admin/products', {
+      params: cleanParams({
+        ...params,
+        ...toSoftDeleteQuery(deletedState),
+      }),
+    });
 
     return {
       ...response,
@@ -75,6 +85,7 @@ function normalizeProductListItem(input: unknown): ProductListItem {
     createdAt: asString(record.createdAt),
     variantCount,
     activeVariantCount,
+    isDeleted: asBoolean(record.isDeleted),
   };
 }
 
@@ -114,11 +125,19 @@ function normalizeVariant(input: unknown, productId: EntityId): ProductVariant {
     weightGram: asNullableNumber(record.weightGram),
     status: asString(record.status) as ProductVariant['status'],
     attributes: Array.isArray(record.attributes)
-      ? record.attributes.map((attribute) => ({
-          attributeName: asString(toRecord(attribute).attributeName ?? toRecord(attribute).name),
-          value: asString(toRecord(attribute).value),
-        }))
+      ? record.attributes.map((attribute) => {
+          const attributeRecord = toRecord(attribute);
+          return {
+            attributeId: asString(attributeRecord.attributeId),
+            attributeName: asString(attributeRecord.attributeName ?? attributeRecord.name),
+            attributeCode: asString(attributeRecord.attributeCode),
+            valueId: asString(attributeRecord.valueId),
+            value: asString(attributeRecord.value),
+            displayValue: asNullableString(attributeRecord.displayValue),
+          };
+        })
       : [],
+    isDeleted: asBoolean(record.isDeleted),
   };
 }
 
@@ -188,6 +207,10 @@ function asNumber(value: unknown): number | null {
 
 function asNullableNumber(value: unknown): number | null {
   return value == null ? null : asNumber(value);
+}
+
+function asBoolean(value: unknown): boolean | undefined {
+  return typeof value === 'boolean' ? value : undefined;
 }
 
 function arrayOfStrings(value: unknown): string[] | null {

@@ -39,6 +39,27 @@ export interface PaginationParams {
   sort?: string;
 }
 
+export const SoftDeleteState = {
+  ACTIVE: 'ACTIVE',
+  DELETED: 'DELETED',
+  ALL: 'ALL',
+} as const;
+
+export type SoftDeleteState = (typeof SoftDeleteState)[keyof typeof SoftDeleteState];
+
+export interface SoftDeleteFilterParams {
+  deletedState?: SoftDeleteState;
+}
+
+export interface SoftDeleteQueryParams {
+  isDeleted?: boolean;
+  includeDeleted?: boolean;
+}
+
+export interface SoftDeletableRecord {
+  isDeleted?: boolean;
+}
+
 export type ToastVariant = 'success' | 'error' | 'warning' | 'info';
 
 export interface Toast {

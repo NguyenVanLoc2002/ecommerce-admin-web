@@ -3,6 +3,7 @@ import { Plus, Tag } from 'lucide-react';
 import { DataTable } from '@/shared/components/table/DataTable';
 import { TableToolbar } from '@/shared/components/table/TableToolbar';
 import { Pagination } from '@/shared/components/table/Pagination';
+import { SoftDeleteFilter } from '@/shared/components/ui/SoftDeleteFilter';
 import { StatusBadge } from '@/shared/components/ui/StatusBadge';
 import { Button } from '@/shared/components/ui/Button';
 import { Select } from '@/shared/components/ui/Select';
@@ -10,8 +11,9 @@ import { SkeletonTable } from '@/shared/components/feedback/Skeleton';
 import { ErrorCard } from '@/shared/components/feedback/ErrorCard';
 import { EmptyState } from '@/shared/components/feedback/EmptyState';
 import { formatDate } from '@/shared/utils/formatDate';
+import { resolveSoftDeleteState } from '@/shared/utils/softDelete';
 import type { ColumnDef, SortState } from '@/shared/components/table/types';
-import type { PaginatedResponse } from '@/shared/types/api.types';
+import { SoftDeleteState, type PaginatedResponse } from '@/shared/types/api.types';
 import type { EntityStatus } from '@/shared/types/enums';
 import type { Category, CategoryListParams } from '../types/category.types';
 import { CategoryRowActions } from './CategoryRowActions';
@@ -82,6 +84,16 @@ export function CategoryTable({
         ),
       },
       {
+        id: 'recordStatus',
+        header: 'Record Status',
+        cell: ({ row }) => (
+          <StatusBadge
+            type="soft-delete"
+            status={resolveSoftDeleteState(row.original, filters.deletedState)}
+          />
+        ),
+      },
+      {
         id: 'status',
         header: 'Status',
         cell: ({ row }) => (
@@ -114,7 +126,7 @@ export function CategoryTable({
         ),
       },
     ],
-    [onEdit, maxProductCount],
+    [filters.deletedState, onEdit, maxProductCount],
   );
 
   if (isLoading) return <SkeletonTable rows={6} />;
@@ -127,12 +139,19 @@ export function CategoryTable({
         onSearchChange={(name) => onFiltersChange({ name: name || undefined })}
         searchPlaceholder="Search categories…"
         filters={
-          <Select
-            options={STATUS_FILTER_OPTIONS}
-            value={filters.status ?? ''}
-            onChange={(e) => onFiltersChange({ status: e.target.value || undefined })}
-            className="h-9 w-36 text-sm"
-          />
+          <>
+            <Select
+              options={STATUS_FILTER_OPTIONS}
+              value={filters.status ?? ''}
+              onChange={(e) => onFiltersChange({ status: e.target.value || undefined })}
+              className="h-9 w-36 text-sm"
+            />
+            <SoftDeleteFilter
+              value={filters.deletedState ?? SoftDeleteState.ACTIVE}
+              onChange={(deletedState) => onFiltersChange({ deletedState })}
+              className="h-9 w-32 text-sm"
+            />
+          </>
         }
         actions={
           <Button size="md" onClick={onCreateNew} leftIcon={<Plus className="h-4 w-4" />}>
@@ -150,8 +169,18 @@ export function CategoryTable({
         emptyState={
           <EmptyState
             icon={<Tag className="h-10 w-10" />}
-            title="No categories yet"
-            message="Create your first category to organize your product catalog."
+            title={
+              filters.deletedState === SoftDeleteState.DELETED
+                ? 'No deleted categories'
+                : filters.deletedState === SoftDeleteState.ALL
+                  ? 'No categories yet'
+                  : 'No active categories'
+            }
+            message={
+              filters.deletedState === SoftDeleteState.DELETED
+                ? 'Deleted categories will appear here.'
+                : 'Create your first category to organize your product catalog.'
+            }
             action={{ label: 'Add Category', onClick: onCreateNew }}
           />
         }

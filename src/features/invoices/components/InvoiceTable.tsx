@@ -1,11 +1,11 @@
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText } from 'lucide-react';
+import { FileText, SlidersHorizontal } from 'lucide-react';
 import { DataTable } from '@/shared/components/table/DataTable';
 import { TableToolbar } from '@/shared/components/table/TableToolbar';
 import { Pagination } from '@/shared/components/table/Pagination';
 import { StatusBadge } from '@/shared/components/ui/StatusBadge';
-import { Select } from '@/shared/components/ui/Select';
+import { Button } from '@/shared/components/ui/Button';
 import { SkeletonTable } from '@/shared/components/feedback/Skeleton';
 import { ErrorCard } from '@/shared/components/feedback/ErrorCard';
 import { EmptyState } from '@/shared/components/feedback/EmptyState';
@@ -15,13 +15,7 @@ import { routes } from '@/constants/routes';
 import type { ColumnDef, SortState } from '@/shared/components/table/types';
 import type { PaginatedResponse } from '@/shared/types/api.types';
 import type { InvoiceSummary, InvoiceListParams } from '../types/invoice.types';
-
-const STATUS_OPTIONS = [
-  { value: '', label: 'All statuses' },
-  { value: 'ISSUED', label: 'Issued' },
-  { value: 'PAID', label: 'Paid' },
-  { value: 'VOIDED', label: 'Voided' },
-];
+import { InvoiceRowActions } from './InvoiceRowActions';
 
 interface InvoiceTableProps {
   data: PaginatedResponse<InvoiceSummary> | undefined;
@@ -32,6 +26,7 @@ interface InvoiceTableProps {
   onFiltersChange: (updates: Partial<InvoiceListParams>) => void;
   sort: SortState | undefined;
   onSortChange: (sort: SortState) => void;
+  onOpenFilters: () => void;
 }
 
 export function InvoiceTable({
@@ -43,36 +38,62 @@ export function InvoiceTable({
   onFiltersChange,
   sort,
   onSortChange,
+  onOpenFilters,
 }: InvoiceTableProps) {
   const navigate = useNavigate();
+  const activeFilterCount = [
+    filters.orderCode,
+    filters.status,
+    filters.dateFrom,
+    filters.dateTo,
+  ].filter((value) => value !== undefined && value !== '').length;
 
   const columns = useMemo<ColumnDef<InvoiceSummary>[]>(
     () => [
       {
         id: 'invoiceCode',
-        header: 'Invoice',
+        header: 'Invoice Code',
         enableSorting: true,
         cell: ({ row }) => (
+          <span className="font-mono text-sm font-semibold text-primary-600">
+            {row.original.invoiceCode}
+          </span>
+        ),
+      },
+      {
+        id: 'orderCode',
+        header: 'Order Code',
+        enableSorting: true,
+        cell: ({ row }) => (
+          <span className="font-mono text-sm text-gray-700">#{row.original.orderCode}</span>
+        ),
+      },
+      {
+        id: 'customerName',
+        header: 'Customer',
+        cell: ({ row }) => (
           <div className="min-w-0">
-            <button
-              type="button"
-              onClick={() => navigate(routes.invoices.detail(row.original.id))}
-              className="rounded-sm font-mono text-sm font-bold text-primary-600 transition-colors hover:text-primary-700 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-1"
-            >
-              {row.original.invoiceCode}
-            </button>
-            <p className="mt-0.5 truncate text-xs text-gray-500">Order #{row.original.orderCode}</p>
+            <p className="truncate text-sm font-medium text-gray-900">{row.original.customerName}</p>
+            {row.original.customerPhone && (
+              <p className="truncate text-xs text-gray-500">{row.original.customerPhone}</p>
+            )}
           </div>
         ),
       },
       {
-        id: 'receiverName',
-        header: 'Receiver',
+        id: 'status',
+        header: 'Status',
+        enableSorting: true,
+        cell: ({ row }) => <StatusBadge type="invoice" status={row.original.status} />,
+      },
+      {
+        id: 'paymentStatus',
+        header: 'Payment Status',
+        enableSorting: true,
         cell: ({ row }) => (
-          <div className="min-w-0">
-            <p className="truncate text-sm font-medium text-gray-900">{row.original.receiverName}</p>
-            <p className="text-xs text-gray-500">{row.original.receiverPhone}</p>
-          </div>
+          row.original.paymentStatus
+            ? <StatusBadge type="order-payment" status={row.original.paymentStatus} />
+            : <span className="text-xs text-gray-400">—</span>
         ),
       },
       {
@@ -88,22 +109,6 @@ export function InvoiceTable({
         ),
       },
       {
-        id: 'status',
-        header: 'Status',
-        enableSorting: true,
-        cell: ({ row }) => <StatusBadge type="invoice" status={row.original.status} />,
-      },
-      {
-        id: 'paidAt',
-        header: 'Paid At',
-        enableSorting: true,
-        cell: ({ row }) => (
-          <span className="whitespace-nowrap text-xs text-gray-500">
-            {row.original.paidAt ? formatDateTime(row.original.paidAt) : '-'}
-          </span>
-        ),
-      },
-      {
         id: 'issuedAt',
         header: 'Issued At',
         enableSorting: true,
@@ -113,8 +118,24 @@ export function InvoiceTable({
           </span>
         ),
       },
+      {
+        id: 'createdAt',
+        header: 'Created At',
+        enableSorting: true,
+        cell: ({ row }) => (
+          <span className="whitespace-nowrap text-xs text-gray-500">
+            {formatDateTime(row.original.createdAt)}
+          </span>
+        ),
+      },
+      {
+        id: 'actions',
+        header: '',
+        className: 'w-16',
+        cell: ({ row }) => <InvoiceRowActions invoice={row.original} />,
+      },
     ],
-    [navigate],
+    [],
   );
 
   if (isLoading) return <SkeletonTable rows={8} />;
@@ -124,15 +145,24 @@ export function InvoiceTable({
     <div className="space-y-4">
       <TableToolbar
         searchValue={filters.invoiceCode ?? ''}
-        onSearchChange={(invoiceCode) => onFiltersChange({ invoiceCode: invoiceCode || undefined })}
+        onSearchChange={(invoiceCode) =>
+          onFiltersChange({ invoiceCode: invoiceCode || undefined, page: 0 })
+        }
         searchPlaceholder="Search by invoice code..."
-        filters={
-          <Select
-            options={STATUS_OPTIONS}
-            value={filters.status ?? ''}
-            onChange={(e) => onFiltersChange({ status: e.target.value || undefined })}
-            className="h-9 w-36 text-sm"
-          />
+        actions={
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={onOpenFilters}
+            leftIcon={<SlidersHorizontal className="h-4 w-4" />}
+          >
+            Filters
+            {activeFilterCount > 0 && (
+              <span className="ml-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary-600 text-[10px] font-bold text-white">
+                {activeFilterCount}
+              </span>
+            )}
+          </Button>
         }
       />
 
@@ -140,6 +170,7 @@ export function InvoiceTable({
         data={data?.items ?? []}
         columns={columns}
         getRowId={(row) => row.id}
+        onRowClick={(row) => navigate(routes.invoices.detail(row.id))}
         sort={sort}
         onSortChange={onSortChange}
         emptyState={
@@ -155,7 +186,7 @@ export function InvoiceTable({
         <Pagination
           pagination={data}
           onPageChange={(page) => onFiltersChange({ page })}
-          onPageSizeChange={(size) => onFiltersChange({ size })}
+          onPageSizeChange={(size) => onFiltersChange({ size, page: 0 })}
         />
       )}
     </div>

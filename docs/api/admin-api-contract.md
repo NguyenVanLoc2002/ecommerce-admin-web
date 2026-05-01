@@ -26,6 +26,7 @@ Role summary by module:
 
 - `ADMIN`, `SUPER_ADMIN` only:
   - admin products and variants
+  - admin product attributes (and their values)
   - admin promotions
   - admin notifications broadcast
   - admin audit logs
@@ -85,36 +86,49 @@ Role summary by module:
 ### Variant DTOs
 
 - `VariantResponse`
-  - `id`, `sku`, `barcode`, `variantName`
+  - `id`, `productId`, `sku`, `barcode`, `variantName`
   - `basePrice`, `salePrice`, `compareAtPrice`
   - `weightGram`, `status`
-  - `attributes`
-- `AttributeResponse`
-  - `name`, `value`
+  - `attributes`: list of `VariantAttributeResponse`
+- `VariantAttributeResponse`
+  - `attributeId`, `attributeName`, `attributeCode`
+  - `valueId`, `value`, `displayValue`
 - `MediaResponse`
   - `id`, `mediaUrl`, `mediaType`, `sortOrder`, `primary`, `variantId`
 - `CreateVariantRequest`
-  - `sku`: required, max 100
-  - `barcode`: optional, max 100
-  - `variantName`: required, max 255
-  - `basePrice`: required, positive
-  - `salePrice`: optional, positive
-  - `compareAtPrice`: optional, positive
-  - `weightGram`: optional
+  - `sku`: optional, max 100. Server generates one when blank or `autoGenerateSku=true`.
+  - `autoGenerateSku`: optional boolean
+  - `barcode`: optional, max 100. Uniqueness enforced when present.
+  - `autoGenerateBarcode`: optional boolean — server generates when true or barcode blank
+  - `variantName`: optional, max 255. Server builds from selected attribute display values when blank or `autoGenerateVariantName=true`.
+  - `autoGenerateVariantName`: optional boolean
+  - `basePrice`: required, `>= 0`
+  - `salePrice`: optional, `>= 0`, must be `<= basePrice`
+  - `compareAtPrice`: optional, `>= 0`, must be `>= basePrice`
+  - `weightGram`: optional, must be `> 0` when present
   - `status`: optional
-  - `attributes`: optional list of `AttributeRequest`
+  - `attributeValueIds`: set of `ProductAttributeValue` UUIDs (must be `VARIANT`-typed; at most one value per attribute)
 - `UpdateVariantRequest`
-  - partial update version of the same fields
-- `AttributeRequest`
-  - `attributeName`: required, max 100
-  - `value`: required, max 100
+  - partial update version of the same fields. If `attributeValueIds` is provided, the variant's attribute set is replaced.
+
+### Variant validation rules
+
+- `attributeValueIds` must reference existing values whose attribute is of type `VARIANT`. Sending a `DESCRIPTIVE` attribute value yields `VARIANT_ATTRIBUTE_INVALID`.
+- A variant cannot select more than one value from the same attribute (`VARIANT_ATTRIBUTE_INVALID`).
+- The same attribute-value combination cannot occur twice within the same product (`VARIANT_COMBINATION_DUPLICATE`).
+- `basePrice` is required and must be `>= 0`. `salePrice <= basePrice`. `compareAtPrice >= basePrice`. Violations yield `VARIANT_INVALID_PRICE`.
+- `weightGram` must be `> 0` when present (`VARIANT_INVALID_WEIGHT`).
+- Manually supplied `sku` must be unique (`SKU_ALREADY_EXISTS`); manually supplied `barcode` must be unique (`BARCODE_ALREADY_EXISTS`).
 
 ### GET `/api/v1/admin/products`
 
 - Access: `ADMIN`, `SUPER_ADMIN`
 - Description: list all products, including non-public statuses
+- Soft-delete behavior:
+  - soft-deleted products are excluded by default
 - Filters:
   - `keyword`, `categoryId`, `brandId`, `status`, `minPrice`, `maxPrice`, `featured`
+  - `isDeleted`, `includeDeleted`
 - Pagination:
   - `page`, `size`, `sort`
   - default: `size=20`, `sort=createdAt,desc`
@@ -125,6 +139,9 @@ Role summary by module:
 
 - Access: `ADMIN`, `SUPER_ADMIN`
 - Description: get full product detail without public status filtering
+- Soft-delete behavior:
+  - a soft-deleted product returns `PRODUCT_NOT_FOUND`
+  - returned `categories[]` and `variants[]` exclude soft-deleted children
 - Response:
   - `ApiResponse<ProductDetailResponse>`
 
@@ -132,6 +149,8 @@ Role summary by module:
 
 - Access: `ADMIN`, `SUPER_ADMIN`
 - Description: create product
+- Reference behavior:
+  - `brandId` and every `categoryId` must reference active rows
 - Request body:
   - `CreateProductRequest`
 - Current HTTP status:
@@ -143,6 +162,8 @@ Role summary by module:
 
 - Access: `ADMIN`, `SUPER_ADMIN`
 - Description: partial update product
+- Reference behavior:
+  - `brandId` and every `categoryId` must reference active rows
 - Request body:
   - `UpdateProductRequest`
 - Response:
@@ -159,6 +180,10 @@ Role summary by module:
 
 - Access: `ADMIN`, `SUPER_ADMIN`
 - Description: list variants for a product
+- Soft-delete behavior:
+  - soft-deleted variants are excluded by default
+- Filters:
+  - `isDeleted`, `includeDeleted`
 - Response:
   - `ApiResponse<List<VariantResponse>>`
 
@@ -191,6 +216,135 @@ Role summary by module:
 
 ---
 
+## 2.b Product Attribute
+
+Reusable attribute definitions used to build variant pickers and tag descriptive product traits.
+
+### DTOs
+
+- `ProductAttributeFilter`
+  - `type`: optional `VARIANT` or `DESCRIPTIVE`
+  - `keyword`: optional partial, case-insensitive match on `name` or `code`
+  - `isDeleted`, `includeDeleted`
+- `ProductAttributeResponse`
+  - `id`, `name`, `code`, `type`
+  - `values`: list of `ProductAttributeValueResponse`
+  - `createdAt`, `updatedAt`
+- `ProductAttributeValueResponse`
+  - `id`, `value`, `displayValue`
+- `CreateProductAttributeRequest`
+  - `name`: required, max 100
+  - `code`: required, max 50 — normalized to upper snake-case server-side
+  - `type`: required (`VARIANT` or `DESCRIPTIVE`)
+  - `values`: optional list of `CreateProductAttributeValueRequest`
+- `UpdateProductAttributeRequest`
+  - partial update of the same fields. When `values` is provided, the value set is **replaced**.
+- `CreateProductAttributeValueRequest`
+  - `value`: required, max 100
+  - `displayValue`: optional, max 100
+
+### GET `/api/v1/admin/product-attributes`
+
+- Access: `ADMIN`, `SUPER_ADMIN`
+- Description: list product attributes (paginated). Pass `type=VARIANT` to fetch the dataset used by the variant attribute picker.
+- Soft-delete behavior:
+  - soft-deleted attributes are excluded by default
+  - each returned `values[]` list excludes soft-deleted attribute values
+- Filters:
+  - `type`, `keyword`, `isDeleted`, `includeDeleted`
+- Pagination:
+  - `page`, `size`, `sort`
+  - default: `size=20`, `sort=createdAt,desc`
+- Response:
+  - `ApiResponse<PagedResponse<ProductAttributeResponse>>`
+
+### GET `/api/v1/admin/product-attributes/{id}`
+
+- Access: `ADMIN`, `SUPER_ADMIN`
+- Description: fetch one attribute
+- Soft-delete behavior:
+  - a soft-deleted attribute is treated as not found
+- Errors:
+  - `PRODUCT_ATTRIBUTE_NOT_FOUND` (404)
+- Response:
+  - `ApiResponse<ProductAttributeResponse>`
+
+### POST `/api/v1/admin/product-attributes`
+
+- Access: `ADMIN`, `SUPER_ADMIN`
+- Description: create a product attribute (optionally seed initial values)
+- Uniqueness rule:
+  - `code` remains reserved even if an older attribute with the same code was soft-deleted, because the database unique constraint still applies
+- Request body:
+  - `CreateProductAttributeRequest`
+- Errors:
+  - `PRODUCT_ATTRIBUTE_CODE_ALREADY_EXISTS` (409)
+  - `PRODUCT_ATTRIBUTE_VALUE_ALREADY_EXISTS` (409) — duplicate value in request
+- Response:
+  - `ApiResponse<ProductAttributeResponse>`
+
+### PUT `/api/v1/admin/product-attributes/{id}`
+
+- Access: `ADMIN`, `SUPER_ADMIN`
+- Description: partial update. If `values` is provided, the value set is replaced. Existing values that are still in use by variants cannot be removed.
+- Soft-delete behavior:
+  - the target attribute must be active; a soft-deleted attribute returns `PRODUCT_ATTRIBUTE_NOT_FOUND`
+  - soft-deleted values are not returned in the response payload
+- Uniqueness rule:
+  - attribute `code` and per-attribute `value` uniqueness still consider soft-deleted rows reserved
+- Request body:
+  - `UpdateProductAttributeRequest`
+- Errors:
+  - `PRODUCT_ATTRIBUTE_NOT_FOUND` (404)
+  - `PRODUCT_ATTRIBUTE_CODE_ALREADY_EXISTS` (409)
+  - `PRODUCT_ATTRIBUTE_VALUE_IN_USE` (409)
+- Response:
+  - `ApiResponse<ProductAttributeResponse>`
+
+### DELETE `/api/v1/admin/product-attributes/{id}`
+
+- Access: `ADMIN`, `SUPER_ADMIN`
+- Description: soft-delete the attribute and soft-delete its values. There is no hard-delete behavior for product attributes or product attribute values through this API. Variant snapshots remain intact because `variant_attribute_values` join rows are not touched.
+- Response:
+  - `ApiResponse<Void>`
+
+### POST `/api/v1/admin/product-attributes/{attributeId}/values`
+
+- Access: `ADMIN`, `SUPER_ADMIN`
+- Description: add a single value under an attribute
+- Uniqueness rule:
+  - a value remains reserved under the same attribute even if an older row with that value was soft-deleted
+- Request body:
+  - `CreateProductAttributeValueRequest`
+- Errors:
+  - `PRODUCT_ATTRIBUTE_NOT_FOUND` (404)
+  - `PRODUCT_ATTRIBUTE_VALUE_ALREADY_EXISTS` (409)
+- Response:
+  - `ApiResponse<ProductAttributeValueResponse>`
+
+### PUT `/api/v1/admin/product-attributes/{attributeId}/values/{valueId}`
+
+- Access: `ADMIN`, `SUPER_ADMIN`
+- Description: update a single attribute value
+- Soft-delete behavior:
+  - the attribute and value must both be active; soft-deleted rows return `PRODUCT_ATTRIBUTE_VALUE_NOT_FOUND`
+- Request body:
+  - `CreateProductAttributeValueRequest`
+- Errors:
+  - `PRODUCT_ATTRIBUTE_VALUE_NOT_FOUND` (404)
+  - `PRODUCT_ATTRIBUTE_VALUE_ALREADY_EXISTS` (409)
+- Response:
+  - `ApiResponse<ProductAttributeValueResponse>`
+
+### DELETE `/api/v1/admin/product-attributes/{attributeId}/values/{valueId}`
+
+- Access: `ADMIN`, `SUPER_ADMIN`
+- Description: soft-delete a single value. Rejected with `PRODUCT_ATTRIBUTE_VALUE_IN_USE` if any active variant still references it. There is no hard-delete behavior for attribute values through this API.
+- Response:
+  - `ApiResponse<Void>`
+
+---
+
 ## 3. Category
 
 ### DTOs
@@ -200,6 +354,7 @@ Role summary by module:
   - `slug`
   - `parentId`
   - `status`
+  - `isDeleted`, `includeDeleted`
 - `CategoryResponse`
   - `id`, `parentId`, `name`, `slug`, `description`, `imageUrl`
   - `status`, `sortOrder`, `createdAt`
@@ -218,8 +373,10 @@ Role summary by module:
 
 - Access: `STAFF`, `ADMIN`, `SUPER_ADMIN`
 - Description: list categories
+- Soft-delete behavior:
+  - soft-deleted categories are excluded by default
 - Filters:
-  - `name`, `slug`, `parentId`, `status`
+  - `name`, `slug`, `parentId`, `status`, `isDeleted`, `includeDeleted`
 - Pagination:
   - `page`, `size`, `sort`
   - default: `size=20`
@@ -230,6 +387,8 @@ Role summary by module:
 
 - Access: `STAFF`, `ADMIN`, `SUPER_ADMIN`
 - Description: create category
+- Reference behavior:
+  - `parentId`, when provided, must reference an active category
 - Request body:
   - `CreateCategoryRequest`
 - Current HTTP status:
@@ -241,6 +400,10 @@ Role summary by module:
 
 - Access: `STAFF`, `ADMIN`, `SUPER_ADMIN`
 - Description: partial update category
+- Soft-delete behavior:
+  - a soft-deleted category returns `CATEGORY_NOT_FOUND`
+- Reference behavior:
+  - `parentId`, when provided, must reference an active category
 - Request body:
   - `UpdateCategoryRequest`
 - Response:
@@ -262,6 +425,7 @@ Role summary by module:
 - `BrandFilter`
   - `name`
   - `status`
+  - `isDeleted`, `includeDeleted`
 - `BrandResponse`
   - `id`, `name`, `slug`, `logoUrl`, `description`
   - `sortOrder`, `status`, `createdAt`
@@ -278,8 +442,10 @@ Role summary by module:
 
 - Access: `STAFF`, `ADMIN`, `SUPER_ADMIN`
 - Description: list brands
+- Soft-delete behavior:
+  - soft-deleted brands are excluded by default
 - Filters:
-  - `name`, `status`
+  - `name`, `status`, `isDeleted`, `includeDeleted`
 - Pagination:
   - `page`, `size`, `sort`
   - default: `size=20`, `sort=sortOrder,asc`
@@ -301,6 +467,8 @@ Role summary by module:
 
 - Access: `STAFF`, `ADMIN`, `SUPER_ADMIN`
 - Description: partial update brand
+- Soft-delete behavior:
+  - a soft-deleted brand returns `BRAND_NOT_FOUND`
 - Request body:
   - `UpdateBrandRequest`
 - Response:
@@ -467,7 +635,11 @@ Role summary by module:
 ### GET `/api/v1/admin/warehouses`
 
 - Access: `STAFF`, `ADMIN`, `SUPER_ADMIN`
-- Description: list active warehouses
+- Description: list warehouses
+- Soft-delete behavior:
+  - soft-deleted warehouses are excluded by default
+- Filters:
+  - `status`, `isDeleted`, `includeDeleted`
 - Response:
   - `ApiResponse<List<WarehouseResponse>>`
 
@@ -475,6 +647,8 @@ Role summary by module:
 
 - Access: `STAFF`, `ADMIN`, `SUPER_ADMIN`
 - Description: get warehouse by ID
+- Soft-delete behavior:
+  - a soft-deleted warehouse returns `WAREHOUSE_NOT_FOUND`
 - Response:
   - `ApiResponse<WarehouseResponse>`
 
@@ -857,8 +1031,19 @@ Role summary by module:
 
 ## 11. User
 
+Manages system users only — STAFF, ADMIN, SUPER_ADMIN. CUSTOMER accounts are managed via the
+public `/auth/register` flow and customer-facing endpoints.
+
 ### DTOs
 
+- `AdminUserFilter`
+  - `keyword`: free-text, matched against `email`, `firstName`, `lastName`, `phoneNumber`
+  - `email`: partial, case-insensitive
+  - `phoneNumber`: partial match
+  - `status`: `UserStatus` (`ACTIVE`, `INACTIVE`, `LOCKED`)
+  - `role`: `RoleName` (`SUPER_ADMIN`, `ADMIN`, `STAFF`, `CUSTOMER`)
+  - `isDeleted`: optional — `false` = active only (default), `true` = deleted only
+  - `includeDeleted`: optional — `true` returns both active and deleted rows
 - `CreateUserRequest`
   - `email`: required, valid email, max 255
   - `password`: required, 8-64 chars, at least one lowercase letter, one uppercase letter, and one digit
@@ -866,20 +1051,100 @@ Role summary by module:
   - `lastName`: optional, max 100
   - `phoneNumber`: optional, `@PhoneNumber`
   - `roles`: required non-empty set of `RoleName`
+- `UpdateUserRequest`
+  - all fields optional — partial update
+  - `firstName`: max 100
+  - `lastName`: max 100
+  - `phoneNumber`: `@PhoneNumber`; uniqueness enforced server-side
+  - `status`: `UserStatus`
+  - `roles`: replace assigned roles. Must be non-empty when provided.
+  - **Not updatable** here: `email`, `password`. Update these via dedicated flows.
 - `UserResponse`
   - `id`, `email`, `firstName`, `lastName`, `phoneNumber`
   - `status`, `roles`, `createdAt`
+  - never exposes `passwordHash` or token fields
+
+### Access
+
+- All endpoints in this section require `ADMIN` or `SUPER_ADMIN`.
+- `STAFF` and `CUSTOMER` are rejected with `403 FORBIDDEN`.
+
+### Pagination & sorting
+
+- Default `page = 0`, `size = 20` (`AppConstants.DEFAULT_PAGE_SIZE`), `sort = createdAt,desc`.
+- Standard `page`, `size`, `sort` query params (see [api-common.md](./api-common.md)).
+
+### Safety rules
+
+The following are enforced by `AdminUserService` and return `403 FORBIDDEN`:
+
+- A caller cannot delete or deactivate themselves.
+- A caller cannot remove their own `SUPER_ADMIN` or sole `ADMIN` role (would lock them out).
+- The last active `SUPER_ADMIN` cannot be deleted, deactivated, locked, or have the
+  `SUPER_ADMIN` role removed.
+
+### Soft-delete behaviour
+
+- `DELETE` performs a soft delete (`SoftDeleteEntity`) and forces `status` to `INACTIVE`.
+- Deleted users are filtered by Hibernate `@SQLRestriction` and cannot authenticate
+  (login lookup uses `findByEmailAndDeletedFalse`). Access tokens still cached client-side
+  become unusable on next authenticated request.
+
+### Error codes
+
+| Code | When |
+| --- | --- |
+| `USER_NOT_FOUND` | id does not exist or user is soft-deleted |
+| `EMAIL_ALREADY_EXISTS` | create with duplicate email |
+| `PHONE_ALREADY_EXISTS` | create or update with duplicate phone |
+| `VALIDATION_ERROR` | `roles` provided but empty in `UpdateUserRequest` |
+| `BAD_REQUEST` | unknown role names supplied |
+| `FORBIDDEN` | safety rule violation (self-delete, last SUPER_ADMIN, etc.) or insufficient privileges |
+
+### GET `/api/v1/admin/users`
+
+- Access: `ADMIN`, `SUPER_ADMIN`
+- Description: list system users with filter and pagination
+- Query params:
+  - `AdminUserFilter` fields (see DTOs)
+  - `page`, `size`, `sort`
+- Response:
+  - `ApiResponse<PagedResponse<UserResponse>>`
+
+### GET `/api/v1/admin/users/{id}`
+
+- Access: `ADMIN`, `SUPER_ADMIN`
+- Description: get a single system user by id
+- Soft-delete behaviour: a soft-deleted user returns `USER_NOT_FOUND`
+- Response:
+  - `ApiResponse<UserResponse>`
 
 ### POST `/api/v1/admin/users`
 
 - Access: `ADMIN`, `SUPER_ADMIN`
-- Description: create system user
+- Description: create a system user with explicit role assignment
 - Request body:
   - `CreateUserRequest`
 - Current HTTP status:
   - `201 Created`
 - Response:
   - `ApiResponse<UserResponse>`
+
+### PATCH `/api/v1/admin/users/{id}`
+
+- Access: `ADMIN`, `SUPER_ADMIN`
+- Description: partial update — only provided fields are applied
+- Request body:
+  - `UpdateUserRequest`
+- Response:
+  - `ApiResponse<UserResponse>`
+
+### DELETE `/api/v1/admin/users/{id}`
+
+- Access: `ADMIN`, `SUPER_ADMIN`
+- Description: soft-delete and deactivate the user (see soft-delete behaviour above)
+- Response:
+  - `ApiResponse<Void>` with `data = null`
 
 ---
 
@@ -893,6 +1158,7 @@ Role summary by module:
   - `active`
   - `dateFrom`
   - `dateTo`
+  - `isDeleted`, `includeDeleted`
 - `PromotionResponse`
   - `id`, `name`, `description`
   - `discountType`, `discountValue`, `maxDiscountAmount`, `minimumOrderAmount`
@@ -936,6 +1202,8 @@ Role summary by module:
 
 - Access: `ADMIN`, `SUPER_ADMIN`
 - Description: get promotion by ID
+- Soft-delete behavior:
+  - a soft-deleted promotion returns `PROMOTION_NOT_FOUND`
 - Response:
   - `ApiResponse<PromotionResponse>`
 
@@ -943,8 +1211,10 @@ Role summary by module:
 
 - Access: `ADMIN`, `SUPER_ADMIN`
 - Description: list promotions
+- Soft-delete behavior:
+  - soft-deleted promotions are excluded by default
 - Filters:
-  - `name`, `scope`, `active`, `dateFrom`, `dateTo`
+  - `name`, `scope`, `active`, `dateFrom`, `dateTo`, `isDeleted`, `includeDeleted`
 - Pagination:
   - `page`, `size`, `sort`
   - default: `size=20`, `sort=createdAt,asc`
@@ -1001,6 +1271,7 @@ Role summary by module:
   - `active`
   - `dateFrom`
   - `dateTo`
+  - `isDeleted`, `includeDeleted`
 - `VoucherResponse`
   - `id`, `code`, `promotionId`, `promotionName`
   - `discountType`, `discountValue`, `maxDiscountAmount`, `minimumOrderAmount`
@@ -1023,6 +1294,8 @@ Role summary by module:
 
 - Access: `STAFF`, `ADMIN`, `SUPER_ADMIN`
 - Description: get voucher by ID
+- Soft-delete behavior:
+  - a soft-deleted voucher returns `VOUCHER_NOT_FOUND`
 - Response:
   - `ApiResponse<VoucherResponse>`
 
@@ -1030,6 +1303,8 @@ Role summary by module:
 
 - Access: `STAFF`, `ADMIN`, `SUPER_ADMIN`
 - Description: get voucher by code
+- Soft-delete behavior:
+  - a soft-deleted voucher returns `VOUCHER_NOT_FOUND`
 - Response:
   - `ApiResponse<VoucherResponse>`
 
@@ -1037,8 +1312,10 @@ Role summary by module:
 
 - Access: `STAFF`, `ADMIN`, `SUPER_ADMIN`
 - Description: list vouchers
+- Soft-delete behavior:
+  - soft-deleted vouchers are excluded by default
 - Filters:
-  - `code`, `promotionId`, `active`, `dateFrom`, `dateTo`
+  - `code`, `promotionId`, `active`, `dateFrom`, `dateTo`, `isDeleted`, `includeDeleted`
 - Pagination:
   - `page`, `size`, `sort`
   - controller default: `size=20`
@@ -1049,6 +1326,8 @@ Role summary by module:
 
 - Access: `STAFF`, `ADMIN`, `SUPER_ADMIN`
 - Description: get voucher usage history
+- Soft-delete behavior:
+  - a soft-deleted voucher returns `VOUCHER_NOT_FOUND`
 - Pagination:
   - `page`, `size`, `sort`
   - controller default: `size=20`
@@ -1105,6 +1384,7 @@ Those legacy moderation endpoints exist in code but are not under `/api/v1/admin
   - `customerId`
   - `minRating`
   - `maxRating`
+  - `isDeleted`, `includeDeleted`
 - `ReviewResponse`
   - `id`
   - `customerId`, `customerName`
@@ -1122,8 +1402,10 @@ Those legacy moderation endpoints exist in code but are not under `/api/v1/admin
 
 - Access: `STAFF`, `ADMIN`, `SUPER_ADMIN`
 - Description: list reviews across all statuses
+- Soft-delete behavior:
+  - soft-deleted reviews are excluded by default
 - Filters:
-  - `status`, `productId`, `customerId`, `minRating`, `maxRating`
+  - `status`, `productId`, `customerId`, `minRating`, `maxRating`, `isDeleted`, `includeDeleted`
 - Pagination and sorting:
   - `page`
   - `size`
@@ -1137,6 +1419,8 @@ Those legacy moderation endpoints exist in code but are not under `/api/v1/admin
 
 - Access: `STAFF`, `ADMIN`, `SUPER_ADMIN`
 - Description: get review by ID
+- Soft-delete behavior:
+  - a soft-deleted review returns `REVIEW_NOT_FOUND`
 - Response:
   - `ApiResponse<ReviewResponse>`
 

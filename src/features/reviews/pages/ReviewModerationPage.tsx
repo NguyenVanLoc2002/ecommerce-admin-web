@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
 import { AdminLayout } from '@/shared/components/layout/AdminLayout';
 import { PageHeader } from '@/shared/components/layout/PageHeader';
 import { useTableFilters } from '@/shared/hooks/useTableFilters';
 import { toast } from '@/shared/stores/uiStore';
+import { SoftDeleteState } from '@/shared/types/api.types';
 import type { RowSelectionState } from '@/shared/components/table/types';
 import { useApproveReview } from '../hooks/useApproveReview';
 import { useReview } from '../hooks/useReview';
@@ -18,6 +19,11 @@ const DEFAULT_FILTERS: ReviewListParams = {
   size: 20,
   sort: 'createdAt,asc',
   status: 'PENDING',
+  productId: undefined,
+  customerId: undefined,
+  minRating: undefined,
+  maxRating: undefined,
+  deletedState: SoftDeleteState.ACTIVE,
 };
 
 interface BulkProgress {
@@ -26,11 +32,14 @@ interface BulkProgress {
 }
 
 export function ReviewModerationPage() {
-  const [filters, setFilters] = useTableFilters<ReviewListParams>(DEFAULT_FILTERS);
-  const [selectedId, setSelectedId] = useState<number>(0);
+  const [filters, setFilters] = useTableFilters<ReviewListParams>(DEFAULT_FILTERS, {
+    numberKeys: ['minRating', 'maxRating'],
+  });
+  const [selectedId, setSelectedId] = useState<string | undefined>();
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [rejectTarget, setRejectTarget] = useState<Review | null>(null);
   const [bulkProgress, setBulkProgress] = useState<BulkProgress | null>(null);
+  const detailPanelRef = useRef<HTMLDivElement | null>(null);
 
   const { data, isLoading, isError, refetch } = usePendingReviews(filters);
 
@@ -44,61 +53,67 @@ export function ReviewModerationPage() {
   const approveReview = useApproveReview();
 
   const selectedIds = Object.entries(rowSelection)
-    .filter(([, v]) => v)
-    .map(([id]) => Number(id));
+    .filter(([, value]) => value)
+    .map(([id]) => id);
 
-  // Auto-select first review when list loads and nothing is selected
   useEffect(() => {
-    if (!selectedId && data?.items.length) {
-      setSelectedId(data.items[0].id);
+    const items = data?.items ?? [];
+
+    if (items.length === 0) {
+      if (selectedId) {
+        setSelectedId(undefined);
+      }
+      return;
     }
-  }, [data, selectedId]);
+
+    const hasSelectedReview = selectedId
+      ? items.some((review) => review.id === selectedId)
+      : false;
+
+    if (!hasSelectedReview) {
+      setSelectedId(items[0].id);
+    }
+  }, [data?.items, selectedId]);
 
   const handleRowClick = (review: Review) => {
     setSelectedId(review.id);
+    requestAnimationFrame(() => {
+      detailPanelRef.current?.focus();
+    });
   };
 
   const handleReject = (review: Review) => {
     setRejectTarget(review);
   };
 
-  // Keyboard shortcuts — A to approve, R to reject
-  const approveRef = useRef(approveReview);
-  approveRef.current = approveReview;
+  const handleKeyboardApprove = () => {
+    if (!selectedReview || selectedReview.status !== 'PENDING') {
+      return;
+    }
 
-  const handleKeyboardApprove = useCallback(() => {
-    if (!selectedReview || selectedReview.status !== 'PENDING') return;
-    approveRef.current.mutate(
+    approveReview.mutate(
       { id: selectedReview.id },
       { onSuccess: () => toast.success('Review approved.') },
     );
-  }, [selectedReview]);
+  };
 
-  const rejectTargetRef = useRef(rejectTarget);
-  rejectTargetRef.current = rejectTarget;
+  const handleDetailPanelKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (!selectedReview) {
+      return;
+    }
 
-  useEffect(() => {
-    const handleKey = (e: KeyboardEvent) => {
-      const target = e.target as Element;
-      if (
-        target.tagName === 'INPUT' ||
-        target.tagName === 'TEXTAREA' ||
-        target.tagName === 'SELECT'
-      ) {
-        return;
+    if (event.key === 'a' || event.key === 'A') {
+      event.preventDefault();
+      handleKeyboardApprove();
+    }
+
+    if ((event.key === 'r' || event.key === 'R') && !rejectTarget) {
+      if (selectedReview.status === 'PENDING') {
+        event.preventDefault();
+        setRejectTarget(selectedReview);
       }
-      if (e.key === 'a' || e.key === 'A') {
-        handleKeyboardApprove();
-      }
-      if ((e.key === 'r' || e.key === 'R') && !rejectTargetRef.current) {
-        if (selectedReview?.status === 'PENDING') {
-          setRejectTarget(selectedReview);
-        }
-      }
-    };
-    document.addEventListener('keydown', handleKey);
-    return () => document.removeEventListener('keydown', handleKey);
-  }, [handleKeyboardApprove, selectedReview]);
+    }
+  };
 
   const handleBulkApprove = async () => {
     const ids = [...selectedIds];
@@ -110,7 +125,7 @@ export function ReviewModerationPage() {
         await approveReview.mutateAsync({ id: ids[i] });
         successCount++;
       } catch {
-        // Continue with next; individual error toasts are handled in the hook
+        // Keep processing the remaining items. Hook-level toast handles failures.
       }
       setBulkProgress({ done: i + 1, total: ids.length });
     }
@@ -124,14 +139,13 @@ export function ReviewModerationPage() {
 
   return (
     <AdminLayout>
-      <div className="flex flex-col h-full p-6 space-y-4">
+      <div className="flex h-full flex-col space-y-4 p-6">
         <PageHeader
           title="Review Moderation"
           description="Approve or reject customer reviews before they appear on the storefront."
         />
 
-        <div className="grid grid-cols-[1fr_420px] gap-6 items-start">
-          {/* Left: list */}
+        <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_420px]">
           <ReviewTable
             data={data}
             isLoading={isLoading}
@@ -141,19 +155,24 @@ export function ReviewModerationPage() {
             onFiltersChange={setFilters}
             rowSelection={rowSelection}
             onRowSelectionChange={setRowSelection}
-            activeRowId={selectedId > 0 ? String(selectedId) : undefined}
+            activeRowId={selectedId}
             onRowClick={handleRowClick}
             onReject={handleReject}
           />
 
-          {/* Right: detail */}
-          <div className="sticky top-6 bg-white rounded-lg border border-gray-200 p-5 min-h-[300px]">
+          <div
+            ref={detailPanelRef}
+            tabIndex={selectedReview ? 0 : -1}
+            onKeyDown={handleDetailPanelKeyDown}
+            className="sticky top-6 min-h-[300px] rounded-lg border border-gray-200 bg-white p-5 focus:outline-none focus:ring-2 focus:ring-primary-500"
+          >
             <ReviewDetail
               review={selectedReview}
               isLoading={detailLoading}
               isError={detailError}
               onRetry={() => void refetchDetail()}
               onReject={handleReject}
+              recordStatus={selectedReview?.isDeleted}
             />
           </div>
         </div>

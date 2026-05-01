@@ -5,8 +5,8 @@ import type { ReviewListParams } from '../types/review.types';
 
 export function usePendingReviews(params: ReviewListParams) {
   return useQuery({
-    queryKey: queryKeys.reviews.pending(params),
-    queryFn: () => reviewService.getPending(params),
+    queryKey: queryKeys.reviews.list(params),
+    queryFn: () => reviewService.getList(params),
     staleTime: 30_000,
   });
 }

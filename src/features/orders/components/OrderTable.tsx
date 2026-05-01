@@ -143,9 +143,9 @@ export function OrderTable({
   return (
     <div className="space-y-4">
       <TableToolbar
-        searchValue={filters.keyword ?? ''}
-        onSearchChange={(v) => onFiltersChange({ keyword: v || undefined, page: 0 })}
-        searchPlaceholder="Search by order code or customer…"
+        searchValue={filters.customerId ?? ''}
+        onSearchChange={(customerId) => onFiltersChange({ customerId: customerId || undefined })}
+        searchPlaceholder="Search by customer ID…"
         actions={
           <Button
             variant="secondary"
@@ -182,7 +182,7 @@ export function OrderTable({
         <Pagination
           pagination={data}
           onPageChange={(page) => onFiltersChange({ page } as Partial<OrderListParams>)}
-          onPageSizeChange={(size) => onFiltersChange({ size } as Partial<OrderListParams>)}
+          onPageSizeChange={(size) => onFiltersChange({ size, page: 0 } as Partial<OrderListParams>)}
         />
       )}
     </div>

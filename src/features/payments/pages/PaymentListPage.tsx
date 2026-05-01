@@ -13,6 +13,11 @@ const DEFAULT_FILTERS: PaymentListParams = {
   page: 0,
   size: 20,
   sort: 'createdAt,desc',
+  orderCode: undefined,
+  method: undefined,
+  status: undefined,
+  dateFrom: undefined,
+  dateTo: undefined,
 };
 
 export function PaymentListPage() {

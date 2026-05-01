@@ -7,6 +7,7 @@ import { useTableFilters } from '@/shared/hooks/useTableFilters';
 import { useDebounce } from '@/shared/hooks/useDebounce';
 import { toast } from '@/shared/stores/uiStore';
 import { routes } from '@/constants/routes';
+import { SoftDeleteState } from '@/shared/types/api.types';
 import type { SortState, RowSelectionState } from '@/shared/components/table/types';
 import type { MultiSelectOption } from '@/shared/components/ui/MultiSelectDropdown';
 import { useProducts } from '../hooks/useProducts';
@@ -20,6 +21,14 @@ const DEFAULT_FILTERS: ProductListParams = {
   page: 0,
   size: 20,
   sort: 'createdAt,desc',
+  keyword: undefined,
+  status: undefined,
+  categoryId: undefined,
+  brandId: undefined,
+  minPrice: undefined,
+  maxPrice: undefined,
+  featured: undefined,
+  deletedState: SoftDeleteState.ACTIVE,
 };
 
 type BulkAction = 'publish' | 'deactivate' | 'delete';
@@ -116,9 +125,13 @@ export function ProductListPage() {
       const result = await bulkDelete.mutateAsync(selectedIds);
       setRowSelection({});
       if (result.failed > 0) {
-        toast.warning(`${result.succeeded} deleted, ${result.failed} failed.`);
+        toast.warning(`${result.succeeded} deleted successfully, ${result.failed} failed.`);
       } else {
-        toast.success(`${result.succeeded} product${result.succeeded > 1 ? 's' : ''} deleted.`);
+        toast.success(
+          result.succeeded === 1
+            ? 'Product deleted successfully.'
+            : 'Products deleted successfully.',
+        );
       }
     } finally {
       setPendingBulk(null);
@@ -127,7 +140,7 @@ export function ProductListPage() {
 
   return (
     <AdminLayout>
-      <div className="space-y-6 p-6">
+      <div className="min-w-0 space-y-6 p-6">
         <PageHeader
           title="Products"
           description="Manage your product catalog."

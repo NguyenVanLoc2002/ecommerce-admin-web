@@ -1,5 +1,7 @@
 import { apiClient } from '@/shared/lib/axios';
 import type { EntityId, PaginatedResponse } from '@/shared/types/api.types';
+import { cleanParams } from '@/shared/utils/cleanParams';
+import { toSoftDeleteQuery } from '@/shared/utils/softDelete';
 import type {
   Category,
   CategoryListParams,
@@ -8,8 +10,13 @@ import type {
 } from '../types/category.types';
 
 export const categoryService = {
-  getList: (params: CategoryListParams) =>
-    apiClient.get<PaginatedResponse<Category>>('/admin/categories', { params }),
+  getList: ({ deletedState, ...params }: CategoryListParams) =>
+    apiClient.get<PaginatedResponse<Category>>('/admin/categories', {
+      params: cleanParams({
+        ...params,
+        ...toSoftDeleteQuery(deletedState),
+      }),
+    }),
 
   getById: (id: EntityId) =>
     apiClient.get<Category>(`/categories/${id}`),

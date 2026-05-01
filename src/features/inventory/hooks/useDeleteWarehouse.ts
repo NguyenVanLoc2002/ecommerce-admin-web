@@ -9,7 +9,7 @@ export function useDeleteWarehouse() {
   return useMutation({
     mutationFn: (id: EntityId) => warehouseService.remove(id),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.warehouses.lists() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.warehouses.all });
     },
   });
 }

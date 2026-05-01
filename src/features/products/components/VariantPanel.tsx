@@ -1,33 +1,37 @@
 import { useState } from 'react';
 import { Plus } from 'lucide-react';
 import { Button } from '@/shared/components/ui/Button';
+import { SoftDeleteFilter } from '@/shared/components/ui/SoftDeleteFilter';
 import { SkeletonTable } from '@/shared/components/feedback/Skeleton';
 import { ErrorCard } from '@/shared/components/feedback/ErrorCard';
 import { toast } from '@/shared/stores/uiStore';
-import { AppError } from '@/shared/types/api.types';
+import { SoftDeleteState, type SoftDeleteState as SoftDeleteStateValue } from '@/shared/types/api.types';
 import { useVariants } from '../hooks/useVariants';
+import { useVariantAttributes } from '../hooks/useVariantAttributes';
 import { useCreateVariant } from '../hooks/useCreateVariant';
 import { useUpdateVariant } from '../hooks/useUpdateVariant';
 import { VariantTable } from './VariantTable';
 import { VariantForm } from './VariantForm';
 import type { ProductVariant } from '../types/product.types';
 import type { VariantFormValues } from '../schemas/variantSchema';
+import { buildVariantPayload } from '../utils/variantForm';
 
 interface VariantPanelProps {
   productId: string;
 }
 
-function entriesToAttributes(attributes: Array<{ key: string; value: string }>) {
-  return attributes
-    .filter((a) => a.key)
-    .map(({ key, value }) => ({ attributeName: key, value }));
-}
-
 export function VariantPanel({ productId }: VariantPanelProps) {
   const [formOpen, setFormOpen] = useState(false);
   const [editingVariant, setEditingVariant] = useState<ProductVariant | undefined>();
+  const [deletedState, setDeletedState] = useState<SoftDeleteStateValue>(SoftDeleteState.ACTIVE);
 
-  const { data: variants, isLoading, isError, refetch } = useVariants(productId);
+  const { data: variants, isLoading, isError, refetch } = useVariants(productId, { deletedState });
+  const {
+    data: variantAttributes,
+    isLoading: isAttributesLoading,
+    isError: isAttributesError,
+    refetch: refetchAttributes,
+  } = useVariantAttributes();
   const createVariant = useCreateVariant(productId);
   const updateVariant = useUpdateVariant(productId);
 
@@ -47,45 +51,28 @@ export function VariantPanel({ productId }: VariantPanelProps) {
   };
 
   const handleSubmit = async (values: VariantFormValues) => {
-    const payload = {
-      sku: values.sku,
-      variantName: values.name,
-      basePrice: values.price,
-      salePrice: values.salePrice ?? null,
-      weightGram: values.weight ?? null,
-      status: values.status,
-      attributes: entriesToAttributes(values.attributes),
-    };
+    const payload = buildVariantPayload(values);
 
-    try {
-      if (editingVariant) {
-        await updateVariant.mutateAsync({ variantId: editingVariant.id, body: payload });
-        toast.success('Variant updated.');
-      } else {
-        await createVariant.mutateAsync(payload);
-        toast.success('Variant added.');
-      }
-      handleClose();
-    } catch (err) {
-      if (err instanceof AppError) {
-        if (err.code === 'CONFLICT') {
-          toast.error('This SKU is already in use. Please choose a different one.');
-        } else if (err.fieldErrors?.length) {
-          // VariantForm will handle fieldErrors via thrown error; re-throw for the form
-          throw err;
-        } else {
-          toast.error(err.message || 'Failed to save variant. Please try again.');
-        }
-      } else {
-        toast.error('Failed to save variant. Please try again.');
-      }
+    if (editingVariant) {
+      await updateVariant.mutateAsync({ variantId: editingVariant.id, body: payload });
+      toast.success('Variant updated.');
+    } else {
+      await createVariant.mutateAsync(payload);
+      toast.success('Variant added.');
     }
+
+    handleClose();
   };
 
   const isMutating = createVariant.isPending || updateVariant.isPending;
 
-  if (isLoading) return <SkeletonTable rows={4} />;
-  if (isError) return <ErrorCard onRetry={() => void refetch()} />;
+  if (isLoading) {
+    return <SkeletonTable rows={4} />;
+  }
+
+  if (isError) {
+    return <ErrorCard onRetry={() => void refetch()} />;
+  }
 
   return (
     <div className="space-y-4">
@@ -96,14 +83,18 @@ export function VariantPanel({ productId }: VariantPanelProps) {
             variant{(variants?.length ?? 0) !== 1 ? 's' : ''}
           </span>
         </p>
-        <Button size="md" onClick={openAddForm} leftIcon={<Plus className="h-4 w-4" />}>
-          Add variant
-        </Button>
+        <div className="flex items-center gap-3">
+          <SoftDeleteFilter value={deletedState} onChange={setDeletedState} className="h-9 w-32 text-sm" />
+          <Button size="md" onClick={openAddForm} leftIcon={<Plus className="h-4 w-4" />}>
+            Add variant
+          </Button>
+        </div>
       </div>
 
       <VariantTable
         productId={productId}
         variants={variants ?? []}
+        deletedState={deletedState}
         onEdit={openEditForm}
         onAddNew={openAddForm}
       />
@@ -112,8 +103,12 @@ export function VariantPanel({ productId }: VariantPanelProps) {
         open={formOpen}
         onClose={handleClose}
         variant={editingVariant}
+        attributes={variantAttributes ?? []}
+        isAttributesLoading={isAttributesLoading}
+        isAttributesError={isAttributesError}
+        onRetryAttributes={() => void refetchAttributes()}
         isSubmitting={isMutating}
-        onSubmit={(values) => void handleSubmit(values)}
+        onSubmit={handleSubmit}
       />
     </div>
   );

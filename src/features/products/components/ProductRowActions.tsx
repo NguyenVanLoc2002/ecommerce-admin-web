@@ -33,21 +33,21 @@ export function ProductRowActions({ product }: ProductRowActionsProps) {
   const handleDelete = async () => {
     setMenuOpen(false);
     const ok = await confirm({
-      title: 'Remove product?',
-      description: `"${product.name}" will be removed. This action cannot be undone.`,
-      confirmLabel: 'Remove',
+      title: 'Delete product?',
+      description: `"${product.name}" will be marked as deleted and hidden from active lists.`,
+      confirmLabel: 'Delete',
       variant: 'destructive',
     });
     if (!ok) return;
 
     try {
       await deleteProduct.mutateAsync(product.id);
-      toast.success('Product removed.');
+      toast.success('Product deleted successfully.');
     } catch (err) {
       if (err instanceof AppError) {
         toast.error(err.message);
       } else {
-        toast.error('Failed to remove product. Please try again.');
+        toast.error('Failed to delete product. Please try again.');
       }
     }
   };

@@ -14,12 +14,20 @@ export const routes = {
     variants: (id: EntityKey | ':id') => `/products/${id}/variants`,
   },
 
+  productAttributes: {
+    list: '/product-attributes',
+  },
+
   categories: {
     list: '/categories',
   },
 
   brands: {
     list: '/brands',
+  },
+
+  warehouses: {
+    list: '/warehouses',
   },
 
   inventory: {

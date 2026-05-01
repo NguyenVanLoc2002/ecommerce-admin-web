@@ -3,12 +3,14 @@ import { Activity } from 'lucide-react';
 import { DataTable } from '@/shared/components/table/DataTable';
 import { TableToolbar } from '@/shared/components/table/TableToolbar';
 import { Pagination } from '@/shared/components/table/Pagination';
+import { Badge } from '@/shared/components/ui/Badge';
+import { CopyValueButton } from '@/shared/components/ui/CopyValueButton';
 import { Select } from '@/shared/components/ui/Select';
 import { SkeletonTable } from '@/shared/components/feedback/Skeleton';
 import { ErrorCard } from '@/shared/components/feedback/ErrorCard';
 import { EmptyState } from '@/shared/components/feedback/EmptyState';
 import { formatDateTime } from '@/shared/utils/formatDate';
-import { cn } from '@/shared/utils/cn';
+import { formatEnumLabel } from '@/shared/utils/formatEnumLabel';
 import type { ColumnDef } from '@/shared/components/table/types';
 import type { PaginatedResponse } from '@/shared/types/api.types';
 import type { StockMovement, StockMovementParams, Warehouse } from '../types/inventory.types';
@@ -16,19 +18,17 @@ import type { StockMovement, StockMovementParams, Warehouse } from '../types/inv
 const MOVEMENT_TYPE_OPTIONS = [
   { value: '', label: 'All types' },
   { value: 'IMPORT', label: 'Import' },
+  { value: 'EXPORT', label: 'Export' },
   { value: 'ADJUSTMENT', label: 'Adjustment' },
-  { value: 'RESERVATION', label: 'Reservation' },
-  { value: 'RELEASE', label: 'Release' },
-  { value: 'FULFILLMENT', label: 'Fulfillment' },
+  { value: 'RETURN', label: 'Return' },
 ];
 
-const movementTypeStyle: Record<string, string> = {
-  IMPORT: 'bg-success-50 text-success-700 border-success-200',
-  ADJUSTMENT: 'bg-warning-50 text-warning-700 border-warning-200',
-  RESERVATION: 'bg-primary-50 text-primary-700 border-primary-200',
-  RELEASE: 'bg-gray-100 text-gray-600 border-gray-200',
-  FULFILLMENT: 'bg-gray-100 text-gray-600 border-gray-200',
-};
+const movementTypeVariantMap = {
+  IMPORT: 'success',
+  EXPORT: 'danger',
+  ADJUSTMENT: 'warning',
+  RETURN: 'info',
+} as const;
 
 interface StockMovementsTableProps {
   data: PaginatedResponse<StockMovement> | undefined;
@@ -51,7 +51,7 @@ export function StockMovementsTable({
 }: StockMovementsTableProps) {
   const warehouseOptions = [
     { value: '', label: 'All warehouses' },
-    ...warehouses.map((w) => ({ value: String(w.id), label: w.name })),
+    ...warehouses.map((warehouse) => ({ value: String(warehouse.id), label: warehouse.name })),
   ];
 
   const columns = useMemo<ColumnDef<StockMovement>[]>(
@@ -60,7 +60,7 @@ export function StockMovementsTable({
         id: 'date',
         header: 'Date',
         cell: ({ row }) => (
-          <span className="text-xs text-gray-500 whitespace-nowrap">
+          <span className="whitespace-nowrap text-xs text-gray-500">
             {formatDateTime(row.original.createdAt)}
           </span>
         ),
@@ -68,34 +68,59 @@ export function StockMovementsTable({
       {
         id: 'variant',
         header: 'Variant',
-        cell: ({ row }) => (
-          <div>
-            <p className="text-sm font-medium text-gray-900 font-mono">
-              {row.original.variantSku}
-            </p>
-            <p className="text-xs text-gray-400">{row.original.variantName}</p>
-          </div>
-        ),
+        cell: ({ row }) => {
+          const primaryLabel = row.original.variantName || row.original.sku || 'Unknown variant';
+          const secondaryLabel = row.original.variantName && row.original.sku
+            ? row.original.sku
+            : null;
+
+          return (
+            <div>
+              <p className="text-sm font-medium text-gray-900">{primaryLabel}</p>
+              <div className="mt-0.5 flex items-center gap-2">
+                {secondaryLabel && (
+                  <p className="font-mono text-xs text-gray-400">{secondaryLabel}</p>
+                )}
+                {!row.original.variantName && row.original.variantId && (
+                  <CopyValueButton
+                    value={row.original.variantId}
+                    label="Copy ID"
+                    className="px-0 py-0 text-[11px] text-gray-400 hover:bg-transparent hover:text-gray-600"
+                  />
+                )}
+              </div>
+            </div>
+          );
+        },
       },
       {
         id: 'warehouse',
         header: 'Warehouse',
-        cell: ({ row }) => (
-          <span className="text-sm text-gray-600">{row.original.warehouseName}</span>
-        ),
+        cell: ({ row }) => {
+          const hasWarehouseName = Boolean(row.original.warehouseName);
+          return (
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-600">
+                {row.original.warehouseName || 'Unknown warehouse'}
+              </span>
+              {!hasWarehouseName && row.original.warehouseId && (
+                <CopyValueButton
+                  value={row.original.warehouseId}
+                  label="Copy ID"
+                  className="px-0 py-0 text-[11px] text-gray-400 hover:bg-transparent hover:text-gray-600"
+                />
+              )}
+            </div>
+          );
+        },
       },
       {
         id: 'type',
         header: 'Type',
         cell: ({ row }) => (
-          <span
-            className={cn(
-              'inline-flex items-center rounded border px-2 py-0.5 text-xs font-medium',
-              movementTypeStyle[row.original.type] ?? 'bg-gray-100 text-gray-600',
-            )}
-          >
-            {row.original.type}
-          </span>
+          <Badge variant={resolveMovementTypeVariant(row.original.movementType)}>
+            {formatEnumLabel(row.original.movementType)}
+          </Badge>
         ),
       },
       {
@@ -103,27 +128,16 @@ export function StockMovementsTable({
         header: 'Qty',
         headerClassName: 'text-right',
         className: 'text-right tabular-nums',
-        cell: ({ row }) => {
-          const qty = row.original.quantity;
-          const isPositive = qty > 0;
-          return (
-            <span
-              className={cn(
-                'font-semibold',
-                isPositive ? 'text-success-700' : 'text-danger-600',
-              )}
-            >
-              {isPositive ? '+' : ''}{qty}
-            </span>
-          );
-        },
+        cell: ({ row }) => (
+          <span className="font-semibold text-gray-700">{row.original.quantity}</span>
+        ),
       },
       {
         id: 'note',
         header: 'Note',
         cell: ({ row }) => (
-          <span className="text-xs text-gray-400 max-w-[200px] truncate block">
-            {row.original.note ?? row.original.reason ?? '—'}
+          <span className="block max-w-[200px] truncate text-xs text-gray-400">
+            {row.original.note ?? 'No note'}
           </span>
         ),
       },
@@ -149,9 +163,9 @@ export function StockMovementsTable({
             <Select
               options={warehouseOptions}
               value={String(filters.warehouseId ?? '')}
-              onChange={(e) =>
+              onChange={(event) =>
                 onFiltersChange({
-                  warehouseId: e.target.value || undefined,
+                  warehouseId: event.target.value || undefined,
                 })
               }
               className="h-9 w-44 text-sm"
@@ -159,7 +173,7 @@ export function StockMovementsTable({
             <Select
               options={MOVEMENT_TYPE_OPTIONS}
               value={filters.movementType ?? ''}
-              onChange={(e) => onFiltersChange({ movementType: e.target.value || undefined })}
+              onChange={(event) => onFiltersChange({ movementType: event.target.value || undefined })}
               className="h-9 w-36 text-sm"
             />
           </>
@@ -188,4 +202,8 @@ export function StockMovementsTable({
       )}
     </div>
   );
+}
+
+function resolveMovementTypeVariant(movementType: string) {
+  return movementTypeVariantMap[movementType as keyof typeof movementTypeVariantMap] ?? 'default';
 }

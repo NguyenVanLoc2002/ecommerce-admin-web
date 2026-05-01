@@ -12,6 +12,7 @@ export interface PaymentSummary {
   id: EntityId;
   orderId: EntityId;
   orderCode: string;
+  paymentCode: string;
   customer: PaymentCustomer;
   method: PaymentMethod;
   status: PaymentStatus;
@@ -26,6 +27,7 @@ export interface Payment {
   id: EntityId;
   orderId: EntityId;
   orderCode: string;
+  paymentCode: string;
   customer: PaymentCustomer;
   method: PaymentMethod;
   status: PaymentStatus;

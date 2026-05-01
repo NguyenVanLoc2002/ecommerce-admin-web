@@ -32,7 +32,7 @@ export function CategoryRowActions({ category, onEdit }: CategoryRowActionsProps
     setMenuOpen(false);
     const ok = await confirm({
       title: 'Delete category?',
-      description: `"${category.name}" will be removed. This action cannot be undone.`,
+      description: `"${category.name}" will be marked as deleted and hidden from active lists.`,
       confirmLabel: 'Delete',
       variant: 'destructive',
     });
@@ -40,7 +40,7 @@ export function CategoryRowActions({ category, onEdit }: CategoryRowActionsProps
 
     try {
       await deleteCategory.mutateAsync(category.id);
-      toast.success('Category deleted.');
+      toast.success('Category deleted successfully.');
     } catch (err) {
       if (err instanceof AppError) {
         toast.error(err.message);

@@ -9,6 +9,7 @@ export function useDeletePromotion() {
     mutationFn: (id: string) => promotionService.remove(id),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.promotions.lists() });
+      void queryClient.invalidateQueries({ queryKey: ['promotions', 'options'] });
     },
   });
 }

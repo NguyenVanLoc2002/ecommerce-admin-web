@@ -2,8 +2,10 @@ import { useState } from 'react';
 import { Drawer } from '@/shared/components/ui/Drawer';
 import { Button } from '@/shared/components/ui/Button';
 import { Select } from '@/shared/components/ui/Select';
+import { SoftDeleteFilter } from '@/shared/components/ui/SoftDeleteFilter';
 import { Input } from '@/shared/components/ui/Input';
 import type { PromotionListParams } from '../types/promotion.types';
+import { SoftDeleteState } from '@/shared/types/api.types';
 
 const SCOPE_OPTIONS = [
   { value: '', label: 'All scopes' },
@@ -120,6 +122,14 @@ export function PromotionFiltersDrawer({
             type="date"
             value={merged.dateTo ?? ''}
             onChange={(e) => set({ dateTo: e.target.value || undefined })}
+          />
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <label className="text-sm font-medium text-gray-700">Record Status</label>
+          <SoftDeleteFilter
+            value={merged.deletedState ?? SoftDeleteState.ACTIVE}
+            onChange={(deletedState) => set({ deletedState })}
           />
         </div>
       </div>

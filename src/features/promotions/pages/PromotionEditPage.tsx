@@ -2,9 +2,12 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { AdminLayout } from '@/shared/components/layout/AdminLayout';
 import { PageHeader } from '@/shared/components/layout/PageHeader';
+import { useBreadcrumbLabel } from '@/shared/components/layout';
 import { Button } from '@/shared/components/ui/Button';
 import { SkeletonTable } from '@/shared/components/feedback/Skeleton';
 import { ErrorCard } from '@/shared/components/feedback/ErrorCard';
+import { NotFoundState } from '@/shared/components/feedback/NotFoundState';
+import { AppError } from '@/shared/types/api.types';
 import { usePermission } from '@/constants/permissions';
 import { routes } from '@/constants/routes';
 import { usePromotion } from '../hooks/usePromotion';
@@ -22,14 +25,25 @@ export function PromotionEditPage() {
     data: promotion,
     isLoading,
     isError,
+    error,
     refetch,
   } = usePromotion(promotionId ?? '');
+
+  const isNotFound =
+    isEditMode && isError && error instanceof AppError && error.code === 'PROMOTION_NOT_FOUND';
 
   const handleSuccess = () => {
     navigate(routes.promotions.list);
   };
 
-  const pageTitle = isEditMode ? 'Edit Promotion' : 'New Promotion';
+  const pageTitle = isEditMode
+    ? (isNotFound ? 'Not found' : (promotion?.name ?? 'Loading...'))
+    : 'New Promotion';
+
+  useBreadcrumbLabel(
+    promotionId ? routes.promotions.edit(promotionId) : undefined,
+    isEditMode ? pageTitle : undefined,
+  );
 
   return (
     <AdminLayout>
@@ -53,7 +67,13 @@ export function PromotionEditPage() {
         />
 
         {isEditMode && isLoading && <SkeletonTable rows={6} />}
-        {isEditMode && isError && <ErrorCard onRetry={() => void refetch()} />}
+        {isEditMode && isNotFound && (
+          <NotFoundState
+            title="Promotion Not Found"
+            message="Promotion not found or has been deleted."
+          />
+        )}
+        {isEditMode && isError && !isNotFound && <ErrorCard onRetry={() => void refetch()} />}
 
         {(!isEditMode || (!isLoading && !isError && promotion)) && (
           <div className="space-y-6">

@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import { usePermission } from '@/constants/permissions';
 import { Button } from '@/shared/components/ui/Button';
 import { DropdownMenu } from '@/shared/components/ui/DropdownMenu';
 import { useConfirmDialog } from '@/shared/hooks/useConfirmDialog';
@@ -14,16 +15,21 @@ interface WarehouseRowActionsProps {
 }
 
 export function WarehouseRowActions({ warehouse, onEdit }: WarehouseRowActionsProps) {
+  const canWrite = usePermission('warehouses', 'write');
   const { confirm } = useConfirmDialog();
   const deleteWarehouse = useDeleteWarehouse();
   const [menuOpen, setMenuOpen] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
+  if (!canWrite) {
+    return null;
+  }
+
   const handleDelete = async () => {
     setMenuOpen(false);
     const ok = await confirm({
       title: 'Delete warehouse?',
-      description: `"${warehouse.name}" will be removed. This action cannot be undone.`,
+      description: `"${warehouse.name}" will be marked as deleted and hidden from active lists.`,
       confirmLabel: 'Delete',
       variant: 'destructive',
     });
@@ -31,7 +37,7 @@ export function WarehouseRowActions({ warehouse, onEdit }: WarehouseRowActionsPr
 
     try {
       await deleteWarehouse.mutateAsync(warehouse.id);
-      toast.success('Warehouse deleted.');
+      toast.success('Warehouse deleted successfully.');
     } catch (err) {
       if (err instanceof AppError) {
         toast.error(err.message);

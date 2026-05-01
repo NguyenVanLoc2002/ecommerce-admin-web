@@ -1,19 +1,13 @@
 import { CheckCheck, Star, XCircle } from 'lucide-react';
-import { Badge } from '@/shared/components/ui/Badge';
 import { Button } from '@/shared/components/ui/Button';
+import { StatusBadge } from '@/shared/components/ui/StatusBadge';
 import { SkeletonDetail } from '@/shared/components/feedback/Skeleton';
 import { ErrorCard } from '@/shared/components/feedback/ErrorCard';
 import { formatDateTime } from '@/shared/utils/formatDate';
 import { usePermission } from '@/constants/permissions';
 import { useApproveReview } from '../hooks/useApproveReview';
-import type { Review } from '../types/review.types';
 import { toast } from '@/shared/stores/uiStore';
-
-const STATUS_BADGE: Record<Review['status'], { variant: 'warning' | 'success' | 'danger'; label: string }> = {
-  PENDING: { variant: 'warning', label: 'Pending' },
-  APPROVED: { variant: 'success', label: 'Approved' },
-  REJECTED: { variant: 'danger', label: 'Rejected' },
-};
+import type { Review } from '../types/review.types';
 
 interface ReviewDetailProps {
   review: Review | undefined;
@@ -21,15 +15,18 @@ interface ReviewDetailProps {
   isError: boolean;
   onRetry: () => void;
   onReject: (review: Review) => void;
+  recordStatus?: boolean;
 }
 
 function StarRating({ rating }: { rating: number }) {
   return (
     <div className="flex items-center gap-0.5">
-      {Array.from({ length: 5 }, (_, i) => (
+      {Array.from({ length: 5 }, (_, index) => (
         <Star
-          key={i}
-          className={`h-4 w-4 ${i < rating ? 'fill-warning-400 text-warning-400' : 'fill-gray-200 text-gray-200'}`}
+          key={index}
+          className={`h-4 w-4 ${
+            index < rating ? 'fill-warning-400 text-warning-400' : 'fill-gray-200 text-gray-200'
+          }`}
         />
       ))}
       <span className="ml-1.5 text-sm font-medium text-gray-700">{rating}/5</span>
@@ -37,32 +34,45 @@ function StarRating({ rating }: { rating: number }) {
   );
 }
 
-export function ReviewDetail({ review, isLoading, isError, onRetry, onReject }: ReviewDetailProps) {
+export function ReviewDetail({
+  review,
+  isLoading,
+  isError,
+  onRetry,
+  onReject,
+  recordStatus,
+}: ReviewDetailProps) {
   const canWrite = usePermission('reviews', 'write');
   const approveReview = useApproveReview();
 
-  if (isLoading) return <SkeletonDetail />;
-  if (isError) return <ErrorCard onRetry={onRetry} />;
+  if (isLoading) {
+    return <SkeletonDetail />;
+  }
+
+  if (isError) {
+    return <ErrorCard onRetry={onRetry} />;
+  }
 
   if (!review) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
-        <div className="h-12 w-12 rounded-full bg-gray-100 flex items-center justify-center mb-3">
+        <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
           <Star className="h-6 w-6 text-gray-400" />
         </div>
         <p className="text-sm font-medium text-gray-500">Select a review to see details</p>
         <p className="mt-1 text-xs text-gray-400">
           Press <kbd className="rounded bg-gray-100 px-1.5 py-0.5 font-mono text-xs">A</kbd> to
-          approve or{' '}
-          <kbd className="rounded bg-gray-100 px-1.5 py-0.5 font-mono text-xs">R</kbd> to reject
-          the focused review.
+          approve or <kbd className="rounded bg-gray-100 px-1.5 py-0.5 font-mono text-xs">R</kbd>{' '}
+          to reject when this panel is focused.
         </p>
       </div>
     );
   }
 
-  const statusCfg = STATUS_BADGE[review.status];
   const isPending = review.status === 'PENDING';
+  const variantLabel = [review.variantName, review.sku ? `SKU ${review.sku}` : null]
+    .filter(Boolean)
+    .join(' - ');
 
   const handleApprove = () => {
     approveReview.mutate(
@@ -73,9 +83,12 @@ export function ReviewDetail({ review, isLoading, isError, onRetry, onReject }: 
 
   return (
     <div className="space-y-5">
-      {/* Status + actions */}
-      <div className="flex items-center justify-between">
-        <Badge variant={statusCfg.variant}>{statusCfg.label}</Badge>
+      <div className="flex items-center justify-between gap-4">
+        <div className="space-y-2">
+          <StatusBadge type="review" status={review.status} />
+          <StatusBadge type="soft-delete" status={recordStatus} />
+        </div>
+
         {isPending && canWrite && (
           <div className="flex gap-2">
             <Button
@@ -102,67 +115,66 @@ export function ReviewDetail({ review, isLoading, isError, onRetry, onReject }: 
         )}
       </div>
 
-      {/* Rating */}
       <div>
-        <p className="text-xs font-medium uppercase tracking-wider text-gray-400 mb-1.5">Rating</p>
+        <p className="mb-1.5 text-xs font-medium uppercase tracking-wider text-gray-400">Rating</p>
         <StarRating rating={review.rating} />
       </div>
 
-      {/* Comment */}
       <div>
-        <p className="text-xs font-medium uppercase tracking-wider text-gray-400 mb-1.5">Comment</p>
-        <p className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap">{review.comment}</p>
+        <p className="mb-1.5 text-xs font-medium uppercase tracking-wider text-gray-400">Comment</p>
+        <p className="whitespace-pre-wrap text-sm leading-relaxed text-gray-800">
+          {review.comment || 'No comment provided.'}
+        </p>
       </div>
 
-      {/* Product */}
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <p className="text-xs font-medium uppercase tracking-wider text-gray-400 mb-1">Product</p>
+          <p className="mb-1 text-xs font-medium uppercase tracking-wider text-gray-400">Product</p>
           <p className="text-sm text-gray-700">{review.productName}</p>
-          <p className="text-xs text-gray-400 mt-0.5">{review.variantName}</p>
+          <p className="mt-0.5 text-xs text-gray-400">
+            {variantLabel || 'Variant not specified'}
+          </p>
         </div>
         <div>
-          <p className="text-xs font-medium uppercase tracking-wider text-gray-400 mb-1">SKU</p>
-          <p className="font-mono text-sm text-gray-700">{review.sku}</p>
-        </div>
-      </div>
-
-      {/* Customer + date */}
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <p className="text-xs font-medium uppercase tracking-wider text-gray-400 mb-1">Customer</p>
+          <p className="mb-1 text-xs font-medium uppercase tracking-wider text-gray-400">
+            Customer
+          </p>
           <p className="text-sm text-gray-700">{review.customerName}</p>
         </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
         <div>
-          <p className="text-xs font-medium uppercase tracking-wider text-gray-400 mb-1">Submitted</p>
+          <p className="mb-1 text-xs font-medium uppercase tracking-wider text-gray-400">Created</p>
           <p className="text-sm text-gray-700">{formatDateTime(review.createdAt)}</p>
+        </div>
+        <div>
+          <p className="mb-1 text-xs font-medium uppercase tracking-wider text-gray-400">Updated</p>
+          <p className="text-sm text-gray-700">
+            {review.updatedAt ? formatDateTime(review.updatedAt) : 'Not available'}
+          </p>
         </div>
       </div>
 
-      {/* Moderation info (only when moderated) */}
-      {review.status !== 'PENDING' && (
-        <div className="rounded-md border border-gray-200 bg-gray-50 p-4 space-y-2">
-          <p className="text-xs font-medium uppercase tracking-wider text-gray-400">Moderation</p>
-          <div className="grid grid-cols-2 gap-3 text-sm">
-            <div>
-              <p className="text-xs text-gray-400">By</p>
-              <p className="text-gray-700">{review.moderatedBy ?? '—'}</p>
-            </div>
-            <div>
-              <p className="text-xs text-gray-400">At</p>
-              <p className="text-gray-700">
-                {review.moderatedAt ? formatDateTime(review.moderatedAt) : '—'}
-              </p>
-            </div>
+      <div className="space-y-2 rounded-md border border-gray-200 bg-gray-50 p-4">
+        <p className="text-xs font-medium uppercase tracking-wider text-gray-400">Moderation</p>
+        <div className="grid grid-cols-2 gap-3 text-sm">
+          <div>
+            <p className="text-xs text-gray-400">By</p>
+            <p className="text-gray-700">{review.moderatedBy ?? 'Not available'}</p>
           </div>
-          {review.adminNote && (
-            <div>
-              <p className="text-xs text-gray-400 mb-1">Admin note</p>
-              <p className="text-sm text-gray-700 italic">{review.adminNote}</p>
-            </div>
-          )}
+          <div>
+            <p className="text-xs text-gray-400">At</p>
+            <p className="text-gray-700">
+              {review.moderatedAt ? formatDateTime(review.moderatedAt) : 'Not available'}
+            </p>
+          </div>
         </div>
-      )}
+        <div>
+          <p className="mb-1 text-xs text-gray-400">Admin note</p>
+          <p className="text-sm text-gray-700">{review.adminNote || 'No admin note.'}</p>
+        </div>
+      </div>
     </div>
   );
 }

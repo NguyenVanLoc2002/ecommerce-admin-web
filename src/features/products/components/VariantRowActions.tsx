@@ -33,7 +33,7 @@ export function VariantRowActions({ productId, variant, onEdit }: VariantRowActi
     setMenuOpen(false);
     const ok = await confirm({
       title: 'Delete variant?',
-      description: `"${variant.variantName}" (${variant.sku}) will be permanently deleted.`,
+      description: `"${variant.variantName}" (${variant.sku}) will be marked as deleted and hidden from active lists.`,
       confirmLabel: 'Delete',
       variant: 'destructive',
     });
@@ -41,7 +41,7 @@ export function VariantRowActions({ productId, variant, onEdit }: VariantRowActi
 
     try {
       await deleteVariant.mutateAsync(variant.id);
-      toast.success('Variant deleted.');
+      toast.success('Variant deleted successfully.');
     } catch (err) {
       if (err instanceof AppError) {
         if (err.code === 'CONFLICT') {

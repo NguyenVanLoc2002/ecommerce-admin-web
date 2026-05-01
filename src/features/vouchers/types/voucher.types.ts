@@ -1,7 +1,12 @@
-import type { PaginationParams, EntityId } from '@/shared/types/api.types';
+import type {
+  PaginationParams,
+  EntityId,
+  SoftDeleteFilterParams,
+  SoftDeletableRecord,
+} from '@/shared/types/api.types';
 import type { DiscountType } from '@/shared/types/enums';
 
-export interface Voucher {
+export interface Voucher extends SoftDeletableRecord {
   id: EntityId;
   code: string;
   promotionId: EntityId;
@@ -29,7 +34,7 @@ export interface VoucherUsage {
   discountAmount: number;
 }
 
-export interface VoucherListParams extends PaginationParams {
+export interface VoucherListParams extends PaginationParams, SoftDeleteFilterParams {
   code?: string;
   promotionId?: EntityId;
   active?: boolean;

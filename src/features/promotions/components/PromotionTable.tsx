@@ -6,14 +6,16 @@ import { TableToolbar } from '@/shared/components/table/TableToolbar';
 import { Pagination } from '@/shared/components/table/Pagination';
 import { Button } from '@/shared/components/ui/Button';
 import { Badge } from '@/shared/components/ui/Badge';
+import { StatusBadge } from '@/shared/components/ui/StatusBadge';
 import { SkeletonTable } from '@/shared/components/feedback/Skeleton';
 import { ErrorCard } from '@/shared/components/feedback/ErrorCard';
 import { EmptyState } from '@/shared/components/feedback/EmptyState';
 import { formatMoney } from '@/shared/utils/formatMoney';
 import { formatDate } from '@/shared/utils/formatDate';
+import { resolveSoftDeleteState } from '@/shared/utils/softDelete';
 import { routes } from '@/constants/routes';
 import type { ColumnDef, SortState } from '@/shared/components/table/types';
-import type { PaginatedResponse } from '@/shared/types/api.types';
+import { SoftDeleteState, type PaginatedResponse } from '@/shared/types/api.types';
 import type { PromotionSummary, PromotionListParams } from '../types/promotion.types';
 import { PromotionRowActions } from './PromotionRowActions';
 
@@ -65,7 +67,8 @@ export function PromotionTable({
     filters.scope !== undefined ||
     filters.active !== undefined ||
     filters.dateFrom !== undefined ||
-    filters.dateTo !== undefined;
+    filters.dateTo !== undefined ||
+    filters.deletedState !== undefined && filters.deletedState !== SoftDeleteState.ACTIVE;
 
   const columns = useMemo<ColumnDef<PromotionSummary>[]>(
     () => [
@@ -114,6 +117,16 @@ export function PromotionTable({
         ),
       },
       {
+        id: 'recordStatus',
+        header: 'Record Status',
+        cell: ({ row }) => (
+          <StatusBadge
+            type="soft-delete"
+            status={resolveSoftDeleteState(row.original, filters.deletedState)}
+          />
+        ),
+      },
+      {
         id: 'usage',
         header: 'Usage',
         cell: ({ row }) => (
@@ -141,7 +154,7 @@ export function PromotionTable({
         cell: ({ row }) => <PromotionRowActions promotion={row.original} />,
       },
     ],
-    [navigate],
+    [filters.deletedState, navigate],
   );
 
   if (isLoading) return <SkeletonTable rows={8} />;
@@ -183,7 +196,9 @@ export function PromotionTable({
             message={
               hasActiveFilters
                 ? 'No promotions match your filters.'
-                : 'Create your first promotion to start offering discounts.'
+                : filters.deletedState === SoftDeleteState.DELETED
+                  ? 'Deleted promotions will appear here.'
+                  : 'Create your first promotion to start offering discounts.'
             }
           />
         }

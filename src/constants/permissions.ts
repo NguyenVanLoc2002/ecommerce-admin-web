@@ -23,6 +23,11 @@ export const permissions = {
     read: ['STAFF', 'ADMIN', 'SUPER_ADMIN'] as const,
     write: ['STAFF', 'ADMIN', 'SUPER_ADMIN'] as const,
   },
+  warehouses: {
+    read: ['STAFF', 'ADMIN', 'SUPER_ADMIN'] as const,
+    write: ['ADMIN', 'SUPER_ADMIN'] as const,
+    delete: ['ADMIN', 'SUPER_ADMIN'] as const,
+  },
   orders: {
     read: ['STAFF', 'ADMIN', 'SUPER_ADMIN'] as const,
     write: ['STAFF', 'ADMIN', 'SUPER_ADMIN'] as const,

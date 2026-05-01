@@ -1,5 +1,6 @@
 import { apiClient } from '@/shared/lib/axios';
 import type { EntityId, PaginatedResponse } from '@/shared/types/api.types';
+import { cleanParams } from '@/shared/utils/cleanParams';
 import type { AuditLog, AuditLogListParams } from '../types/auditLog.types';
 
 export const auditLogService = {
@@ -17,24 +18,17 @@ export const auditLogService = {
 };
 
 function sanitizeAuditLogParams(params: AuditLogListParams) {
-  const sort = normalizeString(params.sort);
-  const actor = normalizeString(params.actor);
-  const entityType = normalizeString(params.entityType);
-  const entityId = normalizeString(params.entityId);
-  const fromDate = normalizeString(params.fromDate);
-  const toDate = normalizeString(params.toDate);
-
-  return {
+  return cleanParams({
     page: params.page,
     size: params.size,
-    ...(sort ? { sort } : {}),
-    ...(params.action ? { action: params.action } : {}),
-    ...(entityType ? { entityType } : {}),
-    ...(entityId ? { entityId } : {}),
-    ...(actor ? { actor } : {}),
-    ...(fromDate ? { fromDate } : {}),
-    ...(toDate ? { toDate } : {}),
-  };
+    sort: normalizeString(params.sort),
+    action: params.action,
+    entityType: normalizeString(params.entityType),
+    entityId: normalizeString(params.entityId),
+    actor: normalizeString(params.actor),
+    fromDate: normalizeString(params.fromDate),
+    toDate: normalizeString(params.toDate),
+  });
 }
 
 function normalizeAuditLog(input: unknown): AuditLog {

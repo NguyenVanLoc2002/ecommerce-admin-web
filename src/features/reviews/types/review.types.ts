@@ -1,16 +1,21 @@
-import type { PaginationParams } from '@/shared/types/api.types';
+import type {
+  EntityId,
+  PaginationParams,
+  SoftDeleteFilterParams,
+  SoftDeletableRecord,
+} from '@/shared/types/api.types';
 import type { ReviewStatus } from '@/shared/types/enums';
 
-export interface Review {
-  id: number;
-  customerId: number;
+export interface Review extends SoftDeletableRecord {
+  id: EntityId;
+  customerId: EntityId;
   customerName: string;
-  productId: number;
+  productId: EntityId;
   productName: string;
-  variantId: number;
-  variantName: string;
-  sku: string;
-  orderItemId: number;
+  variantId: EntityId;
+  variantName: string | null;
+  sku: string | null;
+  orderItemId: EntityId;
   rating: number;
   comment: string;
   status: ReviewStatus;
@@ -21,10 +26,10 @@ export interface Review {
   updatedAt: string | null;
 }
 
-export interface ReviewListParams extends PaginationParams {
+export interface ReviewListParams extends PaginationParams, SoftDeleteFilterParams {
   status?: ReviewStatus;
-  productId?: number;
-  customerId?: number;
+  productId?: EntityId;
+  customerId?: EntityId;
   minRating?: number;
   maxRating?: number;
 }
@@ -35,7 +40,7 @@ export const ModerationAction = {
 } as const;
 export type ModerationAction = (typeof ModerationAction)[keyof typeof ModerationAction];
 
-export interface ModerateReviewRequest {
-  action: ModerationAction;
+export interface UpdateReviewStatusRequest {
+  status: Exclude<ReviewStatus, 'PENDING'>;
   adminNote?: string | null;
 }

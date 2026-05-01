@@ -8,6 +8,7 @@ import { useTableFilters } from '@/shared/hooks/useTableFilters';
 import { useDebounce } from '@/shared/hooks/useDebounce';
 import { usePermission } from '@/constants/permissions';
 import { routes } from '@/constants/routes';
+import { SoftDeleteState } from '@/shared/types/api.types';
 import type { SortState } from '@/shared/components/table/types';
 import { usePromotions } from '../hooks/usePromotions';
 import { PromotionTable } from '../components/PromotionTable';
@@ -18,12 +19,20 @@ const DEFAULT_FILTERS: PromotionListParams = {
   page: 0,
   size: 20,
   sort: 'createdAt,desc',
+  name: undefined,
+  scope: undefined,
+  active: undefined,
+  dateFrom: undefined,
+  dateTo: undefined,
+  deletedState: SoftDeleteState.ACTIVE,
 };
 
 export function PromotionListPage() {
   const navigate = useNavigate();
   const canWrite = usePermission('promotions', 'write');
-  const [filters, setFilters, resetFilters] = useTableFilters<PromotionListParams>(DEFAULT_FILTERS);
+  const [filters, setFilters, resetFilters] = useTableFilters<PromotionListParams>(DEFAULT_FILTERS, {
+    booleanKeys: ['active'],
+  });
   const [sort, setSort] = useState<SortState | undefined>();
   const [filtersOpen, setFiltersOpen] = useState(false);
 

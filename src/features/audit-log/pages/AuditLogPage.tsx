@@ -12,6 +12,12 @@ const DEFAULT_FILTERS: AuditLogListParams = {
   page: 0,
   size: 20,
   sort: 'createdAt,desc',
+  action: undefined,
+  entityType: undefined,
+  entityId: undefined,
+  actor: undefined,
+  fromDate: undefined,
+  toDate: undefined,
 };
 
 const DEFAULT_SORT: SortState = {
@@ -28,7 +34,7 @@ export function AuditLogPage() {
 
   const handleSortChange = (newSort: SortState) => {
     setSort(newSort);
-    setFilters({ sort: `${newSort.column},${newSort.direction}`, page: 0 });
+    setFilters({ sort: `${newSort.column},${newSort.direction}` });
   };
 
   const handleFiltersApply = (updates: Partial<AuditLogListParams>) => {

@@ -1,18 +1,34 @@
 import { apiClient } from '@/shared/lib/axios';
-import type { PaginatedResponse } from '@/shared/types/api.types';
-import type { Review, ReviewListParams, ModerateReviewRequest } from '../types/review.types';
+import type { EntityId, PaginatedResponse } from '@/shared/types/api.types';
+import { cleanParams } from '@/shared/utils/cleanParams';
+import { toSoftDeleteQuery } from '@/shared/utils/softDelete';
+import type { Review, ReviewListParams, UpdateReviewStatusRequest } from '../types/review.types';
 
-// NOTE: Review endpoints live at /reviews (not /admin/reviews) per the API contract.
 export const reviewService = {
-  getPending: (params: ReviewListParams) =>
-    apiClient.get<PaginatedResponse<Review>>('/reviews/pending', { params }),
+  getList: ({ deletedState, sort, ...params }: ReviewListParams) =>
+    apiClient.get<PaginatedResponse<Review>>('/admin/reviews', {
+      params: cleanParams({
+        ...params,
+        ...toReviewSortParams(sort),
+        ...toSoftDeleteQuery(deletedState),
+      }),
+    }),
 
-  getById: (id: number) =>
-    apiClient.get<Review>(`/reviews/${id}`),
+  getById: (id: EntityId) =>
+    apiClient.get<Review>(`/admin/reviews/${id}`),
 
-  moderate: (id: number, body: ModerateReviewRequest) =>
-    apiClient.patch<Review>(`/reviews/${id}/moderate`, body),
-
-  remove: (id: number) =>
-    apiClient.delete(`/reviews/${id}`),
+  moderate: (id: EntityId, body: UpdateReviewStatusRequest) =>
+    apiClient.patch<Review>(`/admin/reviews/${id}/status`, body),
 };
+
+function toReviewSortParams(sort?: string) {
+  if (!sort) {
+    return {};
+  }
+
+  const [field, direction] = sort.split(',');
+  return {
+    sort: field,
+    direction,
+  };
+}

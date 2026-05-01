@@ -7,6 +7,7 @@ import { FormField } from '@/shared/components/form/FormField';
 import { FormSelect } from '@/shared/components/form/FormSelect';
 import { adjustStockSchema, type AdjustStockFormValues } from '../schemas/adjustStockSchema';
 import type { Warehouse } from '../types/inventory.types';
+import { InventoryVariantSelector } from './InventoryVariantSelector';
 
 const MOVEMENT_TYPE_OPTIONS = [
   { value: 'ADJUSTMENT', label: 'Adjustment / Correction' },
@@ -89,7 +90,13 @@ export function AdjustStockModal({
       }
     >
       <FormProvider {...form}>
-        <form id="adjust-stock-form" onSubmit={form.handleSubmit(onSubmit)} noValidate>
+        <form
+          id="adjust-stock-form"
+          onSubmit={(event) => {
+            void form.handleSubmit(onSubmit)(event);
+          }}
+          noValidate
+        >
           <div className="space-y-4">
             {hasContext ? (
               <>
@@ -117,14 +124,7 @@ export function AdjustStockModal({
                   options={[{ value: '', label: 'Select warehouse...' }, ...warehouseOptions]}
                   disabled={isSubmitting}
                 />
-                <FormField
-                  name="variantId"
-                  label="Variant ID"
-                  required
-                  placeholder="Enter variant UUID"
-                  hint="Find the variant UUID on the Product Variants page."
-                  disabled={isSubmitting}
-                />
+                <InventoryVariantSelector open={open} disabled={isSubmitting} />
               </>
             )}
 
@@ -133,8 +133,8 @@ export function AdjustStockModal({
               label="Adjustment quantity"
               required
               type="number"
-              placeholder="e.g. -5 or +10"
-              hint="Positive to add stock, negative to remove."
+              placeholder="e.g. 10"
+              hint="Enter the stock quantity to apply for the selected movement type."
               disabled={isSubmitting}
             />
             <FormSelect

@@ -2,6 +2,8 @@ import { NavLink, useMatch } from 'react-router-dom';
 import {
   LayoutDashboard,
   Package,
+  Boxes,
+  SlidersHorizontal,
   Tag,
   Building2,
   Warehouse,
@@ -32,9 +34,11 @@ interface NavItem {
 const navItems: NavItem[] = [
   { label: 'Dashboard', to: routes.dashboard, icon: LayoutDashboard },
   { label: 'Products', to: routes.products.list, icon: Package },
+  { label: 'Product Attributes', to: routes.productAttributes.list, icon: SlidersHorizontal, adminOnly: true },
   { label: 'Categories', to: routes.categories.list, icon: Tag },
   { label: 'Brands', to: routes.brands.list, icon: Building2 },
-  { label: 'Inventory', to: routes.inventory.stock, icon: Warehouse },
+  { label: 'Warehouses', to: routes.warehouses.list, icon: Warehouse },
+  { label: 'Inventory', to: routes.inventory.stock, icon: Boxes },
   { label: 'Orders', to: routes.orders.list, icon: ShoppingCart },
   { label: 'Payments', to: routes.payments.list, icon: CreditCard },
   { label: 'Shipments', to: routes.shipments.list, icon: Truck },
@@ -95,7 +99,7 @@ export function Sidebar() {
 
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 z-30 flex w-64 flex-col bg-gray-900 transition-transform duration-300 lg:static lg:translate-x-0',
+          'fixed inset-y-0 left-0 z-30 flex h-screen min-h-0 w-64 shrink-0 flex-col overflow-hidden bg-gray-900 transition-transform duration-300 lg:static lg:h-screen lg:translate-x-0',
           sidebarOpen ? 'translate-x-0' : '-translate-x-full',
         )}
       >
@@ -116,7 +120,7 @@ export function Sidebar() {
           </button>
         </div>
 
-        <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-0.5" aria-label="Main navigation">
+        <nav className="min-h-0 flex-1 overflow-y-auto px-3 py-4 space-y-0.5" aria-label="Main navigation">
           {navItems.map((item) => {
             if (item.adminOnly && !isAdmin) return null;
             return <SidebarNavItem key={item.to} item={item} />;

@@ -1,5 +1,6 @@
 import { apiClient } from '@/shared/lib/axios';
 import type { EntityId, PaginatedResponse } from '@/shared/types/api.types';
+import { cleanParams } from '@/shared/utils/cleanParams';
 import type {
   Payment,
   PaymentSummary,
@@ -34,20 +35,16 @@ export const paymentService = {
 };
 
 function sanitizePaymentParams(params: PaymentListParams) {
-  const orderCode = normalizeString(params.orderCode);
-  const dateFrom = normalizeString(params.dateFrom);
-  const dateTo = normalizeString(params.dateTo);
-
-  return {
+  return cleanParams({
     page: params.page,
     size: params.size,
-    ...(params.sort ? { sort: params.sort } : {}),
-    ...(orderCode ? { orderCode } : {}),
-    ...(params.method ? { method: params.method } : {}),
-    ...(params.status ? { status: params.status } : {}),
-    ...(dateFrom ? { dateFrom } : {}),
-    ...(dateTo ? { dateTo } : {}),
-  };
+    sort: params.sort,
+    orderCode: normalizeString(params.orderCode),
+    method: params.method,
+    status: params.status,
+    dateFrom: normalizeString(params.dateFrom),
+    dateTo: normalizeString(params.dateTo),
+  });
 }
 
 function normalizePaymentSummary(input: unknown): PaymentSummary {
@@ -57,6 +54,7 @@ function normalizePaymentSummary(input: unknown): PaymentSummary {
     id: asString(record.id),
     orderId: asString(record.orderId),
     orderCode: asString(record.orderCode),
+    paymentCode: asString(record.paymentCode),
     customer: normalizeCustomer(record),
     method: asString(record.method) as PaymentSummary['method'],
     status: asString(record.status) as PaymentSummary['status'],

@@ -9,6 +9,7 @@ export function useCreatePromotion() {
     mutationFn: promotionService.create,
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.promotions.lists() });
+      void queryClient.invalidateQueries({ queryKey: ['promotions', 'options'] });
     },
   });
 }

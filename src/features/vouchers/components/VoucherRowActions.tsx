@@ -21,7 +21,7 @@ export function VoucherRowActions({ voucher }: VoucherRowActionsProps) {
   const handleDelete = async () => {
     const ok = await confirm({
       title: 'Delete voucher?',
-      description: 'Customers holding this code will not be able to redeem it.',
+      description: 'This voucher will be marked as deleted and hidden from active lists.',
       confirmLabel: 'Delete',
       variant: 'destructive',
     });
@@ -29,7 +29,7 @@ export function VoucherRowActions({ voucher }: VoucherRowActionsProps) {
 
     deleteVoucher.mutate(voucher.id, {
       onSuccess: () => {
-        toast.success('Voucher deleted.');
+        toast.success('Voucher deleted successfully.');
       },
       onError: (error) => {
         toast.error(error.message ?? 'Failed to delete voucher.');

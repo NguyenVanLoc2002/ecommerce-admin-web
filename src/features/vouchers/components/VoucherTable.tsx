@@ -6,15 +6,17 @@ import { TableToolbar } from '@/shared/components/table/TableToolbar';
 import { Pagination } from '@/shared/components/table/Pagination';
 import { Button } from '@/shared/components/ui/Button';
 import { Badge } from '@/shared/components/ui/Badge';
+import { StatusBadge } from '@/shared/components/ui/StatusBadge';
 import { SkeletonTable } from '@/shared/components/feedback/Skeleton';
 import { ErrorCard } from '@/shared/components/feedback/ErrorCard';
 import { EmptyState } from '@/shared/components/feedback/EmptyState';
 import { formatMoney } from '@/shared/utils/formatMoney';
 import { formatDate } from '@/shared/utils/formatDate';
+import { resolveSoftDeleteState } from '@/shared/utils/softDelete';
 import { toast } from '@/shared/stores/uiStore';
 import { routes } from '@/constants/routes';
 import type { ColumnDef } from '@/shared/components/table/types';
-import type { PaginatedResponse } from '@/shared/types/api.types';
+import { SoftDeleteState, type PaginatedResponse } from '@/shared/types/api.types';
 import type { Voucher, VoucherListParams } from '../types/voucher.types';
 import { VoucherRowActions } from './VoucherRowActions';
 
@@ -52,7 +54,8 @@ export function VoucherTable({
   const hasActiveFilters =
     filters.active !== undefined ||
     filters.dateFrom !== undefined ||
-    filters.dateTo !== undefined;
+    filters.dateTo !== undefined ||
+    filters.deletedState !== undefined && filters.deletedState !== SoftDeleteState.ACTIVE;
 
   const columns = useMemo<ColumnDef<Voucher>[]>(
     () => [
@@ -104,6 +107,16 @@ export function VoucherTable({
         ),
       },
       {
+        id: 'recordStatus',
+        header: 'Record Status',
+        cell: ({ row }) => (
+          <StatusBadge
+            type="soft-delete"
+            status={resolveSoftDeleteState(row.original, filters.deletedState)}
+          />
+        ),
+      },
+      {
         id: 'usage',
         header: 'Usage',
         cell: ({ row }) => (
@@ -140,7 +153,7 @@ export function VoucherTable({
         cell: ({ row }) => <VoucherRowActions voucher={row.original} />,
       },
     ],
-    [navigate],
+    [filters.deletedState, navigate],
   );
 
   if (isLoading) return <SkeletonTable rows={8} />;
@@ -180,7 +193,9 @@ export function VoucherTable({
             message={
               hasActiveFilters
                 ? 'No vouchers match your filters.'
-                : 'Create your first voucher to let customers apply discount codes.'
+                : filters.deletedState === SoftDeleteState.DELETED
+                  ? 'Deleted vouchers will appear here.'
+                  : 'Create your first voucher to let customers apply discount codes.'
             }
           />
         }

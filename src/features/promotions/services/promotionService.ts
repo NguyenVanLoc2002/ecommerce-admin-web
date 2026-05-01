@@ -1,5 +1,7 @@
 import { apiClient } from '@/shared/lib/axios';
 import type { EntityId, PaginatedResponse } from '@/shared/types/api.types';
+import { cleanParams } from '@/shared/utils/cleanParams';
+import { toSoftDeleteQuery } from '@/shared/utils/softDelete';
 import type {
   Promotion,
   PromotionSummary,
@@ -11,8 +13,13 @@ import type {
 } from '../types/promotion.types';
 
 export const promotionService = {
-  getList: (params: PromotionListParams) =>
-    apiClient.get<PaginatedResponse<PromotionSummary>>('/admin/promotions', { params }),
+  getList: ({ deletedState, ...params }: PromotionListParams) =>
+    apiClient.get<PaginatedResponse<PromotionSummary>>('/admin/promotions', {
+      params: cleanParams({
+        ...params,
+        ...toSoftDeleteQuery(deletedState),
+      }),
+    }),
 
   getById: (id: EntityId) => apiClient.get<Promotion>(`/admin/promotions/${id}`),
 

@@ -15,6 +15,12 @@ const DEFAULT_FILTERS: ShipmentListParams = {
   page: 0,
   size: 20,
   sort: 'createdAt,desc',
+  orderId: undefined,
+  orderCode: undefined,
+  carrier: undefined,
+  status: undefined,
+  dateFrom: undefined,
+  dateTo: undefined,
 };
 
 export function ShipmentListPage() {

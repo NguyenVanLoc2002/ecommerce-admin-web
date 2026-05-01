@@ -69,7 +69,13 @@ export function WarehouseForm({
       }
     >
       <FormProvider {...form}>
-        <form id="warehouse-form" onSubmit={form.handleSubmit(onSubmit)} noValidate>
+        <form
+          id="warehouse-form"
+          onSubmit={(event) => {
+            void form.handleSubmit(onSubmit)(event);
+          }}
+          noValidate
+        >
           <div className="space-y-4">
             <FormField
               name="name"
@@ -78,13 +84,22 @@ export function WarehouseForm({
               placeholder="e.g. Main Warehouse"
               disabled={isSubmitting}
             />
-            <FormField
-              name="code"
-              label="Code"
-              required
-              placeholder="e.g. KHO-HN-01"
-              disabled={isSubmitting || isEditMode}
-            />
+            {isEditMode ? (
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-gray-700">Code</p>
+                <div className="rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm font-mono text-gray-700">
+                  {warehouse.code}
+                </div>
+              </div>
+            ) : (
+              <FormField
+                name="code"
+                label="Code"
+                required
+                placeholder="e.g. KHO-HN-01"
+                disabled={isSubmitting}
+              />
+            )}
             <FormField
               name="location"
               label="Location"
@@ -93,13 +108,15 @@ export function WarehouseForm({
               placeholder="Street address, city…"
               disabled={isSubmitting}
             />
-            <FormSelect
-              name="status"
-              label="Status"
-              required
-              options={STATUS_OPTIONS}
-              disabled={isSubmitting}
-            />
+            {isEditMode && (
+              <FormSelect
+                name="status"
+                label="Status"
+                required
+                options={STATUS_OPTIONS}
+                disabled={isSubmitting}
+              />
+            )}
           </div>
         </form>
       </FormProvider>

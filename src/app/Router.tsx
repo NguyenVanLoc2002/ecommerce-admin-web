@@ -5,6 +5,7 @@ import { routes } from '@/constants/routes';
 import { LoginPage } from '@/features/auth/pages/LoginPage';
 import { DashboardPage } from '@/features/dashboard';
 import { ProductListPage, ProductEditPage, ProductVariantsPage } from '@/features/products';
+import { ProductAttributeListPage } from '@/features/product-attributes';
 import { CategoryListPage } from '@/features/categories';
 import { BrandListPage } from '@/features/brands';
 import { WarehouseListPage, StockPage, ReservationListPage } from '@/features/inventory';
@@ -64,7 +65,8 @@ export function Router() {
           <Route path={routes.categories.list} element={<CategoryListPage />} />
           <Route path={routes.brands.list} element={<BrandListPage />} />
 
-          <Route path={routes.inventory.warehouses} element={<WarehouseListPage />} />
+          <Route path={routes.warehouses.list} element={<WarehouseListPage />} />
+          <Route path={routes.inventory.warehouses} element={<Navigate to={routes.warehouses.list} replace />} />
           <Route path={routes.inventory.stock} element={<StockPage />} />
           <Route path={routes.inventory.reservations} element={<ReservationListPage />} />
 
@@ -82,6 +84,7 @@ export function Router() {
           <Route path={routes.invoices.detail(':id')} element={<InvoicePage />} />
 
           <Route element={<RoleGuard required={['ADMIN', 'SUPER_ADMIN']} />}>
+            <Route path={routes.productAttributes.list} element={<ProductAttributeListPage />} />
             <Route path={routes.promotions.list} element={<PromotionListPage />} />
             <Route path={routes.promotions.create} element={<PromotionEditPage />} />
             <Route path={routes.promotions.edit(':id')} element={<PromotionEditPage />} />

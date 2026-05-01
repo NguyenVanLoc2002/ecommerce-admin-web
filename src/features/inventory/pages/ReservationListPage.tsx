@@ -10,6 +10,10 @@ const DEFAULT_FILTERS: ReservationParams = {
   page: 0,
   size: 20,
   sort: 'createdAt,desc',
+  orderId: undefined,
+  variantId: undefined,
+  warehouseId: undefined,
+  status: undefined,
 };
 
 export function ReservationListPage() {
@@ -18,7 +22,7 @@ export function ReservationListPage() {
   const { data, isLoading, isError, refetch } = useReservations(filters);
   const { data: warehouseData } = useWarehouseOptions();
 
-  const warehouses = warehouseData?.items ?? [];
+  const warehouses = warehouseData ?? [];
 
   return (
     <AdminLayout>

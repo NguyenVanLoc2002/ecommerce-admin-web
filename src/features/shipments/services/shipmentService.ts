@@ -1,5 +1,6 @@
 import { apiClient } from '@/shared/lib/axios';
 import type { EntityId, PaginatedResponse } from '@/shared/types/api.types';
+import { cleanParams } from '@/shared/utils/cleanParams';
 import type {
   Shipment,
   ShipmentSummary,
@@ -43,23 +44,17 @@ export const shipmentService = {
 };
 
 function sanitizeShipmentParams(params: ShipmentListParams) {
-  const orderId = normalizeString(params.orderId);
-  const orderCode = normalizeString(params.orderCode);
-  const carrier = normalizeString(params.carrier);
-  const dateFrom = normalizeString(params.dateFrom);
-  const dateTo = normalizeString(params.dateTo);
-
-  return {
+  return cleanParams({
     page: params.page,
     size: params.size,
-    ...(params.sort ? { sort: params.sort } : {}),
-    ...(orderId ? { orderId } : {}),
-    ...(orderCode ? { orderCode } : {}),
-    ...(carrier ? { carrier } : {}),
-    ...(params.status ? { status: params.status } : {}),
-    ...(dateFrom ? { dateFrom } : {}),
-    ...(dateTo ? { dateTo } : {}),
-  };
+    sort: params.sort,
+    orderId: normalizeString(params.orderId),
+    orderCode: normalizeString(params.orderCode),
+    carrier: normalizeString(params.carrier),
+    status: params.status,
+    dateFrom: normalizeString(params.dateFrom),
+    dateTo: normalizeString(params.dateTo),
+  });
 }
 
 function normalizeShipmentSummary(input: unknown): ShipmentSummary {
@@ -69,6 +64,7 @@ function normalizeShipmentSummary(input: unknown): ShipmentSummary {
     id: asString(record.id),
     orderId: asString(record.orderId),
     orderCode: asString(record.orderCode),
+    shipmentCode: asString(record.shipmentCode),
     customer: normalizeShipmentCustomer(record),
     trackingNumber: asNullableString(record.trackingNumber),
     carrier: asNullableString(record.carrier),

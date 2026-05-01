@@ -22,7 +22,7 @@ export function PromotionRowActions({ promotion }: PromotionRowActionsProps) {
     const ok = await confirm({
       title: 'Delete promotion?',
       description:
-        'This will deactivate the promotion. Existing vouchers remain valid until their own expiry.',
+        'This promotion will be marked as deleted and hidden from active lists. Existing vouchers remain governed by their own rules.',
       confirmLabel: 'Delete',
       variant: 'destructive',
     });
@@ -30,7 +30,7 @@ export function PromotionRowActions({ promotion }: PromotionRowActionsProps) {
 
     deletePromotion.mutate(promotion.id, {
       onSuccess: () => {
-        toast.success('Promotion deleted.');
+        toast.success('Promotion deleted successfully.');
       },
       onError: (error) => {
         toast.error(error.message ?? 'Failed to delete promotion.');

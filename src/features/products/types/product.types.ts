@@ -1,4 +1,9 @@
-import type { PaginationParams, EntityId } from '@/shared/types/api.types';
+import type {
+  PaginationParams,
+  EntityId,
+  SoftDeleteFilterParams,
+  SoftDeletableRecord,
+} from '@/shared/types/api.types';
 import type { ProductStatus, VariantStatus } from '@/shared/types/enums';
 
 export interface ProductCategory {
@@ -14,11 +19,31 @@ export interface ProductBrand {
 }
 
 export interface VariantAttribute {
+  attributeId: EntityId;
   attributeName: string;
+  attributeCode: string;
+  valueId: EntityId;
   value: string;
+  displayValue: string | null;
 }
 
-export interface ProductVariant {
+export interface VariantAttributeDefinitionValue extends SoftDeletableRecord {
+  id: EntityId;
+  value: string;
+  displayValue: string | null;
+}
+
+export interface VariantAttributeDefinition extends SoftDeletableRecord {
+  id: EntityId;
+  name: string;
+  code: string;
+  type: 'VARIANT' | 'DESCRIPTIVE';
+  values: VariantAttributeDefinitionValue[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ProductVariant extends SoftDeletableRecord {
   id: EntityId;
   productId: EntityId;
   sku: string;
@@ -41,7 +66,7 @@ export interface ProductMedia {
   variantId: EntityId | null;
 }
 
-export interface ProductListItem {
+export interface ProductListItem extends SoftDeletableRecord {
   id: EntityId;
   name: string;
   slug: string;
@@ -67,13 +92,17 @@ export interface Product extends ProductListItem {
   updatedAt: string;
 }
 
-export interface ProductListParams extends PaginationParams {
+export interface ProductListParams extends PaginationParams, SoftDeleteFilterParams {
   keyword?: string;
   status?: string;
   categoryId?: EntityId;
   brandId?: EntityId;
+  minPrice?: number;
+  maxPrice?: number;
   featured?: string;
 }
+
+export interface VariantListParams extends SoftDeleteFilterParams {}
 
 export interface CreateProductRequest {
   name: string;
@@ -89,15 +118,18 @@ export interface CreateProductRequest {
 export type UpdateProductRequest = Partial<CreateProductRequest>;
 
 export interface CreateVariantRequest {
-  sku: string;
-  barcode?: string | null;
-  variantName: string;
+  sku: string | null;
+  autoGenerateSku: boolean;
+  barcode: string | null;
+  autoGenerateBarcode: boolean;
+  variantName: string | null;
+  autoGenerateVariantName: boolean;
   basePrice: number;
   salePrice: number | null;
-  compareAtPrice?: number | null;
+  compareAtPrice: number | null;
   weightGram: number | null;
   status: VariantStatus;
-  attributes: VariantAttribute[];
+  attributeValueIds: EntityId[];
 }
 
 export type UpdateVariantRequest = Partial<CreateVariantRequest>;

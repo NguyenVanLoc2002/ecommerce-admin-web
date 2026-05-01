@@ -12,9 +12,10 @@ import { EmptyState } from '@/shared/components/feedback/EmptyState';
 import { SkeletonTable } from '@/shared/components/feedback/Skeleton';
 import { ErrorCard } from '@/shared/components/feedback/ErrorCard';
 import { formatDate } from '@/shared/utils/formatDate';
+import { resolveSoftDeleteState } from '@/shared/utils/softDelete';
 import { routes } from '@/constants/routes';
 import type { ColumnDef, SortState, RowSelectionState } from '@/shared/components/table/types';
-import type { PaginatedResponse } from '@/shared/types/api.types';
+import { SoftDeleteState, type PaginatedResponse } from '@/shared/types/api.types';
 import type { ProductStatus } from '@/shared/types/enums';
 import type { ProductListItem, ProductListParams } from '../types/product.types';
 import { ProductRowActions } from './ProductRowActions';
@@ -104,6 +105,16 @@ export function ProductTable({
         ),
       },
       {
+        id: 'recordStatus',
+        header: 'Record Status',
+        cell: ({ row }) => (
+          <StatusBadge
+            type="soft-delete"
+            status={resolveSoftDeleteState(row.original, filters.deletedState)}
+          />
+        ),
+      },
+      {
         id: 'status',
         header: 'Status',
         cell: ({ row }) => (
@@ -134,7 +145,7 @@ export function ProductTable({
         cell: ({ row }) => <ProductRowActions product={row.original} />,
       },
     ],
-    [navigate],
+    [filters.deletedState, navigate],
   );
 
   const selectedCount = Object.values(rowSelection).filter(Boolean).length;
@@ -158,6 +169,14 @@ export function ProductTable({
       });
     }
 
+    if (filters.deletedState && filters.deletedState !== SoftDeleteState.ACTIVE) {
+      chips.push({
+        key: 'deletedState',
+        label: 'Record',
+        value: filters.deletedState === SoftDeleteState.DELETED ? 'Deleted' : 'All',
+      });
+    }
+
     return chips;
   }, [filters]);
 
@@ -177,7 +196,7 @@ export function ProductTable({
   const products = data?.items ?? [];
 
   return (
-    <div className="space-y-3">
+    <div className="min-w-0 space-y-3">
       <TableToolbar
         searchValue={filters.keyword ?? ''}
         onSearchChange={(keyword) => onFiltersChange({ keyword, page: 0 })}
@@ -267,7 +286,9 @@ export function ProductTable({
             message={
               filterChips.length > 0
                 ? 'Try adjusting or resetting your filters.'
-                : 'Create your first product to get started.'
+                : filters.deletedState === SoftDeleteState.DELETED
+                  ? 'Deleted products will appear here.'
+                  : 'Create your first product to get started.'
             }
             action={
               filterChips.length > 0

@@ -11,6 +11,7 @@ export function useUpdatePromotion(id: string) {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.promotions.lists() });
       void queryClient.invalidateQueries({ queryKey: queryKeys.promotions.detail(id) });
+      void queryClient.invalidateQueries({ queryKey: ['promotions', 'options'] });
     },
   });
 }

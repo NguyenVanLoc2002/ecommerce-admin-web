@@ -31,11 +31,16 @@ export function RejectModal({ review, onClose }: RejectModalProps) {
   const adminNote = watch('adminNote');
 
   useEffect(() => {
-    if (!review) reset({ adminNote: '' });
+    if (!review) {
+      reset({ adminNote: '' });
+    }
   }, [review, reset]);
 
   const onSubmit = (values: RejectReviewFormValues) => {
-    if (!review) return;
+    if (!review) {
+      return;
+    }
+
     rejectReview.mutate(
       { id: review.id, adminNote: values.adminNote },
       {
@@ -79,7 +84,7 @@ export function RejectModal({ review, onClose }: RejectModalProps) {
         </label>
         <Textarea
           {...register('adminNote')}
-          placeholder="Describe why this review doesn't meet guidelines…"
+          placeholder="Describe why this review does not meet guidelines..."
           rows={4}
           error={!!errors.adminNote}
           autoFocus
@@ -90,7 +95,7 @@ export function RejectModal({ review, onClose }: RejectModalProps) {
           ) : (
             <p className="text-xs text-gray-400">Minimum 10 characters</p>
           )}
-          <p className="text-xs text-gray-400 tabular-nums">{adminNote.length} / 500</p>
+          <p className="text-xs tabular-nums text-gray-400">{adminNote.length} / 500</p>
         </div>
       </div>
     </Modal>

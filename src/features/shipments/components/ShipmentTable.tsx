@@ -99,8 +99,8 @@ export function ShipmentTable({
               {row.original.trackingNumber ? (
                 <TrackingCell code={row.original.trackingNumber} />
               ) : (
-                <span className="font-mono text-sm font-semibold text-primary-600 hover:text-primary-700 hover:underline">
-                  #{row.original.id}
+                <span className="text-sm font-semibold text-primary-600 hover:text-primary-700 hover:underline">
+                  {row.original.carrier ? `${row.original.carrier} shipment` : 'Shipment record'}
                 </span>
               )}
             </button>
@@ -180,9 +180,9 @@ export function ShipmentTable({
       <TableToolbar
         searchValue={filters.orderCode ?? ''}
         onSearchChange={(orderCode) =>
-          onFiltersChange({ orderCode: orderCode || undefined, page: 0 })
+          onFiltersChange({ orderCode: orderCode || undefined })
         }
-        searchPlaceholder="Search by tracking code or order…"
+        searchPlaceholder="Search by order code…"
         actions={
           <>
             <Button
@@ -229,7 +229,7 @@ export function ShipmentTable({
         <Pagination
           pagination={data}
           onPageChange={(page) => onFiltersChange({ page } as Partial<ShipmentListParams>)}
-          onPageSizeChange={(size) => onFiltersChange({ size } as Partial<ShipmentListParams>)}
+          onPageSizeChange={(size) => onFiltersChange({ size, page: 0 } as Partial<ShipmentListParams>)}
         />
       )}
     </div>
