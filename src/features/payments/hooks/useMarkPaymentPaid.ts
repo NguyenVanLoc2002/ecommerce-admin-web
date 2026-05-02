@@ -6,7 +6,7 @@ export function useMarkPaymentPaid() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (orderId: number) => paymentService.completeCod(orderId),
+    mutationFn: (orderId: string) => paymentService.completeCod(orderId),
     onSuccess: (_data, orderId) => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.payments.lists() });
       void queryClient.invalidateQueries({ queryKey: queryKeys.orders.all });

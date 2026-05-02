@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Drawer } from '@/shared/components/ui/Drawer';
 import { Button } from '@/shared/components/ui/Button';
 import { Select } from '@/shared/components/ui/Select';
+import { SoftDeleteFilter } from '@/shared/components/ui/SoftDeleteFilter';
 import type { ProductListParams } from '../types/product.types';
 import type { MultiSelectOption } from '@/shared/components/ui/MultiSelectDropdown';
 import { MultiSelectDropdown } from '@/shared/components/ui/MultiSelectDropdown';
+import { SoftDeleteState } from '@/shared/types/api.types';
 
 const STATUS_OPTIONS = [
   { value: 'DRAFT', label: 'Draft' },
@@ -42,12 +44,27 @@ export function ProductFiltersDrawer({
     filters.brandId ? String(filters.brandId) : '',
   );
   const [localFeatured, setLocalFeatured] = useState<string>(filters.featured ?? '');
+  const [localDeletedState, setLocalDeletedState] = useState(
+    filters.deletedState ?? SoftDeleteState.ACTIVE,
+  );
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    setLocalStatus(filters.status ? filters.status.split(',') : []);
+    setLocalBrandId(filters.brandId ? String(filters.brandId) : '');
+    setLocalFeatured(filters.featured ?? '');
+    setLocalDeletedState(filters.deletedState ?? SoftDeleteState.ACTIVE);
+  }, [filters, open]);
 
   const handleApply = () => {
     onApply({
       status: localStatus.length > 0 ? localStatus.join(',') : undefined,
-      brandId: localBrandId ? Number(localBrandId) : undefined,
+      brandId: localBrandId || undefined,
       featured: localFeatured || undefined,
+      deletedState: localDeletedState,
       page: 0,
     });
     onClose();
@@ -57,6 +74,7 @@ export function ProductFiltersDrawer({
     setLocalStatus([]);
     setLocalBrandId('');
     setLocalFeatured('');
+    setLocalDeletedState(SoftDeleteState.ACTIVE);
     onReset();
     onClose();
   };
@@ -103,6 +121,11 @@ export function ProductFiltersDrawer({
             value={localFeatured}
             onChange={(e) => setLocalFeatured(e.target.value)}
           />
+        </div>
+
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium text-gray-700">Record Status</label>
+          <SoftDeleteFilter value={localDeletedState} onChange={setLocalDeletedState} />
         </div>
       </div>
     </Drawer>

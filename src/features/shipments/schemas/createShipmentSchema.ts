@@ -1,10 +1,7 @@
 import { z } from 'zod';
 
 export const createShipmentSchema = z.object({
-  orderId: z.coerce
-    .number({ invalid_type_error: 'Order ID must be a number' })
-    .int()
-    .positive('Order ID is required'),
+  orderId: z.string().min(1, 'Order ID is required'),
   carrier: z
     .string()
     .max(100, 'Carrier name must be at most 100 characters')

@@ -1,10 +1,9 @@
 import { useMemo } from 'react';
-import { Download, SlidersHorizontal, PackageSearch } from 'lucide-react';
+import { Download, SlidersHorizontal, PackageSearch, Filter } from 'lucide-react';
 import { DataTable } from '@/shared/components/table/DataTable';
 import { TableToolbar } from '@/shared/components/table/TableToolbar';
 import { Pagination } from '@/shared/components/table/Pagination';
 import { Button } from '@/shared/components/ui/Button';
-import { Select } from '@/shared/components/ui/Select';
 import { SkeletonTable } from '@/shared/components/feedback/Skeleton';
 import { ErrorCard } from '@/shared/components/feedback/ErrorCard';
 import { EmptyState } from '@/shared/components/feedback/EmptyState';
@@ -12,7 +11,7 @@ import { formatDateTime } from '@/shared/utils/formatDate';
 import { cn } from '@/shared/utils/cn';
 import type { ColumnDef } from '@/shared/components/table/types';
 import type { PaginatedResponse } from '@/shared/types/api.types';
-import type { InventoryStock, InventoryStockParams, Warehouse } from '../types/inventory.types';
+import type { InventoryStock, InventoryStockParams } from '../types/inventory.types';
 
 interface InventoryStockTableProps {
   data: PaginatedResponse<InventoryStock> | undefined;
@@ -21,7 +20,9 @@ interface InventoryStockTableProps {
   onRetry: () => void;
   filters: InventoryStockParams;
   onFiltersChange: (updates: Partial<InventoryStockParams>) => void;
-  warehouses: Warehouse[];
+  onReset: () => void;
+  onOpenFilters: () => void;
+  activeFilterCount: number;
   onImport: (stock: InventoryStock) => void;
   onAdjust: (stock: InventoryStock) => void;
   onImportNew: () => void;
@@ -47,15 +48,14 @@ export function InventoryStockTable({
   onRetry,
   filters,
   onFiltersChange,
-  warehouses,
+  onReset,
+  onOpenFilters,
+  activeFilterCount,
   onImport,
   onAdjust,
   onImportNew,
 }: InventoryStockTableProps) {
-  const warehouseOptions = [
-    { value: '', label: 'All warehouses' },
-    ...warehouses.map((w) => ({ value: String(w.id), label: w.name })),
-  ];
+  const hasActiveFilters = activeFilterCount > 0;
 
   const columns = useMemo<ColumnDef<InventoryStock>[]>(
     () => [
@@ -64,10 +64,10 @@ export function InventoryStockTable({
         header: 'Product / Variant',
         cell: ({ row }) => (
           <div>
-            <p className="font-medium text-gray-900 text-sm">{row.original.productName}</p>
+            <p className="text-sm font-medium text-gray-900">{row.original.productName}</p>
             <p className="text-xs text-gray-500">
               <span className="font-mono">{row.original.sku}</span>
-              {' — '}
+              {' - '}
               {row.original.variantName}
             </p>
           </div>
@@ -149,16 +149,23 @@ export function InventoryStockTable({
       <TableToolbar
         searchValue={filters.keyword ?? ''}
         onSearchChange={(keyword) => onFiltersChange({ keyword: keyword || undefined })}
-        searchPlaceholder="Search by SKU or product name…"
+        searchPlaceholder="Search by SKU or product name..."
         filters={
-          <Select
-            options={warehouseOptions}
-            value={String(filters.warehouseId ?? '')}
-            onChange={(e) =>
-              onFiltersChange({ warehouseId: e.target.value ? Number(e.target.value) : undefined })
-            }
-            className="h-9 w-44 text-sm"
-          />
+          <div className="flex items-center gap-2">
+            <Button variant="secondary" size="sm" onClick={onOpenFilters} leftIcon={<Filter className="h-4 w-4" />}>
+              Filters
+              {hasActiveFilters && (
+                <span className="ml-1 rounded-full bg-primary-600 px-1.5 py-0.5 text-xs text-white">
+                  {activeFilterCount}
+                </span>
+              )}
+            </Button>
+            {hasActiveFilters && (
+              <Button variant="ghost" size="sm" onClick={onReset}>
+                Clear Filters
+              </Button>
+            )}
+          </div>
         }
         actions={
           <Button size="sm" onClick={onImportNew} leftIcon={<Download className="h-4 w-4" />}>
@@ -174,9 +181,17 @@ export function InventoryStockTable({
         emptyState={
           <EmptyState
             icon={<PackageSearch className="h-10 w-10" />}
-            title="No stock records found"
-            message="Import stock to start tracking inventory levels."
-            action={{ label: 'Import Stock', onClick: onImportNew }}
+            title={hasActiveFilters ? 'No stock records match your filters' : 'No stock records found'}
+            message={
+              hasActiveFilters
+                ? 'Try adjusting or clearing your inventory filters.'
+                : 'Import stock to start tracking inventory levels.'
+            }
+            action={
+              hasActiveFilters
+                ? { label: 'Clear Filters', onClick: onReset }
+                : { label: 'Import Stock', onClick: onImportNew }
+            }
           />
         }
       />

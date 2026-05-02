@@ -4,6 +4,11 @@ export interface ColumnDef<T> {
   accessorKey?: keyof T;
   cell?: (ctx: { row: { original: T; index: number } }) => React.ReactNode;
   enableSorting?: boolean;
+  /**
+   * Backend field used in `sort=field,direction` when sorting this column.
+   * Defaults to `id` when unset.
+   */
+  sortField?: string;
   enableHiding?: boolean;
   className?: string;
   headerClassName?: string;

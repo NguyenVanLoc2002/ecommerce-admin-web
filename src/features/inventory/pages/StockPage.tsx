@@ -6,6 +6,7 @@ import { useDebounce } from '@/shared/hooks/useDebounce';
 import { toast } from '@/shared/stores/uiStore';
 import { AppError } from '@/shared/types/api.types';
 import { cn } from '@/shared/utils/cn';
+import { cleanParams } from '@/shared/utils/cleanParams';
 import { useInventoryStock } from '../hooks/useInventoryStock';
 import { useStockMovements } from '../hooks/useStockMovements';
 import { useImportStock } from '../hooks/useImportStock';
@@ -15,6 +16,7 @@ import { InventoryStockTable } from '../components/InventoryStockTable';
 import { StockMovementsTable } from '../components/StockMovementsTable';
 import { ImportStockModal } from '../components/ImportStockModal';
 import { AdjustStockModal } from '../components/AdjustStockModal';
+import { InventoryFiltersDrawer } from '../components/InventoryFiltersDrawer';
 import type {
   InventoryStock,
   InventoryStockParams,
@@ -25,23 +27,63 @@ import type { AdjustStockFormValues } from '../schemas/adjustStockSchema';
 
 type ActiveTab = 'stock' | 'movements';
 
-const DEFAULT_STOCK_FILTERS: InventoryStockParams = { page: 0, size: 20, sort: 'updatedAt,desc' };
-const DEFAULT_MOVEMENT_FILTERS: StockMovementParams = { page: 0, size: 20, sort: 'createdAt,desc' };
+const DEFAULT_STOCK_FILTERS: InventoryStockParams = {
+  page: 0,
+  size: 20,
+  sort: 'updatedAt,desc',
+  variantId: undefined,
+  warehouseId: undefined,
+  productId: undefined,
+  sku: undefined,
+  keyword: undefined,
+  variantStatus: undefined,
+  outOfStock: undefined,
+  lowStock: undefined,
+  lowStockThreshold: undefined,
+};
+const DEFAULT_MOVEMENT_FILTERS: StockMovementParams = {
+  page: 0,
+  size: 20,
+  sort: 'createdAt,desc',
+  variantId: undefined,
+  warehouseId: undefined,
+  movementType: undefined,
+};
 
 export function StockPage() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('stock');
   const [importOpen, setImportOpen] = useState(false);
   const [adjustOpen, setAdjustOpen] = useState(false);
+  const [stockFiltersOpen, setStockFiltersOpen] = useState(false);
   const [stockContext, setStockContext] = useState<InventoryStock | undefined>();
 
-  const [stockFilters, setStockFilters] = useTableFilters<InventoryStockParams>(DEFAULT_STOCK_FILTERS);
-  const [movementFilters, setMovementFilters] = useTableFilters<StockMovementParams>(DEFAULT_MOVEMENT_FILTERS);
+  const [stockFilters, setStockFilters, resetStockFilters] = useTableFilters<InventoryStockParams>(DEFAULT_STOCK_FILTERS, {
+    namespace: 'stock',
+    booleanKeys: ['outOfStock', 'lowStock'],
+    numberKeys: ['lowStockThreshold'],
+  });
+  const [movementFilters, setMovementFilters] = useTableFilters<StockMovementParams>(DEFAULT_MOVEMENT_FILTERS, {
+    namespace: 'movements',
+  });
 
   const debouncedKeyword = useDebounce(stockFilters.keyword ?? '', 300);
   const stockQueryParams: InventoryStockParams = {
     ...stockFilters,
     keyword: debouncedKeyword || undefined,
   };
+  const stockActiveFilterCount = Object.keys(
+    cleanParams({
+      keyword: stockFilters.keyword,
+      sku: stockFilters.sku,
+      warehouseId: stockFilters.warehouseId,
+      productId: stockFilters.productId,
+      variantId: stockFilters.variantId,
+      variantStatus: stockFilters.variantStatus,
+      outOfStock: stockFilters.outOfStock,
+      lowStock: stockFilters.lowStock,
+      lowStockThreshold: stockFilters.lowStockThreshold,
+    }),
+  ).length;
 
   const { data: stockData, isLoading: stockLoading, isError: stockError, refetch: refetchStock } =
     useInventoryStock(stockQueryParams);
@@ -51,7 +93,7 @@ export function StockPage() {
   const importStock = useImportStock();
   const adjustStock = useAdjustStock();
 
-  const warehouses = warehouseData?.items ?? [];
+  const warehouses = warehouseData ?? [];
 
   const openImport = (stock?: InventoryStock) => {
     setStockContext(stock);
@@ -135,7 +177,9 @@ export function StockPage() {
             onRetry={() => void refetchStock()}
             filters={stockFilters}
             onFiltersChange={setStockFilters}
-            warehouses={warehouses}
+            onReset={resetStockFilters}
+            onOpenFilters={() => setStockFiltersOpen(true)}
+            activeFilterCount={stockActiveFilterCount}
             onImport={openImport}
             onAdjust={openAdjust}
             onImportNew={() => openImport()}
@@ -154,6 +198,15 @@ export function StockPage() {
           />
         )}
       </div>
+
+      <InventoryFiltersDrawer
+        open={stockFiltersOpen}
+        onClose={() => setStockFiltersOpen(false)}
+        filters={stockFilters}
+        warehouses={warehouses}
+        onApply={setStockFilters}
+        onReset={resetStockFilters}
+      />
 
       <ImportStockModal
         open={importOpen}

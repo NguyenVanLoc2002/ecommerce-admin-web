@@ -1,4 +1,5 @@
-import { FileText, Calendar, CheckCircle, XCircle } from 'lucide-react';
+import type { ReactNode } from 'react';
+import { Calendar, FileText } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { formatDateTime } from '@/shared/utils/formatDate';
 import { routes } from '@/constants/routes';
@@ -9,6 +10,16 @@ interface InvoiceHeaderProps {
 }
 
 export function InvoiceHeader({ invoice }: InvoiceHeaderProps) {
+  const billingAddress = [
+    invoice.billingStreet,
+    invoice.billingWard,
+    invoice.billingDistrict,
+    invoice.billingCity,
+    invoice.billingPostalCode,
+  ]
+    .filter(Boolean)
+    .join(', ');
+
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-5">
       <div className="flex items-start justify-between gap-4">
@@ -17,9 +28,7 @@ export function InvoiceHeader({ invoice }: InvoiceHeaderProps) {
             <FileText className="h-5 w-5 text-primary-600" />
           </div>
           <div>
-            <p className="font-mono text-lg font-semibold text-gray-900">
-              {invoice.invoiceCode}
-            </p>
+            <p className="font-mono text-lg font-semibold text-gray-900">{invoice.invoiceCode}</p>
             <p className="text-xs text-gray-500">
               Order{' '}
               <Link
@@ -37,38 +46,21 @@ export function InvoiceHeader({ invoice }: InvoiceHeaderProps) {
         <MetaItem icon={<Calendar className="h-3.5 w-3.5" />} label="Issued">
           {formatDateTime(invoice.issuedAt)}
         </MetaItem>
-
-        {invoice.paidAt && (
-          <MetaItem icon={<CheckCircle className="h-3.5 w-3.5 text-success-500" />} label="Paid">
-            {formatDateTime(invoice.paidAt)}
-          </MetaItem>
-        )}
-
-        {invoice.voidedAt && (
-          <MetaItem icon={<XCircle className="h-3.5 w-3.5 text-danger-500" />} label="Voided">
-            {formatDateTime(invoice.voidedAt)}
-          </MetaItem>
-        )}
+        <MetaItem label="Created">{formatDateTime(invoice.createdAt)}</MetaItem>
+        <MetaItem label="Due">{invoice.dueDate ? formatDateTime(invoice.dueDate) : 'N/A'}</MetaItem>
       </div>
 
-      {invoice.voidNote && (
-        <div className="mt-3 rounded border border-danger-100 bg-danger-50 px-3 py-2">
-          <p className="text-xs font-medium text-danger-700">Void reason</p>
-          <p className="mt-0.5 text-xs text-danger-600">{invoice.voidNote}</p>
+      <div className="mt-4 grid gap-4 border-t border-gray-100 pt-4 md:grid-cols-2">
+        <div>
+          <p className="text-xs font-medium uppercase tracking-wide text-gray-400">Customer</p>
+          <p className="mt-1 text-sm font-medium text-gray-900">{invoice.customerName}</p>
+          <p className="text-xs text-gray-500">{invoice.customerEmail ?? 'N/A'}</p>
+          <p className="text-xs text-gray-500">{invoice.customerPhone ?? 'N/A'}</p>
         </div>
-      )}
-
-      <div className="mt-4 border-t border-gray-100 pt-3">
-        <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
-          Ship to
-        </p>
-        <p className="mt-1 text-sm font-medium text-gray-900">{invoice.receiverName}</p>
-        <p className="text-xs text-gray-500">{invoice.receiverPhone}</p>
-        <p className="text-xs text-gray-500">
-          {[invoice.shippingStreet, invoice.shippingWard, invoice.shippingDistrict, invoice.shippingCity]
-            .filter(Boolean)
-            .join(', ')}
-        </p>
+        <div>
+          <p className="text-xs font-medium uppercase tracking-wide text-gray-400">Bill to</p>
+          <p className="mt-1 text-sm text-gray-700">{billingAddress || 'N/A'}</p>
+        </div>
       </div>
     </div>
   );
@@ -79,9 +71,9 @@ function MetaItem({
   label,
   children,
 }: {
-  icon?: React.ReactNode;
+  icon?: ReactNode;
   label: string;
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
     <div className="flex items-center gap-1.5">

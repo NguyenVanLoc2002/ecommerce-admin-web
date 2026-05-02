@@ -2,7 +2,9 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, CreditCard } from 'lucide-react';
 import { AdminLayout } from '@/shared/components/layout/AdminLayout';
 import { PageHeader } from '@/shared/components/layout/PageHeader';
+import { useBreadcrumbLabel } from '@/shared/components/layout';
 import { Button } from '@/shared/components/ui/Button';
+import { CopyValueButton } from '@/shared/components/ui/CopyValueButton';
 import { SkeletonDetail } from '@/shared/components/feedback/Skeleton';
 import { ErrorCard } from '@/shared/components/feedback/ErrorCard';
 import { EmptyState } from '@/shared/components/feedback/EmptyState';
@@ -18,7 +20,7 @@ import { PaymentDetail } from '../components/PaymentDetail';
 export function PaymentDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const paymentId = Number(id);
+  const paymentId = id ?? '';
   const { confirm } = useConfirmDialog();
 
   const { data: payment, isLoading, isError, refetch } = usePayment(paymentId);
@@ -30,7 +32,15 @@ export function PaymentDetailPage() {
   } = usePaymentTransactions(paymentId);
   const markPaid = useMarkPaymentPaid();
 
+  useBreadcrumbLabel(
+    routes.payments.detail(paymentId),
+    isLoading
+      ? 'Loading...'
+      : (payment?.paymentCode ?? (isError ? 'Loading...' : 'Not found')),
+  );
+
   const handleMarkPaid = async () => {
+    if (!payment) return;
     const ok = await confirm({
       title: 'Mark payment as paid?',
       description:
@@ -46,7 +56,7 @@ export function PaymentDetailPage() {
     } catch (err) {
       if (err instanceof AppError) {
         if (err.code === 'PAYMENT_ALREADY_PROCESSED') {
-          toast.error('This payment was already processed. Refreshing…');
+          toast.error('This payment was already processed. Refreshing...');
           setTimeout(() => void refetch(), 1_000);
         } else {
           toast.error(err.message || 'Failed to update payment.');
@@ -105,8 +115,9 @@ export function PaymentDetailPage() {
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <PageHeader
-            title={`Payment #${payment.id}`}
-            description={`Order #${payment.orderCode} · ${payment.customer.fullName}`}
+            title={payment.paymentCode || 'Payment Details'}
+            description={`Order #${payment.orderCode} - ${payment.customer.fullName}`}
+            actions={<CopyValueButton value={payment.id} label="Copy ID" />}
           />
         </div>
 

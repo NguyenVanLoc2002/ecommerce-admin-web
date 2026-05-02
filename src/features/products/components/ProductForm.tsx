@@ -103,7 +103,7 @@ export function ProductForm({
 
           {/* Basic Info */}
           <section className="space-y-4">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-400">
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-500">
               Basic Information
             </h2>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -160,7 +160,7 @@ export function ProductForm({
 
           {/* Status & Settings */}
           <section className="space-y-4">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-400">
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-500">
               Status & Settings
             </h2>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

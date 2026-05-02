@@ -3,6 +3,7 @@ import type { ShipmentStatus } from '@/shared/types/enums';
 
 export const SHIPMENT_STATUS_VALUES = [
   'PENDING',
+  'PICKING',
   'IN_TRANSIT',
   'OUT_FOR_DELIVERY',
   'DELIVERED',

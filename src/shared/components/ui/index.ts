@@ -1,10 +1,12 @@
 export { Button } from './Button';
+export { CopyValueButton } from './CopyValueButton';
 export { Input } from './Input';
 export { Textarea } from './Textarea';
 export { Select } from './Select';
 export type { SelectOption } from './Select';
 export { Badge } from './Badge';
 export { StatusBadge } from './StatusBadge';
+export { SoftDeleteFilter } from './SoftDeleteFilter';
 export { Tooltip } from './Tooltip';
 export { Spinner } from './Spinner';
 export { Checkbox } from './Checkbox';
@@ -14,3 +16,4 @@ export { Drawer } from './Drawer';
 export { ConfirmDialogProvider } from './ConfirmDialog';
 export { MultiSelectDropdown } from './MultiSelectDropdown';
 export type { MultiSelectOption } from './MultiSelectDropdown';
+export { DropdownMenu } from './DropdownMenu';

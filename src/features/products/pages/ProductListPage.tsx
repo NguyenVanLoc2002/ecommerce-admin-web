@@ -7,6 +7,8 @@ import { useTableFilters } from '@/shared/hooks/useTableFilters';
 import { useDebounce } from '@/shared/hooks/useDebounce';
 import { toast } from '@/shared/stores/uiStore';
 import { routes } from '@/constants/routes';
+import { SoftDeleteState } from '@/shared/types/api.types';
+import { buildSortParam, parseSortParam } from '@/shared/utils/sort';
 import type { SortState, RowSelectionState } from '@/shared/components/table/types';
 import type { MultiSelectOption } from '@/shared/components/ui/MultiSelectDropdown';
 import { useProducts } from '../hooks/useProducts';
@@ -20,15 +22,26 @@ const DEFAULT_FILTERS: ProductListParams = {
   page: 0,
   size: 20,
   sort: 'createdAt,desc',
+  keyword: undefined,
+  status: undefined,
+  categoryId: undefined,
+  brandId: undefined,
+  minPrice: undefined,
+  maxPrice: undefined,
+  featured: undefined,
+  deletedState: SoftDeleteState.ACTIVE,
 };
+
+type BulkAction = 'publish' | 'deactivate' | 'delete';
 
 export function ProductListPage() {
   const navigate = useNavigate();
   const { confirm } = useConfirmDialog();
   const [filters, setFilters, resetFilters] = useTableFilters<ProductListParams>(DEFAULT_FILTERS);
-  const [sort, setSort] = useState<SortState | undefined>();
+  const sort = parseSortParam(filters.sort);
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [pendingBulk, setPendingBulk] = useState<BulkAction | null>(null);
 
   const debouncedKeyword = useDebounce(filters.keyword ?? '', 300);
   const queryParams: ProductListParams = { ...filters, keyword: debouncedKeyword || undefined };
@@ -39,17 +52,16 @@ export function ProductListPage() {
   const { data: brandsData } = useBrandOptions();
 
   const selectedIds = Object.entries(rowSelection)
-    .filter(([, v]) => v)
-    .map(([id]) => Number(id));
+    .filter(([, value]) => value)
+    .map(([id]) => id);
 
-  const brandOptions: MultiSelectOption[] = (brandsData?.items ?? []).map((b) => ({
-    value: b.id,
-    label: b.name,
+  const brandOptions: MultiSelectOption[] = (brandsData ?? []).map((brand) => ({
+    value: brand.id,
+    label: brand.name,
   }));
 
   const handleSortChange = (newSort: SortState) => {
-    setSort(newSort);
-    setFilters({ sort: `${newSort.column},${newSort.direction}` });
+    setFilters({ sort: buildSortParam(newSort), page: 0 });
   };
 
   const handleBulkPublish = async () => {
@@ -61,12 +73,17 @@ export function ProductListPage() {
     });
     if (!ok) return;
 
-    const result = await bulkUpdateStatus.mutateAsync({ ids: selectedIds, status: 'PUBLISHED' });
-    setRowSelection({});
-    if (result.failed > 0) {
-      toast.warning(`${result.succeeded} published, ${result.failed} failed.`);
-    } else {
-      toast.success(`${result.succeeded} product${result.succeeded > 1 ? 's' : ''} published.`);
+    setPendingBulk('publish');
+    try {
+      const result = await bulkUpdateStatus.mutateAsync({ ids: selectedIds, status: 'PUBLISHED' });
+      setRowSelection({});
+      if (result.failed > 0) {
+        toast.warning(`${result.succeeded} published, ${result.failed} failed.`);
+      } else {
+        toast.success(`${result.succeeded} product${result.succeeded > 1 ? 's' : ''} published.`);
+      }
+    } finally {
+      setPendingBulk(null);
     }
   };
 
@@ -79,12 +96,17 @@ export function ProductListPage() {
     });
     if (!ok) return;
 
-    const result = await bulkUpdateStatus.mutateAsync({ ids: selectedIds, status: 'INACTIVE' });
-    setRowSelection({});
-    if (result.failed > 0) {
-      toast.warning(`${result.succeeded} deactivated, ${result.failed} failed.`);
-    } else {
-      toast.success(`${result.succeeded} product${result.succeeded > 1 ? 's' : ''} deactivated.`);
+    setPendingBulk('deactivate');
+    try {
+      const result = await bulkUpdateStatus.mutateAsync({ ids: selectedIds, status: 'INACTIVE' });
+      setRowSelection({});
+      if (result.failed > 0) {
+        toast.warning(`${result.succeeded} deactivated, ${result.failed} failed.`);
+      } else {
+        toast.success(`${result.succeeded} product${result.succeeded > 1 ? 's' : ''} deactivated.`);
+      }
+    } finally {
+      setPendingBulk(null);
     }
   };
 
@@ -98,20 +120,27 @@ export function ProductListPage() {
     });
     if (!ok) return;
 
-    const result = await bulkDelete.mutateAsync(selectedIds);
-    setRowSelection({});
-    if (result.failed > 0) {
-      toast.warning(`${result.succeeded} deleted, ${result.failed} failed.`);
-    } else {
-      toast.success(`${result.succeeded} product${result.succeeded > 1 ? 's' : ''} deleted.`);
+    setPendingBulk('delete');
+    try {
+      const result = await bulkDelete.mutateAsync(selectedIds);
+      setRowSelection({});
+      if (result.failed > 0) {
+        toast.warning(`${result.succeeded} deleted successfully, ${result.failed} failed.`);
+      } else {
+        toast.success(
+          result.succeeded === 1
+            ? 'Product deleted successfully.'
+            : 'Products deleted successfully.',
+        );
+      }
+    } finally {
+      setPendingBulk(null);
     }
   };
 
-  const isBulkPending = bulkUpdateStatus.isPending || bulkDelete.isPending;
-
   return (
     <AdminLayout>
-      <div className="space-y-6 p-6">
+      <div className="min-w-0 space-y-6 p-6">
         <PageHeader
           title="Products"
           description="Manage your product catalog."
@@ -133,7 +162,7 @@ export function ProductListPage() {
           onBulkPublish={() => void handleBulkPublish()}
           onBulkArchive={() => void handleBulkDeactivate()}
           onBulkDelete={() => void handleBulkDelete()}
-          isBulkPending={isBulkPending}
+          pendingBulk={pendingBulk}
           onCreateNew={() => navigate(routes.products.create)}
         />
       </div>

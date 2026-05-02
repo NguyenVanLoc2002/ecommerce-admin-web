@@ -1,3 +1,5 @@
+import type { EntityKey } from '@/shared/types/api.types';
+
 // All route paths for the admin application.
 // Always use these constants — never hardcode path strings in components.
 
@@ -8,8 +10,12 @@ export const routes = {
   products: {
     list: '/products',
     create: '/products/new',
-    edit: (id: number | ':id') => `/products/${id}`,
-    variants: (id: number | ':id') => `/products/${id}/variants`,
+    edit: (id: EntityKey) => `/products/${id}`,
+    variants: (id: EntityKey) => `/products/${id}/variants`,
+  },
+
+  productAttributes: {
+    list: '/product-attributes',
   },
 
   categories: {
@@ -20,6 +26,10 @@ export const routes = {
     list: '/brands',
   },
 
+  warehouses: {
+    list: '/warehouses',
+  },
+
   inventory: {
     warehouses: '/inventory/warehouses',
     stock: '/inventory/stock',
@@ -28,40 +38,48 @@ export const routes = {
 
   orders: {
     list: '/orders',
-    detail: (id: number | ':id') => `/orders/${id}`,
+    detail: (id: EntityKey) => `/orders/${id}`,
   },
 
   payments: {
     list: '/payments',
-    detail: (id: number | ':id') => `/payments/${id}`,
+    detail: (id: EntityKey) => `/payments/${id}`,
   },
 
   shipments: {
     list: '/shipments',
     create: '/shipments/new',
-    detail: (id: number | ':id') => `/shipments/${id}`,
+    detail: (id: EntityKey) => `/shipments/${id}`,
   },
 
   invoices: {
     list: '/invoices',
-    detail: (id: number | ':id') => `/invoices/${id}`,
+    detail: (id: EntityKey) => `/invoices/${id}`,
   },
 
   promotions: {
     list: '/promotions',
     create: '/promotions/new',
-    edit: (id: number | ':id') => `/promotions/${id}`,
+    edit: (id: EntityKey) => `/promotions/${id}`,
   },
 
   vouchers: {
     list: '/vouchers',
     create: '/vouchers/new',
-    edit: (id: number | ':id') => `/vouchers/${id}`,
-    usages: (id: number | ':id') => `/vouchers/${id}/usages`,
+    edit: (id: EntityKey) => `/vouchers/${id}`,
+    usages: (id: EntityKey) => `/vouchers/${id}/usages`,
   },
 
   reviews: {
     list: '/reviews',
+  },
+
+  users: {
+    list: '/users',
+  },
+
+  customers: {
+    list: '/customers',
   },
 
   auditLog: {

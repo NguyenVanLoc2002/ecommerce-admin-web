@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight, Star } from 'lucide-react';
+import { cn } from '@/shared/utils/cn';
 import { routes } from '@/constants/routes';
 import { SkeletonTable } from '@/shared/components/feedback/Skeleton';
 import { ErrorCard } from '@/shared/components/feedback/ErrorCard';
@@ -8,15 +9,16 @@ import { useDashboardPendingReviews } from '../hooks/useDashboardPendingReviews'
 
 function StarRating({ rating }: { rating: number }) {
   return (
-    <span className="flex items-center gap-0.5" aria-label={`${rating} out of 5 stars`}>
+    <span className="group flex items-center gap-0.5" aria-label={`${rating} out of 5 stars`}>
       {Array.from({ length: 5 }).map((_, i) => (
         <Star
           key={i}
-          className={
+          className={cn(
+            'h-3 w-3 transition-transform duration-100',
             i < rating
-              ? 'h-3 w-3 fill-warning-400 text-warning-400'
-              : 'h-3 w-3 text-gray-200'
-          }
+              ? 'fill-warning-400 text-warning-400 group-hover:scale-110'
+              : 'text-gray-200',
+          )}
           aria-hidden
         />
       ))}
@@ -58,7 +60,7 @@ export function PendingReviewsPanel() {
         <>
           {data?.items.length === 0 ? (
             <p className="px-5 py-10 text-center text-sm text-gray-400">
-              No pending reviews — you're all caught up!
+              No pending reviews — queue is clear.
             </p>
           ) : (
             <ul className="divide-y divide-gray-100">

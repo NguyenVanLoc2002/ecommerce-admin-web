@@ -1,52 +1,8 @@
 import { Link, useLocation } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
 import { cn } from '@/shared/utils/cn';
-
-const SEGMENT_LABELS: Record<string, string> = {
-  '': 'Dashboard',
-  products: 'Products',
-  new: 'New',
-  variants: 'Variants',
-  categories: 'Categories',
-  brands: 'Brands',
-  inventory: 'Inventory',
-  warehouses: 'Warehouses',
-  stock: 'Stock',
-  reservations: 'Reservations',
-  orders: 'Orders',
-  payments: 'Payments',
-  shipments: 'Shipments',
-  invoices: 'Invoices',
-  promotions: 'Promotions',
-  vouchers: 'Vouchers',
-  usages: 'Usages',
-  reviews: 'Reviews',
-  'audit-log': 'Audit Log',
-};
-
-interface Crumb {
-  label: string;
-  path: string;
-  isCurrent: boolean;
-}
-
-function buildCrumbs(pathname: string): Crumb[] {
-  if (pathname === '/') {
-    return [{ label: 'Dashboard', path: '/', isCurrent: true }];
-  }
-
-  const segments = pathname.split('/').filter(Boolean);
-  const crumbs: Crumb[] = [{ label: 'Dashboard', path: '/', isCurrent: false }];
-
-  segments.forEach((segment, index) => {
-    const path = '/' + segments.slice(0, index + 1).join('/');
-    const isId = /^\d+$/.test(segment) || segment === ':id';
-    const label = isId ? '#' + segment : (SEGMENT_LABELS[segment] ?? segment);
-    crumbs.push({ label, path, isCurrent: index === segments.length - 1 });
-  });
-
-  return crumbs;
-}
+import { useBreadcrumbLabels } from './useBreadcrumbLabel';
+import { buildCrumbs } from './breadcrumbUtils';
 
 interface BreadcrumbProps {
   className?: string;
@@ -54,7 +10,8 @@ interface BreadcrumbProps {
 
 export function Breadcrumb({ className }: BreadcrumbProps) {
   const { pathname } = useLocation();
-  const crumbs = buildCrumbs(pathname);
+  const labels = useBreadcrumbLabels();
+  const crumbs = buildCrumbs(pathname, labels);
 
   if (crumbs.length <= 1) return null;
 

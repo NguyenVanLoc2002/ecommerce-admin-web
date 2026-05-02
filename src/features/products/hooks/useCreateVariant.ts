@@ -3,14 +3,14 @@ import { queryKeys } from '@/constants/queryKeys';
 import { variantService } from '../services/variantService';
 import type { CreateVariantRequest } from '../types/product.types';
 
-export function useCreateVariant(productId: number) {
+export function useCreateVariant(productId?: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (body: CreateVariantRequest) => variantService.create(productId, body),
+    mutationFn: (body: CreateVariantRequest) => variantService.create(productId ?? '', body),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.variants.byProduct(productId) });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.products.detail(productId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.variants.byProduct(productId ?? '') });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.products.detail(productId ?? '') });
     },
   });
 }

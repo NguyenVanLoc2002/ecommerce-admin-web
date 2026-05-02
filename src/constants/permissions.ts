@@ -23,6 +23,11 @@ export const permissions = {
     read: ['STAFF', 'ADMIN', 'SUPER_ADMIN'] as const,
     write: ['STAFF', 'ADMIN', 'SUPER_ADMIN'] as const,
   },
+  warehouses: {
+    read: ['STAFF', 'ADMIN', 'SUPER_ADMIN'] as const,
+    write: ['ADMIN', 'SUPER_ADMIN'] as const,
+    delete: ['ADMIN', 'SUPER_ADMIN'] as const,
+  },
   orders: {
     read: ['STAFF', 'ADMIN', 'SUPER_ADMIN'] as const,
     write: ['STAFF', 'ADMIN', 'SUPER_ADMIN'] as const,
@@ -42,6 +47,7 @@ export const permissions = {
   reviews: {
     read: ['STAFF', 'ADMIN', 'SUPER_ADMIN'] as const,
     write: ['STAFF', 'ADMIN', 'SUPER_ADMIN'] as const,
+    delete: ['ADMIN', 'SUPER_ADMIN'] as const,
   },
   // ADMIN+ only
   vouchers: {
@@ -51,6 +57,11 @@ export const permissions = {
   },
   promotions: {
     read: ['STAFF', 'ADMIN', 'SUPER_ADMIN'] as const,
+    write: ['ADMIN', 'SUPER_ADMIN'] as const,
+    delete: ['ADMIN', 'SUPER_ADMIN'] as const,
+  },
+  users: {
+    read: ['ADMIN', 'SUPER_ADMIN'] as const,
     write: ['ADMIN', 'SUPER_ADMIN'] as const,
     delete: ['ADMIN', 'SUPER_ADMIN'] as const,
   },

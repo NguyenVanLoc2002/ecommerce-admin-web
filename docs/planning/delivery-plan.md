@@ -322,32 +322,118 @@
 
 ## Phase 11 — Promotion & Voucher Management
 
-**Goal**: ADMIN+ can create and manage promotions and vouchers. STAFF sees read-only.
+**Goal**: ADMIN+ can create and manage promotions and vouchers. Voucher list is readable by STAFF; promotions are ADMIN+ only end-to-end.
 
 **Modules / Output**:
 
-- `features/promotions/types/promotion.types.ts` — `Promotion`, `PromotionRule`, `PromotionListParams`, `CreatePromotionRequest`, `UpdatePromotionRequest`, `CreateRuleRequest`
-- `features/promotions/schemas/` — `promotionSchema.ts`, `promotionRuleSchema.ts`
-- `features/promotions/services/promotionService.ts` — full CRUD + rules CRUD
-- `features/promotions/hooks/` — `usePromotions`, `usePromotion`, `useCreatePromotion`, `useUpdatePromotion`, `useDeletePromotion`, `useCreateRule`, `useDeleteRule`
-- `features/promotions/components/` — `PromotionTable`, `PromotionForm`, `RuleList`, `RuleFormInline`, `PromotionRowActions`
-- `features/promotions/pages/` — `PromotionListPage`, `PromotionEditPage`
-- `features/vouchers/types/voucher.types.ts` — `Voucher`, `VoucherUsage`, `VoucherListParams`, `CreateVoucherRequest`
+### Promotions
+
+- `features/promotions/types/promotion.types.ts`
+  - `Promotion` — `id`, `name`, `description`, `discountType` (`PERCENTAGE` | `FIXED_AMOUNT`), `discountValue`, `maxDiscountAmount: number | null`, `minimumOrderAmount: number | null`, `scope` (`ALL` | `CATEGORY` | `BRAND` | `PRODUCT`), `startDate`, `endDate`, `usageLimit: number | null`, `active`, `rules: PromotionRule[]`, `createdAt`, `updatedAt`
+  - `PromotionRule` — `id`, `ruleType` (`MIN_ORDER_AMOUNT` | `SPECIFIC_PRODUCTS` | `SPECIFIC_CATEGORIES` | `SPECIFIC_BRANDS` | `FIRST_ORDER`), `ruleValue: string`, `description: string | null`
+  - `PromotionListParams` — `name?`, `scope?`, `active?`, `dateFrom?`, `dateTo?`, `page`, `size`, `sort?` — Spring Pageable format (`sort=createdAt,desc`)
+  - `CreatePromotionRequest` — all required fields per §12.1; `maxDiscountAmount` and `minimumOrderAmount` optional
+  - `UpdatePromotionRequest` — all fields optional per §12.4; includes `active: boolean | null`
+  - `CreateRuleRequest` — `ruleType`, `ruleValue`, `description?`
+
+- `features/promotions/schemas/`
+  - `promotionSchema.ts` — `name` max 200; `discountValue` ≥ 0.01; `discountType` enum; `scope` enum; `endDate` must be after `startDate` (cross-field refinement); `maxDiscountAmount` required when `discountType === 'PERCENTAGE'`
+  - `promotionRuleSchema.ts` — `ruleType` enum; `ruleValue` non-empty string; format hint differs per `ruleType` (decimal / comma-separated IDs / `"true"`)
+
+- `features/promotions/services/promotionService.ts`
+  - `getList(params)` — `GET /admin/promotions`
+  - `getById(id)` — `GET /admin/promotions/{id}`
+  - `create(body)` — `POST /admin/promotions`
+  - `update(id, body)` — `PATCH /admin/promotions/{id}`
+  - `remove(id)` — `DELETE /admin/promotions/{id}`
+  - `addRule(promotionId, body)` — `POST /admin/promotions/{id}/rules`
+  - `removeRule(promotionId, ruleId)` — `DELETE /admin/promotions/{id}/rules/{ruleId}`
+
+- `features/promotions/hooks/`
+  - `usePromotions(params)`, `usePromotion(id)`
+  - `useCreatePromotion`, `useUpdatePromotion`, `useDeletePromotion`
+  - `useCreateRule(promotionId)`, `useDeleteRule(promotionId)` — both invalidate `promotions.detail(id)` on success
+
+- `features/promotions/components/`
+  - `PromotionTable` — columns: name, scope badge, discountType + discountValue, date range, usageLimit, active toggle, actions
+  - `PromotionForm` — `maxDiscountAmount` field only rendered when `discountType === 'PERCENTAGE'`; `active` toggle visible in edit mode only; dirty state guard
+  - `RuleList` — renders existing rules as chips with delete icon (ADMIN only); "Add Rule" button opens `RuleFormModal`
+  - `RuleFormModal` — `ruleType` select drives `ruleValue` input helper text; for `SPECIFIC_*` types show multi-value tag input; for `FIRST_ORDER` `ruleValue` is fixed `"true"` (hidden, auto-set)
+  - `PromotionRowActions` — Edit, Delete (ADMIN+ only, disabled for STAFF with tooltip)
+  - `ActiveToggle` — inline PATCH `{ active }` with optimistic UI; rolls back on error
+
+- `features/promotions/pages/`
+  - `PromotionListPage` — filter drawer: `name` search, `scope` select, `active` toggle, `dateFrom`/`dateTo`; filter chips
+  - `PromotionEditPage` — create and edit; `RuleList` inline below the main form; unsaved changes guard on form (rules save immediately, not as part of main form)
+
+- Route guard: `<RoleGuard required={['ADMIN', 'SUPER_ADMIN']}>` wraps both promotion routes — STAFF redirected to `/403`
+
+---
+
+### Vouchers
+
+- `features/vouchers/types/voucher.types.ts`
+  - `Voucher` — `id`, `code`, `promotionId`, `promotionName`, `discountType`, `discountValue`, `maxDiscountAmount: number | null`, `minimumOrderAmount: number | null`, `usageLimit: number | null`, `usageCount`, `usageLimitPerUser: number | null`, `startDate`, `endDate`, `active`, `createdAt`
+  - `VoucherUsage` — `id`, `orderId`, `orderCode`, `customerId`, `customerName`, `usedAt`, `discountAmount`
+  - `VoucherListParams` — `code?`, `promotionId?`, `active?`, `dateFrom?`, `dateTo?`, `page`, `size`, `sort?` — Spring Pageable format
+  - `CreateVoucherRequest` — `code?: string | null` (null → server auto-generates), `promotionId`, `usageLimit?`, `usageLimitPerUser?`, `startDate`, `endDate`
+  - `UpdateVoucherRequest` — `usageLimit?`, `usageLimitPerUser?`, `startDate?`, `endDate?`, `active?` — code and promotionId are immutable after creation
+
 - `features/vouchers/schemas/voucherSchema.ts`
-- `features/vouchers/services/voucherService.ts` — full CRUD + usages
-- `features/vouchers/hooks/` — `useVouchers`, `useVoucher`, `useCreateVoucher`, `useUpdateVoucher`, `useDeleteVoucher`, `useVoucherUsages`
-- `features/vouchers/components/` — `VoucherTable`, `VoucherForm`, `VoucherUsageTable`, `VoucherRowActions`
-- `features/vouchers/pages/` — `VoucherListPage`, `VoucherEditPage`, `VoucherUsagesPage`
-- Enforce `usePermission('vouchers', 'write')` — disable write buttons for STAFF with tooltip
-- PERCENTAGE validation: 0–100 client-side. End date > start date client-side.
-- Code "Generate" button for vouchers.
-- Soft-delete voucher: note "Customers applying this code will not be able to use it."
+  - `code` optional, max 100, uppercase alphanumeric (if provided)
+  - `promotionId` required
+  - `endDate` after `startDate` cross-field refinement
+  - `usageLimit` ≥ 1 if provided; `usageLimitPerUser` ≥ 1 if provided
+
+- `features/vouchers/services/voucherService.ts`
+  - `getList(params)` — `GET /admin/vouchers`
+  - `getById(id)` — `GET /admin/vouchers/{id}`
+  - `getByCode(code)` — `GET /admin/vouchers/code/{code}`
+  - `getUsages(id, params)` — `GET /admin/vouchers/{id}/usages`
+  - `create(body)` — `POST /admin/vouchers`
+  - `update(id, body)` — `PATCH /admin/vouchers/{id}`
+  - `remove(id)` — `DELETE /admin/vouchers/{id}`
+
+- `features/vouchers/hooks/`
+  - `useVouchers(params)`, `useVoucher(id)`, `useVoucherUsages(id, params)`
+  - `useCreateVoucher`, `useUpdateVoucher`, `useDeleteVoucher`
+
+- `features/vouchers/components/`
+  - `VoucherTable` — columns: code (monospace + copy icon), linked promotion, discount summary, usage (`usageCount / usageLimit` or `usageCount / ∞`), date range, active badge, actions
+  - `VoucherForm` — code field: text input + "Generate" button that clears the field (empty → server generates on submit); `promotionId` select loads from `usePromotions`; code and `promotionId` fields disabled in edit mode (immutable); dirty state guard
+  - `VoucherUsageTable` — read-only; columns: order code (link), customer name, used at, discount amount
+  - `VoucherRowActions` — Edit, View Usages, Delete; Edit and Delete disabled for STAFF with tooltip
+
+- `features/vouchers/pages/`
+  - `VoucherListPage` — filter drawer: code search, promotion select, `active` toggle, `dateFrom`/`dateTo`; filter chips
+  - `VoucherEditPage` — create and edit; `VoucherForm` with promotion linked inline summary card
+  - `VoucherUsagesPage` — full usage history for one voucher; pagination
+
+---
+
+### RBAC Summary
+
+| Action | STAFF | ADMIN | SUPER_ADMIN |
+|---|:---:|:---:|:---:|
+| List/view promotions | ✗ (403) | ✓ | ✓ |
+| Create/edit/delete promotion | ✗ | ✓ | ✓ |
+| List/view vouchers | ✓ (read-only) | ✓ | ✓ |
+| Create/edit/delete voucher | ✗ (disabled + tooltip) | ✓ | ✓ |
+
+---
+
+### Error Handling
+
+- `VOUCHER_CODE_ALREADY_EXISTS` (409) → `form.setError('code', { message: 'This code is already in use.' })`
+- `PROMOTION_NOT_FOUND` (404) on voucher create → toast error
+- Soft-delete voucher confirmation: "Customers holding this code will not be able to redeem it."
+- Soft-delete promotion confirmation: "This will deactivate the promotion. Existing vouchers remain valid until their own expiry."
 
 **queryKeys.ts additions**: `promotions.all`, `promotions.lists()`, `promotions.list(params)`, `promotions.detail(id)`, `vouchers.all`, `vouchers.lists()`, `vouchers.list(params)`, `vouchers.detail(id)`, `vouchers.usages(id, params)`
 
 **Dependencies**: Phase 3
 
-**Expected output**: ADMIN can create promotions with rules and link vouchers. STAFF can view but not edit. Voucher usage history is visible.
+**Expected output**: ADMIN can create promotions, add/remove rules, and create vouchers linked to a promotion. STAFF can browse and copy voucher codes but cannot create or modify anything. Voucher usage history is paginated and read-only. Code auto-generation works by leaving the field blank. Active toggle on promotions and vouchers works inline without navigating away.
 
 ---
 

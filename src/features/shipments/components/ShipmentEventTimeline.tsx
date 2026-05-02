@@ -29,6 +29,12 @@ const EVENT_STYLE: Record<ShipmentStatus, EventStyle> = {
     iconColor: 'text-warning-600',
     lineBg: 'bg-gray-200',
   },
+  PICKING: {
+    icon: <Package className="h-4 w-4" />,
+    iconBg: 'bg-info-100',
+    iconColor: 'text-info-600',
+    lineBg: 'bg-info-200',
+  },
   IN_TRANSIT: {
     icon: <Truck className="h-4 w-4" />,
     iconBg: 'bg-primary-100',
@@ -63,6 +69,7 @@ const EVENT_STYLE: Record<ShipmentStatus, EventStyle> = {
 
 const STATUS_LABELS: Record<ShipmentStatus, string> = {
   PENDING: 'Shipment Created',
+  PICKING: 'Picking Items',
   IN_TRANSIT: 'In Transit',
   OUT_FOR_DELIVERY: 'Out for Delivery',
   DELIVERED: 'Delivered',

@@ -1,16 +1,17 @@
-import type { PaginationParams } from '@/shared/types/api.types';
+import type { PaginationParams, EntityId } from '@/shared/types/api.types';
 import type {
   OrderStatus,
-  PaymentStatus,
+  OrderPaymentStatus,
   PaymentMethod,
 } from '@/shared/types/enums';
 
 export interface OrderItem {
-  id: number;
-  variantId: number;
+  id: EntityId;
+  variantId: EntityId;
   productName: string;
   variantName: string;
   sku: string;
+  imageUrl?: string;
   unitPrice: number;
   quantity: number;
   lineTotal: number;
@@ -18,12 +19,12 @@ export interface OrderItem {
 }
 
 export interface Order {
-  id: number;
+  id: EntityId;
   orderCode: string;
-  customerId: number;
+  customerId: EntityId;
   status: OrderStatus;
   paymentMethod: PaymentMethod;
-  paymentStatus: PaymentStatus | null;
+  paymentStatus: OrderPaymentStatus | null;
   receiverName: string;
   receiverPhone: string;
   shippingStreet: string;
@@ -43,20 +44,20 @@ export interface Order {
 }
 
 export interface OrderSummary {
-  id: number;
+  id: EntityId;
   orderCode: string;
-  customerId: number;
+  customerId: EntityId;
   status: OrderStatus;
-  paymentStatus: PaymentStatus | null;
+  paymentStatus: OrderPaymentStatus | null;
   paymentMethod: PaymentMethod | null;
   totalAmount: number;
   createdAt: string;
 }
 
 export interface OrderListParams extends PaginationParams {
-  customerId?: number;
-  status?: string;
-  paymentStatus?: string;
+  customerId?: EntityId;
+  status?: OrderStatus;
+  paymentStatus?: OrderPaymentStatus;
 }
 
 export type OrderAction = 'confirm' | 'process' | 'deliver' | 'complete' | 'cancel';

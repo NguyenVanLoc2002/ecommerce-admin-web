@@ -2,12 +2,18 @@ import { useState } from 'react';
 import { Drawer } from '@/shared/components/ui/Drawer';
 import { Button } from '@/shared/components/ui/Button';
 import { Select } from '@/shared/components/ui/Select';
+import { Input } from '@/shared/components/ui/Input';
+import type { PaymentMethod, PaymentStatus } from '@/shared/types/enums';
 import type { PaymentListParams } from '../types/payment.types';
 
 const METHOD_OPTIONS = [
   { value: '', label: 'All methods' },
   { value: 'COD', label: 'COD' },
   { value: 'ONLINE', label: 'Online' },
+  { value: 'MOMO', label: 'MoMo' },
+  { value: 'ZALO_PAY', label: 'ZaloPay' },
+  { value: 'VNPAY', label: 'VNPay' },
+  { value: 'BANK_TRANSFER', label: 'Bank Transfer' },
 ];
 
 const STATUS_OPTIONS = [
@@ -18,6 +24,7 @@ const STATUS_OPTIONS = [
   { value: 'FAILED', label: 'Failed' },
   { value: 'REFUNDED', label: 'Refunded' },
   { value: 'PARTIALLY_REFUNDED', label: 'Partially Refunded' },
+  { value: 'CANCELLED', label: 'Cancelled' },
 ];
 
 interface PaymentFiltersDrawerProps {
@@ -77,7 +84,9 @@ export function PaymentFiltersDrawer({
           <Select
             options={METHOD_OPTIONS}
             value={merged.method ?? ''}
-            onChange={(e) => set({ method: e.target.value || undefined })}
+            onChange={(e) =>
+              set({ method: (e.target.value as PaymentMethod) || undefined })
+            }
           />
         </div>
 
@@ -86,7 +95,27 @@ export function PaymentFiltersDrawer({
           <Select
             options={STATUS_OPTIONS}
             value={merged.status ?? ''}
-            onChange={(e) => set({ status: e.target.value || undefined })}
+            onChange={(e) =>
+              set({ status: (e.target.value as PaymentStatus) || undefined })
+            }
+          />
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <label className="text-sm font-medium text-gray-700">From date</label>
+          <Input
+            type="date"
+            value={merged.dateFrom ?? ''}
+            onChange={(e) => set({ dateFrom: e.target.value || undefined })}
+          />
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <label className="text-sm font-medium text-gray-700">To date</label>
+          <Input
+            type="date"
+            value={merged.dateTo ?? ''}
+            onChange={(e) => set({ dateTo: e.target.value || undefined })}
           />
         </div>
       </div>

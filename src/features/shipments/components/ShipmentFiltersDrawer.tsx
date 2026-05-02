@@ -3,11 +3,13 @@ import { Drawer } from '@/shared/components/ui/Drawer';
 import { Button } from '@/shared/components/ui/Button';
 import { Select } from '@/shared/components/ui/Select';
 import { Input } from '@/shared/components/ui/Input';
+import type { ShipmentStatus } from '@/shared/types/enums';
 import type { ShipmentListParams } from '../types/shipment.types';
 
 const STATUS_OPTIONS = [
   { value: '', label: 'All statuses' },
   { value: 'PENDING', label: 'Pending' },
+  { value: 'PICKING', label: 'Picking' },
   { value: 'IN_TRANSIT', label: 'In Transit' },
   { value: 'OUT_FOR_DELIVERY', label: 'Out for Delivery' },
   { value: 'DELIVERED', label: 'Delivered' },
@@ -72,7 +74,9 @@ export function ShipmentFiltersDrawer({
           <Select
             options={STATUS_OPTIONS}
             value={merged.status ?? ''}
-            onChange={(e) => set({ status: e.target.value || undefined })}
+            onChange={(e) =>
+              set({ status: (e.target.value as ShipmentStatus) || undefined })
+            }
           />
         </div>
 

@@ -83,8 +83,8 @@ export function OrderItemsTable({
           />
         )}
         <PriceLine label="Shipping fee" value={shippingFee} />
-        <div className="pt-2 border-t border-gray-200">
-          <PriceLine label="Total" value={total} labelClass="font-semibold text-gray-900" valueClass="font-bold text-gray-900 text-base" />
+        <div className="pt-2.5 border-t border-gray-200">
+          <PriceLine label="Total" value={total} labelClass="font-semibold text-gray-900 text-sm" valueClass="font-bold text-gray-900 text-lg" />
         </div>
       </div>
     </div>

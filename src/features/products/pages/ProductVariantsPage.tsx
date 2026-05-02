@@ -2,7 +2,9 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { AdminLayout } from '@/shared/components/layout/AdminLayout';
 import { PageHeader } from '@/shared/components/layout/PageHeader';
+import { useBreadcrumbLabel } from '@/shared/components/layout';
 import { Button } from '@/shared/components/ui/Button';
+import { CopyValueButton } from '@/shared/components/ui/CopyValueButton';
 import { SkeletonForm } from '@/shared/components/feedback/Skeleton';
 import { ErrorCard } from '@/shared/components/feedback/ErrorCard';
 import { NotFoundState } from '@/shared/components/feedback/NotFoundState';
@@ -14,12 +16,17 @@ import { VariantPanel } from '../components/VariantPanel';
 export function ProductVariantsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const productId = Number(id);
+  const productId = id ?? '';
 
   const { data: product, isLoading, isError, error, refetch } = useProduct(productId);
 
   const isNotFound =
     isError && error instanceof AppError && error.code === 'PRODUCT_NOT_FOUND';
+
+  useBreadcrumbLabel(
+    routes.products.edit(productId),
+    isNotFound ? 'Not found' : (product?.name ?? 'Loading...'),
+  );
 
   if (isLoading) {
     return (
@@ -35,7 +42,10 @@ export function ProductVariantsPage() {
     return (
       <AdminLayout>
         <div className="p-6">
-          <NotFoundState />
+          <NotFoundState
+            title="Product Not Found"
+            message="Product not found or has been deleted."
+          />
         </div>
       </AdminLayout>
     );
@@ -53,19 +63,24 @@ export function ProductVariantsPage() {
 
   return (
     <AdminLayout>
-      <div className="p-6 max-w-5xl">
+      <div className="mx-auto w-full max-w-5xl p-6">
         <PageHeader
-          title={`Variants — ${product?.name ?? ''}`}
-          description={`Product ID: ${productId}`}
+          title={product?.name ? `${product.name}: Variants` : 'Variants'}
+          description={product?.brand?.name
+            ? `Manage sellable options for ${product.brand.name}.`
+            : 'Manage sellable options such as size, color, and pricing.'}
           actions={
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => navigate(routes.products.edit(productId))}
-              leftIcon={<ArrowLeft className="h-4 w-4" />}
-            >
-              Back to product
-            </Button>
+            <>
+              <CopyValueButton value={productId} label="Copy ID" />
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => navigate(routes.products.edit(productId))}
+                leftIcon={<ArrowLeft className="h-4 w-4" />}
+              >
+                Back to product
+              </Button>
+            </>
           }
         />
 

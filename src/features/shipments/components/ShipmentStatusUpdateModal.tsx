@@ -12,7 +12,8 @@ import {
 } from '../schemas/updateStatusSchema';
 
 const ALLOWED_TRANSITIONS: Partial<Record<ShipmentStatus, ShipmentStatus[]>> = {
-  PENDING: ['IN_TRANSIT', 'FAILED'],
+  PENDING: ['PICKING', 'FAILED'],
+  PICKING: ['IN_TRANSIT', 'FAILED'],
   IN_TRANSIT: ['OUT_FOR_DELIVERY', 'FAILED', 'RETURNED'],
   OUT_FOR_DELIVERY: ['DELIVERED', 'FAILED', 'RETURNED'],
   FAILED: ['IN_TRANSIT', 'RETURNED'],
@@ -20,6 +21,7 @@ const ALLOWED_TRANSITIONS: Partial<Record<ShipmentStatus, ShipmentStatus[]>> = {
 
 const STATUS_LABELS: Record<ShipmentStatus, string> = {
   PENDING: 'Pending',
+  PICKING: 'Picking',
   IN_TRANSIT: 'In Transit',
   OUT_FOR_DELIVERY: 'Out for Delivery',
   DELIVERED: 'Delivered',

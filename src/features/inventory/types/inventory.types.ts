@@ -1,10 +1,15 @@
-import type { PaginationParams } from '@/shared/types/api.types';
+import type {
+  PaginationParams,
+  EntityId,
+  SoftDeleteFilterParams,
+  SoftDeletableRecord,
+} from '@/shared/types/api.types';
 import type { StockMovementType, EntityStatus } from '@/shared/types/enums';
 
 // ─── Warehouse ────────────────────────────────────────────────────────────────
 
-export interface Warehouse {
-  id: number;
+export interface Warehouse extends SoftDeletableRecord {
+  id: EntityId;
   name: string;
   code: string;
   location: string | null;
@@ -13,9 +18,8 @@ export interface Warehouse {
   updatedAt: string;
 }
 
-export interface WarehouseListParams extends PaginationParams {
-  keyword?: string;
-  status?: string;
+export interface WarehouseListParams extends SoftDeleteFilterParams {
+  status?: EntityStatus;
 }
 
 export interface CreateWarehouseRequest {
@@ -33,13 +37,13 @@ export interface UpdateWarehouseRequest {
 // ─── Inventory Stock ──────────────────────────────────────────────────────────
 
 export interface InventoryStock {
-  id: number;
-  warehouseId: number;
+  id: EntityId;
+  warehouseId: EntityId;
   warehouseName: string;
-  variantId: number;
+  variantId: EntityId;
   sku: string;
   variantName: string;
-  productId: number;
+  productId: EntityId;
   productName: string;
   onHand: number;
   reserved: number;
@@ -48,13 +52,20 @@ export interface InventoryStock {
 }
 
 export interface InventoryStockParams extends PaginationParams {
+  variantId?: EntityId;
   keyword?: string;
-  warehouseId?: number;
+  warehouseId?: EntityId;
+  productId?: EntityId;
+  sku?: string;
+  variantStatus?: string;
+  outOfStock?: boolean;
+  lowStock?: boolean;
+  lowStockThreshold?: number;
 }
 
 export interface AdjustStockRequest {
-  warehouseId: number;
-  variantId: number;
+  warehouseId: EntityId;
+  variantId: EntityId;
   quantity: number;
   movementType: StockMovementType;
   note: string;
@@ -63,25 +74,31 @@ export interface AdjustStockRequest {
 // ─── Stock Movement ───────────────────────────────────────────────────────────
 
 export interface StockMovement {
-  id: number;
-  warehouseId: number;
+  id: EntityId;
+  warehouseId: EntityId;
   warehouseName: string;
-  variantId: number;
-  variantSku: string;
+  variantId: EntityId;
+  sku: string;
   variantName: string;
-  type: StockMovementType;
+  movementType: string;
   quantity: number;
-  reason: string | null;
   note: string | null;
-  referenceId: number | null;
+  referenceType: string | null;
+  referenceId: EntityId | null;
+  beforeOnHand: number | null;
+  beforeReserved: number | null;
+  beforeAvailable: number | null;
+  afterOnHand: number | null;
+  afterReserved: number | null;
+  afterAvailable: number | null;
   createdAt: string;
   createdBy: string;
 }
 
 export interface StockMovementParams extends PaginationParams {
-  variantId?: number;
-  warehouseId?: number;
-  movementType?: string;
+  variantId?: EntityId;
+  warehouseId?: EntityId;
+  movementType?: StockMovementType;
 }
 
 // ─── Reservation ──────────────────────────────────────────────────────────────
@@ -95,13 +112,13 @@ export const ReservationStatus = {
 export type ReservationStatus = (typeof ReservationStatus)[keyof typeof ReservationStatus];
 
 export interface Reservation {
-  id: number;
-  orderId: number;
+  id: EntityId;
+  orderId: EntityId;
   orderCode: string;
-  variantId: number;
+  variantId: EntityId;
   variantSku: string;
   variantName: string;
-  warehouseId: number;
+  warehouseId: EntityId;
   warehouseName: string;
   quantity: number;
   status: ReservationStatus;
@@ -110,8 +127,8 @@ export interface Reservation {
 }
 
 export interface ReservationParams extends PaginationParams {
-  orderId?: number;
-  variantId?: number;
-  warehouseId?: number;
+  orderId?: EntityId;
+  variantId?: EntityId;
+  warehouseId?: EntityId;
   status?: string;
 }

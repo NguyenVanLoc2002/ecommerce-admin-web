@@ -4,7 +4,8 @@ import { PageHeader } from '@/shared/components/layout/PageHeader';
 import { useTableFilters } from '@/shared/hooks/useTableFilters';
 import { useDebounce } from '@/shared/hooks/useDebounce';
 import { toast } from '@/shared/stores/uiStore';
-import { AppError } from '@/shared/types/api.types';
+import { AppError, SoftDeleteState } from '@/shared/types/api.types';
+import { buildSortParam, parseSortParam } from '@/shared/utils/sort';
 import type { SortState } from '@/shared/components/table/types';
 import { useCategories } from '../hooks/useCategories';
 import { useCreateCategory } from '../hooks/useCreateCategory';
@@ -18,18 +19,21 @@ const DEFAULT_FILTERS: CategoryListParams = {
   page: 0,
   size: 20,
   sort: 'name,asc',
+  name: undefined,
+  slug: undefined,
+  parentId: undefined,
+  status: undefined,
+  deletedState: SoftDeleteState.ACTIVE,
 };
 
 export function CategoryListPage() {
-  const [filters, setFilters, resetFilters] = useTableFilters<CategoryListParams>(DEFAULT_FILTERS);
-  const [sort, setSort] = useState<SortState | undefined>();
+  const [filters, setFilters] = useTableFilters<CategoryListParams>(DEFAULT_FILTERS);
+  const sort = parseSortParam(filters.sort);
   const [formOpen, setFormOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | undefined>();
 
-  void resetFilters;
-
-  const debouncedKeyword = useDebounce(filters.keyword ?? '', 300);
-  const queryParams: CategoryListParams = { ...filters, keyword: debouncedKeyword || undefined };
+  const debouncedName = useDebounce(filters.name ?? '', 300);
+  const queryParams: CategoryListParams = { ...filters, name: debouncedName || undefined };
 
   const { data, isLoading, isError, refetch } = useCategories(queryParams);
   const createCategory = useCreateCategory();
@@ -48,8 +52,7 @@ export function CategoryListPage() {
   };
 
   const handleSortChange = (newSort: SortState) => {
-    setSort(newSort);
-    setFilters({ sort: `${newSort.column},${newSort.direction}` });
+    setFilters({ sort: buildSortParam(newSort), page: 0 });
   };
 
   const handleSubmit = async (values: CategoryFormValues) => {
@@ -82,7 +85,7 @@ export function CategoryListPage() {
       <div className="space-y-6 p-6">
         <PageHeader
           title="Categories"
-          description="Organise your product catalog into categories."
+          description="Group products so customers can browse and filter."
         />
 
         <CategoryTable

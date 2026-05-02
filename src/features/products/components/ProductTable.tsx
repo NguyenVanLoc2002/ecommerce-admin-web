@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
-import { Package } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Package, Plus } from 'lucide-react';
 import { DataTable } from '@/shared/components/table/DataTable';
 import { TableToolbar } from '@/shared/components/table/TableToolbar';
 import { BulkActionBar } from '@/shared/components/table/BulkActionBar';
@@ -11,14 +12,16 @@ import { EmptyState } from '@/shared/components/feedback/EmptyState';
 import { SkeletonTable } from '@/shared/components/feedback/Skeleton';
 import { ErrorCard } from '@/shared/components/feedback/ErrorCard';
 import { formatDate } from '@/shared/utils/formatDate';
+import { resolveSoftDeleteState } from '@/shared/utils/softDelete';
+import { routes } from '@/constants/routes';
 import type { ColumnDef, SortState, RowSelectionState } from '@/shared/components/table/types';
-import type { PaginatedResponse } from '@/shared/types/api.types';
+import { SoftDeleteState, type PaginatedResponse } from '@/shared/types/api.types';
 import type { ProductStatus } from '@/shared/types/enums';
-import type { Product, ProductListParams } from '../types/product.types';
+import type { ProductListItem, ProductListParams } from '../types/product.types';
 import { ProductRowActions } from './ProductRowActions';
 
 interface ProductTableProps {
-  data: PaginatedResponse<Product> | undefined;
+  data: PaginatedResponse<ProductListItem> | undefined;
   isLoading: boolean;
   isError: boolean;
   onRetry: () => void;
@@ -33,7 +36,7 @@ interface ProductTableProps {
   onBulkPublish: () => void;
   onBulkArchive: () => void;
   onBulkDelete: () => void;
-  isBulkPending: boolean;
+  pendingBulk: 'publish' | 'deactivate' | 'delete' | null;
   onCreateNew: () => void;
 }
 
@@ -53,10 +56,13 @@ export function ProductTable({
   onBulkPublish,
   onBulkArchive,
   onBulkDelete,
-  isBulkPending,
+  pendingBulk,
   onCreateNew,
 }: ProductTableProps) {
-  const columns = useMemo<ColumnDef<Product>[]>(
+  const navigate = useNavigate();
+  const isBulkPending = pendingBulk !== null;
+
+  const columns = useMemo<ColumnDef<ProductListItem>[]>(
     () => [
       { id: 'select' },
       {
@@ -79,8 +85,14 @@ export function ProductTable({
               )}
             </div>
             <div className="min-w-0">
-              <p className="truncate font-medium text-gray-900">{row.original.name}</p>
-              <p className="truncate text-xs text-gray-400">{row.original.slug}</p>
+              <button
+                type="button"
+                onClick={() => navigate(routes.products.edit(row.original.id))}
+                className="truncate text-left text-sm font-semibold text-gray-900 hover:text-primary-700 hover:underline"
+              >
+                {row.original.name}
+              </button>
+              <p className="truncate font-mono text-xs text-gray-400">{row.original.slug}</p>
             </div>
           </div>
         ),
@@ -89,7 +101,17 @@ export function ProductTable({
         id: 'brand',
         header: 'Brand',
         cell: ({ row }) => (
-          <span className="text-gray-600">{row.original.brand?.name ?? '—'}</span>
+          <span className="text-gray-600">{row.original.brandName || '-'}</span>
+        ),
+      },
+      {
+        id: 'recordStatus',
+        header: 'Record Status',
+        cell: ({ row }) => (
+          <StatusBadge
+            type="soft-delete"
+            status={resolveSoftDeleteState(row.original, filters.deletedState)}
+          />
         ),
       },
       {
@@ -103,7 +125,9 @@ export function ProductTable({
         id: 'variants',
         header: 'Variants',
         cell: ({ row }) => (
-          <span className="text-gray-600">{row.original.variantCount ?? 0}</span>
+          <span className="text-gray-600">
+            {row.original.variantCount ?? row.original.activeVariantCount ?? 0}
+          </span>
         ),
       },
       {
@@ -111,7 +135,7 @@ export function ProductTable({
         header: 'Created',
         enableSorting: true,
         cell: ({ row }) => (
-          <span className="text-gray-500 text-xs">{formatDate(row.original.createdAt)}</span>
+          <span className="text-xs text-gray-500">{formatDate(row.original.createdAt)}</span>
         ),
       },
       {
@@ -121,23 +145,45 @@ export function ProductTable({
         cell: ({ row }) => <ProductRowActions product={row.original} />,
       },
     ],
-    [],
+    [filters.deletedState, navigate],
   );
 
   const selectedCount = Object.values(rowSelection).filter(Boolean).length;
 
   const filterChips = useMemo<FilterChip[]>(() => {
     const chips: FilterChip[] = [];
-    if (filters.status) chips.push({ key: 'status', label: 'Status', value: filters.status });
-    if (filters.brandId) chips.push({ key: 'brandId', label: 'Brand', value: String(filters.brandId) });
-    if (filters.featured) chips.push({ key: 'featured', label: 'Featured', value: filters.featured === 'true' ? 'Yes' : 'No' });
+
+    if (filters.status) {
+      chips.push({ key: 'status', label: 'Status', value: filters.status });
+    }
+
+    if (filters.brandId) {
+      chips.push({ key: 'brandId', label: 'Brand', value: filters.brandId });
+    }
+
+    if (filters.featured) {
+      chips.push({
+        key: 'featured',
+        label: 'Featured',
+        value: filters.featured === 'true' ? 'Yes' : 'No',
+      });
+    }
+
+    if (filters.deletedState && filters.deletedState !== SoftDeleteState.ACTIVE) {
+      chips.push({
+        key: 'deletedState',
+        label: 'Record',
+        value: filters.deletedState === SoftDeleteState.DELETED ? 'Deleted' : 'All',
+      });
+    }
+
     return chips;
   }, [filters]);
 
   if (isLoading) {
     return (
       <div className="space-y-4">
-        <TableToolbar searchPlaceholder="Search products…" />
+        <TableToolbar searchPlaceholder="Search products..." />
         <SkeletonTable />
       </div>
     );
@@ -150,11 +196,11 @@ export function ProductTable({
   const products = data?.items ?? [];
 
   return (
-    <div className="space-y-3">
+    <div className="min-w-0 space-y-3">
       <TableToolbar
         searchValue={filters.keyword ?? ''}
         onSearchChange={(keyword) => onFiltersChange({ keyword, page: 0 })}
-        searchPlaceholder="Search products…"
+        searchPlaceholder="Search products..."
         filters={
           <Button variant="secondary" size="sm" onClick={onOpenFilters}>
             Filters
@@ -166,8 +212,8 @@ export function ProductTable({
           </Button>
         }
         actions={
-          <Button size="sm" onClick={onCreateNew}>
-            + New Product
+          <Button size="md" onClick={onCreateNew} leftIcon={<Plus className="h-4 w-4" />}>
+            New Product
           </Button>
         }
       />
@@ -189,7 +235,8 @@ export function ProductTable({
                 variant="secondary"
                 size="sm"
                 onClick={onBulkPublish}
-                isLoading={isBulkPending}
+                isLoading={pendingBulk === 'publish'}
+                disabled={isBulkPending}
               >
                 Publish
               </Button>
@@ -197,7 +244,8 @@ export function ProductTable({
                 variant="secondary"
                 size="sm"
                 onClick={onBulkArchive}
-                isLoading={isBulkPending}
+                isLoading={pendingBulk === 'deactivate'}
+                disabled={isBulkPending}
               >
                 Deactivate
               </Button>
@@ -205,7 +253,8 @@ export function ProductTable({
                 variant="danger"
                 size="sm"
                 onClick={onBulkDelete}
-                isLoading={isBulkPending}
+                isLoading={pendingBulk === 'delete'}
+                disabled={isBulkPending}
               >
                 Delete
               </Button>
@@ -213,6 +262,7 @@ export function ProductTable({
                 variant="ghost"
                 size="sm"
                 onClick={() => onRowSelectionChange({})}
+                disabled={isBulkPending}
               >
                 Deselect all
               </Button>
@@ -224,7 +274,7 @@ export function ProductTable({
       <DataTable
         data={products}
         columns={columns}
-        getRowId={(row) => String(row.id)}
+        getRowId={(row) => row.id}
         sort={sort}
         onSortChange={onSortChange}
         rowSelection={rowSelection}
@@ -236,7 +286,9 @@ export function ProductTable({
             message={
               filterChips.length > 0
                 ? 'Try adjusting or resetting your filters.'
-                : 'Create your first product to get started.'
+                : filters.deletedState === SoftDeleteState.DELETED
+                  ? 'Deleted products will appear here.'
+                  : 'Create your first product to get started.'
             }
             action={
               filterChips.length > 0

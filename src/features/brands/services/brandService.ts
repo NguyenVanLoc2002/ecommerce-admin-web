@@ -1,5 +1,7 @@
 import { apiClient } from '@/shared/lib/axios';
-import type { PaginatedResponse } from '@/shared/types/api.types';
+import type { EntityId, PaginatedResponse } from '@/shared/types/api.types';
+import { cleanParams } from '@/shared/utils/cleanParams';
+import { toSoftDeleteQuery } from '@/shared/utils/softDelete';
 import type {
   Brand,
   BrandListParams,
@@ -8,18 +10,23 @@ import type {
 } from '../types/brand.types';
 
 export const brandService = {
-  getList: (params: BrandListParams) =>
-    apiClient.get<PaginatedResponse<Brand>>('/admin/brands', { params }),
+  getList: ({ deletedState, ...params }: BrandListParams) =>
+    apiClient.get<PaginatedResponse<Brand>>('/admin/brands', {
+      params: cleanParams({
+        ...params,
+        ...toSoftDeleteQuery(deletedState),
+      }),
+    }),
 
-  getById: (id: number) =>
+  getById: (id: EntityId) =>
     apiClient.get<Brand>(`/admin/brands/${id}`),
 
   create: (body: CreateBrandRequest) =>
     apiClient.post<Brand>('/admin/brands', body),
 
-  update: (id: number, body: UpdateBrandRequest) =>
+  update: (id: EntityId, body: UpdateBrandRequest) =>
     apiClient.patch<Brand>(`/admin/brands/${id}`, body),
 
-  remove: (id: number) =>
+  remove: (id: EntityId) =>
     apiClient.delete(`/admin/brands/${id}`),
 };

@@ -15,14 +15,10 @@ export function PricingSummary({
   totalAmount,
 }: PricingSummaryProps) {
   return (
-    <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 space-y-1.5">
+    <div className="space-y-1.5 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
       <PriceLine label="Subtotal" value={subTotal} />
       {discountAmount > 0 && (
-        <PriceLine
-          label="Discount"
-          value={-discountAmount}
-          valueClass="text-success-700"
-        />
+        <PriceLine label="Discount" value={-discountAmount} valueClass="text-success-700" />
       )}
       <PriceLine label="Shipping fee" value={shippingFee} />
       <div className="border-t border-gray-200 pt-2">
@@ -51,8 +47,8 @@ function PriceLine({
   return (
     <div className="flex items-center justify-between">
       <span className={cn('text-sm text-gray-500', labelClass)}>{label}</span>
-      <span className={cn('text-sm font-medium text-gray-800 tabular-nums', valueClass)}>
-        {value < 0 ? `−${formatMoney(Math.abs(value))}` : formatMoney(value)}
+      <span className={cn('text-sm font-medium tabular-nums text-gray-800', valueClass)}>
+        {value < 0 ? `-${formatMoney(Math.abs(value))}` : formatMoney(value)}
       </span>
     </div>
   );

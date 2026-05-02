@@ -99,8 +99,8 @@ export function ShipmentTable({
               {row.original.trackingNumber ? (
                 <TrackingCell code={row.original.trackingNumber} />
               ) : (
-                <span className="font-mono text-sm font-semibold text-primary-600 hover:text-primary-700 hover:underline">
-                  #{row.original.id}
+                <span className="text-sm font-semibold text-primary-600 hover:text-primary-700 hover:underline">
+                  {row.original.carrier ? `${row.original.carrier} shipment` : 'Shipment record'}
                 </span>
               )}
             </button>
@@ -141,7 +141,6 @@ export function ShipmentTable({
       {
         id: 'estimatedDeliveryDate',
         header: 'Est. Delivery',
-        enableSorting: true,
         cell: ({ row }) => (
           <span className="text-sm text-gray-600 whitespace-nowrap">
             {row.original.estimatedDeliveryDate ? (
@@ -155,7 +154,6 @@ export function ShipmentTable({
       {
         id: 'updatedAt',
         header: 'Updated',
-        enableSorting: true,
         cell: ({ row }) => (
           <span className="text-xs text-gray-500 whitespace-nowrap">
             {formatDateTime(row.original.updatedAt)}
@@ -179,8 +177,10 @@ export function ShipmentTable({
     <div className="space-y-4">
       <TableToolbar
         searchValue={filters.orderCode ?? ''}
-        onSearchChange={(orderCode) => onFiltersChange({ orderCode: orderCode || undefined })}
-        searchPlaceholder="Search by tracking code or order…"
+        onSearchChange={(orderCode) =>
+          onFiltersChange({ orderCode: orderCode || undefined })
+        }
+        searchPlaceholder="Search by order code…"
         actions={
           <>
             <Button
@@ -227,7 +227,7 @@ export function ShipmentTable({
         <Pagination
           pagination={data}
           onPageChange={(page) => onFiltersChange({ page } as Partial<ShipmentListParams>)}
-          onPageSizeChange={(size) => onFiltersChange({ size } as Partial<ShipmentListParams>)}
+          onPageSizeChange={(size) => onFiltersChange({ size, page: 0 } as Partial<ShipmentListParams>)}
         />
       )}
     </div>

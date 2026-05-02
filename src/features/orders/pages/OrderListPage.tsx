@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { AdminLayout } from '@/shared/components/layout/AdminLayout';
 import { PageHeader } from '@/shared/components/layout/PageHeader';
 import { useTableFilters } from '@/shared/hooks/useTableFilters';
+import { useDebounce } from '@/shared/hooks/useDebounce';
+import { buildSortParam, parseSortParam } from '@/shared/utils/sort';
 import type { SortState } from '@/shared/components/table/types';
 import { useOrders } from '../hooks/useOrders';
 import { OrderTable } from '../components/OrderTable';
@@ -12,18 +14,25 @@ const DEFAULT_FILTERS: OrderListParams = {
   page: 0,
   size: 20,
   sort: 'createdAt,desc',
+  customerId: undefined,
+  status: undefined,
+  paymentStatus: undefined,
 };
 
 export function OrderListPage() {
   const [filters, setFilters, resetFilters] = useTableFilters<OrderListParams>(DEFAULT_FILTERS);
-  const [sort, setSort] = useState<SortState | undefined>();
+  const sort = parseSortParam(filters.sort);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const debouncedCustomerId = useDebounce(filters.customerId ?? '', 300);
+  const queryParams: OrderListParams = {
+    ...filters,
+    customerId: debouncedCustomerId || undefined,
+  };
 
-  const { data, isLoading, isError, refetch } = useOrders(filters);
+  const { data, isLoading, isError, refetch } = useOrders(queryParams);
 
   const handleSortChange = (newSort: SortState) => {
-    setSort(newSort);
-    setFilters({ sort: `${newSort.column},${newSort.direction}` });
+    setFilters({ sort: buildSortParam(newSort), page: 0 });
   };
 
   const handleFiltersApply = (updates: Partial<OrderListParams>) => {

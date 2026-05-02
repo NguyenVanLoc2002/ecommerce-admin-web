@@ -2,7 +2,9 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Layers } from 'lucide-react';
 import { AdminLayout } from '@/shared/components/layout/AdminLayout';
 import { PageHeader } from '@/shared/components/layout/PageHeader';
+import { useBreadcrumbLabel } from '@/shared/components/layout';
 import { Button } from '@/shared/components/ui/Button';
+import { CopyValueButton } from '@/shared/components/ui/CopyValueButton';
 import { SkeletonForm } from '@/shared/components/feedback/Skeleton';
 import { ErrorCard } from '@/shared/components/feedback/ErrorCard';
 import { NotFoundState } from '@/shared/components/feedback/NotFoundState';
@@ -14,6 +16,7 @@ import { useCreateProduct } from '../hooks/useCreateProduct';
 import { useUpdateProduct } from '../hooks/useUpdateProduct';
 import { useCategoryOptions, useBrandOptions } from '../hooks/useCatalogOptions';
 import { ProductForm } from '../components/ProductForm';
+import { ProductSummaryCard } from '../components/ProductSummaryCard';
 import type { ProductFormValues } from '../schemas/productSchema';
 
 export function ProductEditPage() {
@@ -21,16 +24,13 @@ export function ProductEditPage() {
   const navigate = useNavigate();
 
   const isEditMode = id !== undefined;
-  const productId = isEditMode ? Number(id) : 0;
+  const productId = isEditMode ? id : undefined;
 
   const { data: product, isLoading, isError, error, refetch } = useProduct(productId);
   const createProduct = useCreateProduct();
   const updateProduct = useUpdateProduct(productId);
-  const { data: categoriesData } = useCategoryOptions();
-  const { data: brandsData } = useBrandOptions();
-
-  const brands = brandsData?.items ?? [];
-  const categories = categoriesData?.items ?? [];
+  const { data: categories = [] } = useCategoryOptions();
+  const { data: brands = [] } = useBrandOptions();
 
   const isSubmitting = createProduct.isPending || updateProduct.isPending;
 
@@ -72,10 +72,15 @@ export function ProductEditPage() {
   };
 
   const isNotFound =
-    isEditMode &&
-    isError &&
-    error instanceof AppError &&
-    error.code === 'PRODUCT_NOT_FOUND';
+    isEditMode && isError && error instanceof AppError && error.code === 'PRODUCT_NOT_FOUND';
+  const breadcrumbLabel = isEditMode
+    ? (isNotFound ? 'Not found' : (product?.name ?? 'Loading...'))
+    : undefined;
+
+  useBreadcrumbLabel(
+    productId ? routes.products.edit(productId) : undefined,
+    breadcrumbLabel,
+  );
 
   if (isEditMode && isLoading) {
     return (
@@ -91,7 +96,10 @@ export function ProductEditPage() {
     return (
       <AdminLayout>
         <div className="p-6">
-          <NotFoundState />
+          <NotFoundState
+            title="Product Not Found"
+            message="Product not found or has been deleted."
+          />
         </div>
       </AdminLayout>
     );
@@ -108,39 +116,68 @@ export function ProductEditPage() {
   }
 
   const showNoVariantsWarning =
-    isEditMode && ((product?.activeVariantCount ?? 0) === 0);
+    isEditMode &&
+    ((product?.activeVariantCount
+      ?? product?.variants.filter((variant) => variant.status === 'ACTIVE').length
+      ?? 0) === 0);
 
   return (
     <AdminLayout>
-      <div className="p-6 max-w-3xl">
+      <div className="mx-auto w-full max-w-6xl space-y-6 p-6">
         <PageHeader
           title={isEditMode ? (product?.name ?? 'Edit Product') : 'New Product'}
-          description={isEditMode ? `ID: ${productId}` : 'Fill in the details to create a new product.'}
+          description={
+            isEditMode
+              ? (product?.brand?.name
+                ? `${product.brand.name} product configuration`
+                : 'Update product details, categories, and visibility settings.')
+              : 'Add a product to your catalog.'
+          }
           actions={
-            isEditMode ? (
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => navigate(routes.products.variants(productId))}
-                leftIcon={<Layers className="h-4 w-4" />}
-              >
-                Manage Variants
-              </Button>
+            isEditMode && productId ? (
+              <>
+                <CopyValueButton value={productId} label="Copy ID" />
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => navigate(routes.products.variants(productId))}
+                  leftIcon={<Layers className="h-4 w-4" />}
+                >
+                  Manage Variants
+                </Button>
+              </>
             ) : undefined
           }
         />
 
-        <div className="mt-6">
-          <ProductForm
-            product={isEditMode ? product : undefined}
-            brands={brands}
-            categories={categories}
-            isSubmitting={isSubmitting}
-            onSubmit={(values) => void handleSubmit(values)}
-            onCancel={() => navigate(routes.products.list)}
-            showNoVariantsWarning={showNoVariantsWarning}
-          />
-        </div>
+        {isEditMode && product ? (
+          <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_20rem]">
+            <div className="rounded-lg border border-gray-200 bg-white p-6">
+              <ProductForm
+                product={product}
+                brands={brands}
+                categories={categories}
+                isSubmitting={isSubmitting}
+                onSubmit={(values) => void handleSubmit(values)}
+                onCancel={() => navigate(routes.products.list)}
+                showNoVariantsWarning={showNoVariantsWarning}
+              />
+            </div>
+            <ProductSummaryCard product={product} />
+          </div>
+        ) : (
+          <div className="mx-auto w-full max-w-3xl rounded-lg border border-gray-200 bg-white p-6">
+            <ProductForm
+              product={undefined}
+              brands={brands}
+              categories={categories}
+              isSubmitting={isSubmitting}
+              onSubmit={(values) => void handleSubmit(values)}
+              onCancel={() => navigate(routes.products.list)}
+              showNoVariantsWarning={showNoVariantsWarning}
+            />
+          </div>
+        )}
       </div>
     </AdminLayout>
   );

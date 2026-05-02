@@ -15,12 +15,16 @@ import { formatDateTime } from '@/shared/utils/formatDate';
 import { routes } from '@/constants/routes';
 import type { ColumnDef, SortState } from '@/shared/components/table/types';
 import type { PaginatedResponse } from '@/shared/types/api.types';
-import type { OrderStatus, PaymentStatus } from '@/shared/types/enums';
+import type { OrderStatus, OrderPaymentStatus } from '@/shared/types/enums';
 import type { OrderSummary, OrderListParams } from '../types/order.types';
 
 const PAYMENT_METHOD_LABEL: Record<string, string> = {
   COD: 'COD',
   ONLINE: 'Online',
+  MOMO: 'MoMo',
+  ZALO_PAY: 'ZaloPay',
+  VNPAY: 'VNPay',
+  BANK_TRANSFER: 'Bank Transfer',
 };
 
 interface OrderTableProps {
@@ -48,19 +52,19 @@ export function OrderTable({
 }: OrderTableProps) {
   const navigate = useNavigate();
 
-  const hasActiveFilters =
-    filters.status || filters.paymentStatus;
+  const activeFilterCount = [filters.status, filters.paymentStatus].filter(Boolean).length;
 
   const columns = useMemo<ColumnDef<OrderSummary>[]>(
     () => [
       {
-        id: 'code',
+        id: 'orderCode',
         header: 'Order',
+        enableSorting: true,
         cell: ({ row }) => (
           <button
             type="button"
             onClick={() => navigate(routes.orders.detail(row.original.id))}
-            className="font-mono text-sm font-semibold text-primary-600 hover:text-primary-700 hover:underline"
+            className="rounded-sm font-mono text-sm font-bold text-primary-600 transition-colors hover:text-primary-700 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-1"
           >
             #{row.original.orderCode}
           </button>
@@ -80,7 +84,10 @@ export function OrderTable({
         cell: ({ row }) => (
           <div className="flex flex-col gap-1">
             {row.original.paymentStatus && (
-              <StatusBadge type="payment" status={row.original.paymentStatus as PaymentStatus} />
+              <StatusBadge
+                type="order-payment"
+                status={row.original.paymentStatus as OrderPaymentStatus}
+              />
             )}
             {row.original.paymentMethod && (
               <Badge variant="default">
@@ -91,9 +98,8 @@ export function OrderTable({
         ),
       },
       {
-        id: 'total',
+        id: 'totalAmount',
         header: 'Total',
-        enableSorting: true,
         headerClassName: 'text-right',
         className: 'text-right tabular-nums',
         cell: ({ row }) => (
@@ -137,9 +143,9 @@ export function OrderTable({
   return (
     <div className="space-y-4">
       <TableToolbar
-        searchValue={''}
-        onSearchChange={() => undefined}
-        searchPlaceholder="Search by order code or customer…"
+        searchValue={filters.customerId ?? ''}
+        onSearchChange={(customerId) => onFiltersChange({ customerId: customerId || undefined })}
+        searchPlaceholder="Search by customer ID…"
         actions={
           <Button
             variant="secondary"
@@ -148,9 +154,9 @@ export function OrderTable({
             leftIcon={<SlidersHorizontal className="h-4 w-4" />}
           >
             Filters
-            {hasActiveFilters && (
+            {activeFilterCount > 0 && (
               <span className="ml-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary-600 text-[10px] font-bold text-white">
-                !
+                {activeFilterCount}
               </span>
             )}
           </Button>
@@ -176,7 +182,7 @@ export function OrderTable({
         <Pagination
           pagination={data}
           onPageChange={(page) => onFiltersChange({ page } as Partial<OrderListParams>)}
-          onPageSizeChange={(size) => onFiltersChange({ size } as Partial<OrderListParams>)}
+          onPageSizeChange={(size) => onFiltersChange({ size, page: 0 } as Partial<OrderListParams>)}
         />
       )}
     </div>

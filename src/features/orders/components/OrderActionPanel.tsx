@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { CheckCircle2, PackageCheck, XCircle, ArrowRight } from 'lucide-react';
 import { Button } from '@/shared/components/ui/Button';
 import { useConfirmDialog } from '@/shared/hooks/useConfirmDialog';
@@ -99,11 +100,13 @@ const STATUS_ACTIONS: Partial<Record<OrderStatus, ActionDef[]>> = {
 
 interface OrderActionPanelProps {
   order: Order;
+  refetch: () => void;
 }
 
-export function OrderActionPanel({ order }: OrderActionPanelProps) {
+export function OrderActionPanel({ order, refetch }: OrderActionPanelProps) {
   const { confirm } = useConfirmDialog();
   const orderAction = useOrderAction(order.id);
+  const [pendingAction, setPendingAction] = useState<OrderAction | null>(null);
   const actions = STATUS_ACTIONS[order.status] ?? [];
 
   if (actions.length === 0) {
@@ -124,6 +127,7 @@ export function OrderActionPanel({ order }: OrderActionPanelProps) {
     });
     if (!ok) return;
 
+    setPendingAction(actionDef.action);
     try {
       await orderAction.mutateAsync(actionDef.action);
       toast.success('Order status updated.');
@@ -131,33 +135,41 @@ export function OrderActionPanel({ order }: OrderActionPanelProps) {
       if (err instanceof AppError) {
         if (err.code === 'ORDER_STATUS_INVALID') {
           toast.error('Order was updated by someone else. Refreshing…');
-          setTimeout(() => window.location.reload(), 1000);
+          setTimeout(() => refetch(), 1000);
         } else {
           toast.error(err.message || 'Failed to update order status.');
         }
       } else {
         toast.error('Failed to update order status. Please try again.');
       }
+    } finally {
+      setPendingAction(null);
     }
   };
+
+  const isPending = pendingAction !== null;
 
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-4">
       <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-3">Actions</p>
       <div className="flex flex-col gap-2">
-        {actions.map((actionDef) => (
-          <Button
-            key={actionDef.action}
-            variant={actionDef.variant === 'danger' ? 'danger' : actionDef.variant}
-            size="sm"
-            className="w-full justify-start"
-            leftIcon={actionDef.icon}
-            isLoading={orderAction.isPending}
-            onClick={() => void handleAction(actionDef)}
-          >
-            {actionDef.label}
-          </Button>
-        ))}
+        {actions.map((actionDef) => {
+          const isDanger = actionDef.variant === 'danger';
+          return (
+            <Button
+              key={actionDef.action}
+              variant={isDanger ? 'danger' : actionDef.variant}
+              size={isDanger ? 'sm' : 'md'}
+              className={isDanger ? 'w-full justify-start' : 'w-full'}
+              leftIcon={actionDef.icon}
+              isLoading={pendingAction === actionDef.action}
+              disabled={isPending}
+              onClick={() => void handleAction(actionDef)}
+            >
+              {actionDef.label}
+            </Button>
+          );
+        })}
       </div>
     </div>
   );

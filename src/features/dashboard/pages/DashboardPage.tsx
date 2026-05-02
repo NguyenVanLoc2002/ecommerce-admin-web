@@ -46,90 +46,100 @@ export function DashboardPage() {
         description="Overview of your store's performance today."
       />
 
-      <div className="mt-6 space-y-6">
-        {/* KPI Cards */}
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-6">
-          <KpiCard
-            title="Orders Today"
-            value={todayOrders.data?.totalItems ?? 0}
-            icon={ShoppingCart}
-            iconBg="bg-primary-50"
-            iconColor="text-primary-600"
-            description="New orders placed today"
-            onClick={() => navigate(routes.orders.list)}
-            isLoading={todayOrders.isLoading}
-            isError={todayOrders.isError}
-            onRetry={todayOrders.refetch}
-          />
-          <KpiCard
-            title="Revenue Today"
-            value={
-              todayPayments.isError
-                ? '—'
-                : todayRevenue !== undefined
-                ? formatMoneyCompact(todayRevenue)
-                : '0 ₫'
-            }
-            icon={CreditCard}
-            iconBg="bg-success-50"
-            iconColor="text-success-600"
-            description="From paid orders today"
-            onClick={() => navigate(routes.payments.list)}
-            isLoading={todayPayments.isLoading}
-            isError={todayPayments.isError}
-            onRetry={todayPayments.refetch}
-          />
-          <KpiCard
-            title="Pending Confirmation"
-            value={pendingOrders.data?.totalItems ?? 0}
-            icon={Clock}
-            iconBg="bg-warning-50"
-            iconColor="text-warning-600"
-            description="Orders awaiting confirmation"
-            onClick={() => navigate(routes.orders.list)}
-            isLoading={pendingOrders.isLoading}
-            isError={pendingOrders.isError}
-            onRetry={pendingOrders.refetch}
-          />
-          <KpiCard
-            title="Pending Reviews"
-            value={pendingReviews.data?.totalItems ?? 0}
-            icon={Star}
-            iconBg="bg-info-50"
-            iconColor="text-info-600"
-            description="Reviews waiting moderation"
-            onClick={() => navigate(routes.reviews.list)}
-            isLoading={pendingReviews.isLoading}
-            isError={pendingReviews.isError}
-            onRetry={pendingReviews.refetch}
-          />
-          <KpiCard
-            title="Low Stock"
-            value={lowStock.data?.totalItems ?? 0}
-            icon={AlertTriangle}
-            iconBg="bg-danger-50"
-            iconColor="text-danger-600"
-            description="Variants with ≤5 units"
-            onClick={() => navigate(routes.inventory.stock)}
-            isLoading={lowStock.isLoading}
-            isError={lowStock.isError}
-            onRetry={lowStock.refetch}
-          />
-          <KpiCard
-            title="Out for Delivery"
-            value={outForDelivery.data?.totalItems ?? 0}
-            icon={Truck}
-            iconBg="bg-primary-50"
-            iconColor="text-primary-600"
-            description="Shipments en route"
-            onClick={() => navigate(routes.shipments.list)}
-            isLoading={outForDelivery.isLoading}
-            isError={outForDelivery.isError}
-            onRetry={outForDelivery.refetch}
-          />
-        </div>
+      <div className="mt-6 animate-fade-in space-y-8">
+        {/* Today's performance */}
+        <section aria-label="Today's metrics">
+          <p className="mb-3 text-[11px] font-medium uppercase tracking-widest text-gray-400">
+            Today
+          </p>
+          <div className="grid grid-cols-2 gap-4">
+            <KpiCard
+              title="Orders"
+              value={todayOrders.data?.totalItems ?? 0}
+              icon={ShoppingCart}
+              iconBg="bg-primary-50"
+              iconColor="text-primary-600"
+              onClick={() => navigate(routes.orders.list)}
+              isLoading={todayOrders.isLoading}
+              isError={todayOrders.isError}
+              onRetry={todayOrders.refetch}
+            />
+            <KpiCard
+              title="Revenue"
+              value={
+                todayPayments.isError
+                  ? '—'
+                  : todayRevenue !== undefined
+                  ? formatMoneyCompact(todayRevenue)
+                  : '0 ₫'
+              }
+              icon={CreditCard}
+              iconBg="bg-success-50"
+              iconColor="text-success-600"
+              onClick={() => navigate(routes.payments.list)}
+              isLoading={todayPayments.isLoading}
+              isError={todayPayments.isError}
+              onRetry={todayPayments.refetch}
+            />
+          </div>
+        </section>
 
-        {/* Panels */}
+        {/* Items needing attention */}
+        <section aria-label="Items needing attention">
+          <p className="mb-3 text-[11px] font-medium uppercase tracking-widest text-gray-400">
+            Needs attention
+          </p>
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+            <KpiCard
+              title="Pending Confirmation"
+              value={pendingOrders.data?.totalItems ?? 0}
+              icon={Clock}
+              iconBg="bg-warning-50"
+              iconColor="text-warning-600"
+              onClick={() => navigate(routes.orders.list)}
+              isLoading={pendingOrders.isLoading}
+              isError={pendingOrders.isError}
+              onRetry={pendingOrders.refetch}
+              showPulse={(pendingOrders.data?.totalItems ?? 0) > 0}
+            />
+            <KpiCard
+              title="Pending Reviews"
+              value={pendingReviews.data?.totalItems ?? 0}
+              icon={Star}
+              iconBg="bg-warning-50"
+              iconColor="text-warning-500"
+              onClick={() => navigate(routes.reviews.list)}
+              isLoading={pendingReviews.isLoading}
+              isError={pendingReviews.isError}
+              onRetry={pendingReviews.refetch}
+            />
+            <KpiCard
+              title="Low Stock"
+              value={lowStock.data?.totalItems ?? 0}
+              icon={AlertTriangle}
+              iconBg="bg-danger-50"
+              iconColor="text-danger-600"
+              onClick={() => navigate(routes.inventory.stock)}
+              isLoading={lowStock.isLoading}
+              isError={lowStock.isError}
+              onRetry={lowStock.refetch}
+              showPulse={(lowStock.data?.totalItems ?? 0) > 0}
+            />
+            <KpiCard
+              title="Out for Delivery"
+              value={outForDelivery.data?.totalItems ?? 0}
+              icon={Truck}
+              iconBg="bg-primary-50"
+              iconColor="text-primary-600"
+              onClick={() => navigate(routes.shipments.list)}
+              isLoading={outForDelivery.isLoading}
+              isError={outForDelivery.isError}
+              onRetry={outForDelivery.refetch}
+            />
+          </div>
+        </section>
+
+        {/* Activity panels */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <RecentOrdersPanel />
           <PendingReviewsPanel />

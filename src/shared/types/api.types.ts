@@ -1,3 +1,6 @@
+export type EntityId = string;
+export type EntityKey = string | number;
+
 export interface ApiResponse<T> {
   success: boolean;
   code: string;
@@ -34,6 +37,27 @@ export interface PaginationParams {
   page: number;
   size: number;
   sort?: string;
+}
+
+export const SoftDeleteState = {
+  ACTIVE: 'ACTIVE',
+  DELETED: 'DELETED',
+  ALL: 'ALL',
+} as const;
+
+export type SoftDeleteState = (typeof SoftDeleteState)[keyof typeof SoftDeleteState];
+
+export interface SoftDeleteFilterParams {
+  deletedState?: SoftDeleteState;
+}
+
+export interface SoftDeleteQueryParams {
+  isDeleted?: boolean;
+  includeDeleted?: boolean;
+}
+
+export interface SoftDeletableRecord {
+  isDeleted?: boolean;
 }
 
 export type ToastVariant = 'success' | 'error' | 'warning' | 'info';

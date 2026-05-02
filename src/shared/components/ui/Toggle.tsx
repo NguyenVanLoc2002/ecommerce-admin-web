@@ -32,7 +32,7 @@ export function Toggle({
         disabled={disabled}
         onClick={() => onChange(!checked)}
         className={cn(
-          'relative inline-flex shrink-0 rounded-full border-2 border-transparent transition-colors',
+          'relative inline-flex shrink-0 rounded-full border-2 border-transparent transition-colors motion-reduce:transition-none',
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2',
           size === 'sm' ? 'h-5 w-9' : 'h-6 w-11',
           checked ? 'bg-primary-600' : 'bg-gray-200',
@@ -40,7 +40,7 @@ export function Toggle({
       >
         <span
           className={cn(
-            'pointer-events-none inline-block rounded-full bg-white shadow-sm ring-0 transition-transform',
+            'pointer-events-none inline-block rounded-full bg-white shadow-sm ring-0 transition-transform motion-reduce:transition-none',
             size === 'sm' ? 'h-4 w-4' : 'h-5 w-5',
             checked
               ? size === 'sm'

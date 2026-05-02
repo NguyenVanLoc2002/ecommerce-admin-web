@@ -1,54 +1,76 @@
-import type { InvoiceStatus } from '@/shared/types/enums';
+import type { EntityId } from '@/shared/types/api.types';
+import type { InvoiceStatus, OrderPaymentStatus, PaymentMethod } from '@/shared/types/enums';
 
 export type { InvoiceStatus };
 
+export interface InvoiceSummary {
+  id: EntityId;
+  invoiceCode: string;
+  orderId: EntityId;
+  orderCode: string;
+  status: InvoiceStatus;
+  issuedAt: string;
+  dueDate: string | null;
+  paymentStatus: OrderPaymentStatus | null;
+  paidAt: string | null;
+  totalAmount: number;
+  customerName: string;
+  customerEmail: string | null;
+  customerPhone: string | null;
+  createdAt: string;
+  notes: string | null;
+}
+
 export interface InvoiceLineItem {
-  id: number;
-  variantId: number;
+  variantId: EntityId;
   productName: string;
-  variantName: string;
-  sku: string;
+  variantName: string | null;
+  sku: string | null;
   unitPrice: number;
+  salePrice: number | null;
+  effectivePrice: number;
   quantity: number;
-  discountAmount: number;
   lineTotal: number;
 }
 
 export interface Invoice {
-  id: number;
+  id: EntityId;
   invoiceCode: string;
-  orderId: number;
+  orderId: EntityId;
   orderCode: string;
   status: InvoiceStatus;
   issuedAt: string;
+  dueDate: string | null;
+  notes: string | null;
+  paymentMethod: PaymentMethod | null;
+  paymentStatus: OrderPaymentStatus | null;
   paidAt: string | null;
-  voidedAt: string | null;
-  voidNote: string | null;
-  receiverName: string;
-  receiverPhone: string;
-  shippingStreet: string;
-  shippingWard: string;
-  shippingDistrict: string;
-  shippingCity: string;
+  customerName: string;
+  customerEmail: string | null;
+  customerPhone: string | null;
+  billingStreet: string | null;
+  billingWard: string | null;
+  billingDistrict: string | null;
+  billingCity: string | null;
+  billingPostalCode: string | null;
   subTotal: number;
   discountAmount: number;
   shippingFee: number;
   totalAmount: number;
+  voucherCode: string | null;
   lineItems: InvoiceLineItem[];
   createdAt: string;
-  updatedAt: string;
 }
 
 export interface InvoiceListParams {
   invoiceCode?: string;
   orderCode?: string;
-  status?: string;
+  status?: InvoiceStatus;
   dateFrom?: string;
   dateTo?: string;
   page: number;
   size: number;
   sort?: string;
-  direction?: string;
 }
 
 export interface UpdateInvoiceStatusRequest {

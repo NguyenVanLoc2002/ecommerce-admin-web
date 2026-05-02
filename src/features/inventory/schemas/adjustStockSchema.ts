@@ -1,16 +1,12 @@
 import { z } from 'zod';
 
 export const adjustStockSchema = z.object({
-  warehouseId: z.coerce
-    .number({ required_error: 'Warehouse is required' })
-    .positive('Select a warehouse'),
-  variantId: z.coerce
-    .number({ required_error: 'Variant is required' })
-    .positive('Variant ID is required'),
+  warehouseId: z.string().min(1, 'Select a warehouse'),
+  variantId: z.string().min(1, 'Select a variant'),
   quantity: z.coerce
     .number()
     .int()
-    .refine((n) => n !== 0, 'Quantity must not be zero'),
+    .min(1, 'Quantity must be at least 1'),
   movementType: z.enum(['EXPORT', 'ADJUSTMENT', 'RETURN']),
   note: z.string().max(500).default(''),
 });

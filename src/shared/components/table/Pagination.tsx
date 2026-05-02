@@ -28,23 +28,31 @@ export function Pagination({
 
   const from = totalItems === 0 ? 0 : page * size + 1;
   const to = Math.min((page + 1) * size, totalItems);
-
   const pageNumbers = buildPageNumbers(page, totalPages);
 
   return (
-    <div className={cn('flex items-center justify-between gap-4 py-3 px-4', className)}>
-      <p className="text-sm text-gray-500">
-        Showing <span className="font-medium text-gray-700">{from}–{to}</span> of{' '}
+    <nav
+      aria-label="Pagination"
+      className={cn(
+        'flex flex-col gap-3 px-4 py-3 md:flex-row md:items-center md:justify-between',
+        className,
+      )}
+    >
+      <p className="text-sm text-gray-500" aria-live="polite" aria-atomic>
+        Showing <span className="font-medium text-gray-700">{from}-{to}</span> of{' '}
         <span className="font-medium text-gray-700">{totalItems}</span> results
       </p>
-      <div className="flex items-center gap-2">
+
+      <div className="flex flex-wrap items-center gap-2 md:justify-end">
         <Select
           options={PAGE_SIZE_OPTIONS}
           value={String(size)}
           onChange={(e) => onPageSizeChange(Number(e.target.value))}
-          className="w-32 h-8 text-xs"
+          className="h-8 w-32 text-xs"
+          aria-label="Results per page"
         />
-        <div className="flex items-center gap-1">
+
+        <div className="flex flex-wrap items-center gap-1">
           <Button
             variant="secondary"
             size="icon-sm"
@@ -54,27 +62,36 @@ export function Pagination({
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          {pageNumbers.map((p, i) =>
-            p === '...' ? (
-              <span key={`ellipsis-${i}`} className="px-1 text-gray-400 text-sm select-none">
-                …
+
+          {pageNumbers.map((pageNumber, index) =>
+            pageNumber === '...' ? (
+              <span
+                key={`ellipsis-${index}`}
+                className="select-none px-1 text-sm text-gray-400"
+                aria-hidden
+              >
+                ...
               </span>
             ) : (
               <button
-                key={p}
+                key={pageNumber}
                 type="button"
-                onClick={() => onPageChange(p)}
+                onClick={() => onPageChange(pageNumber)}
+                aria-label={`Page ${pageNumber + 1}`}
+                aria-current={pageNumber === page ? 'page' : undefined}
                 className={cn(
                   'h-8 w-8 rounded text-sm font-medium transition-colors',
-                  p === page
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-1',
+                  pageNumber === page
                     ? 'bg-primary-600 text-white'
                     : 'text-gray-700 hover:bg-gray-100',
                 )}
               >
-                {p + 1}
+                {pageNumber + 1}
               </button>
             ),
           )}
+
           <Button
             variant="secondary"
             size="icon-sm"
@@ -86,22 +103,44 @@ export function Pagination({
           </Button>
         </div>
       </div>
-    </div>
+    </nav>
   );
 }
 
 function buildPageNumbers(current: number, total: number): (number | '...')[] {
-  if (total <= 7) return Array.from({ length: total }, (_, i) => i);
+  if (total <= 0) {
+    return [];
+  }
+
+  if (total <= 7) {
+    return Array.from({ length: total }, (_, index) => index);
+  }
 
   const pages: (number | '...')[] = [];
-  const addPage = (p: number) => {
-    if (!pages.includes(p)) pages.push(p);
+  const addPage = (pageNumber: number) => {
+    if (!pages.includes(pageNumber)) {
+      pages.push(pageNumber);
+    }
   };
 
   addPage(0);
-  if (current > 2) pages.push('...');
-  for (let p = Math.max(1, current - 1); p <= Math.min(total - 2, current + 1); p++) addPage(p);
-  if (current < total - 3) pages.push('...');
+
+  if (current > 2) {
+    pages.push('...');
+  }
+
+  for (
+    let pageNumber = Math.max(1, current - 1);
+    pageNumber <= Math.min(total - 2, current + 1);
+    pageNumber += 1
+  ) {
+    addPage(pageNumber);
+  }
+
+  if (current < total - 3) {
+    pages.push('...');
+  }
+
   addPage(total - 1);
 
   return pages;

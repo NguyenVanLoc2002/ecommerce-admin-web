@@ -7,7 +7,7 @@ export function useUpdateBrand() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, body }: { id: number; body: UpdateBrandRequest }) =>
+    mutationFn: ({ id, body }: { id: string; body: UpdateBrandRequest }) =>
       brandService.update(id, body),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.brands.lists() });
