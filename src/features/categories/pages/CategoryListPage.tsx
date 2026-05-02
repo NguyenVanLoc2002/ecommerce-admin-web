@@ -5,6 +5,7 @@ import { useTableFilters } from '@/shared/hooks/useTableFilters';
 import { useDebounce } from '@/shared/hooks/useDebounce';
 import { toast } from '@/shared/stores/uiStore';
 import { AppError, SoftDeleteState } from '@/shared/types/api.types';
+import { buildSortParam, parseSortParam } from '@/shared/utils/sort';
 import type { SortState } from '@/shared/components/table/types';
 import { useCategories } from '../hooks/useCategories';
 import { useCreateCategory } from '../hooks/useCreateCategory';
@@ -27,7 +28,7 @@ const DEFAULT_FILTERS: CategoryListParams = {
 
 export function CategoryListPage() {
   const [filters, setFilters] = useTableFilters<CategoryListParams>(DEFAULT_FILTERS);
-  const [sort, setSort] = useState<SortState | undefined>();
+  const sort = parseSortParam(filters.sort);
   const [formOpen, setFormOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | undefined>();
 
@@ -51,8 +52,7 @@ export function CategoryListPage() {
   };
 
   const handleSortChange = (newSort: SortState) => {
-    setSort(newSort);
-    setFilters({ sort: `${newSort.column},${newSort.direction}` });
+    setFilters({ sort: buildSortParam(newSort), page: 0 });
   };
 
   const handleSubmit = async (values: CategoryFormValues) => {

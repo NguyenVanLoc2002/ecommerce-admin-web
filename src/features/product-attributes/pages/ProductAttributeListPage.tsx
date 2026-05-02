@@ -5,6 +5,7 @@ import { useDebounce } from '@/shared/hooks/useDebounce';
 import { useTableFilters } from '@/shared/hooks/useTableFilters';
 import { toast } from '@/shared/stores/uiStore';
 import { SoftDeleteState } from '@/shared/types/api.types';
+import { buildSortParam, parseSortParam } from '@/shared/utils/sort';
 import type { SortState } from '@/shared/components/table/types';
 import { ProductAttributeTable } from '../components/ProductAttributeTable';
 import { ProductAttributeForm } from '../components/ProductAttributeForm';
@@ -20,7 +21,7 @@ import type { ProductAttributeFormValues } from '../schemas/productAttributeSche
 const DEFAULT_FILTERS: ProductAttributeListParams = {
   page: 0,
   size: 20,
-  sort: 'updatedAt,desc',
+  sort: 'createdAt,desc',
   keyword: undefined,
   type: undefined,
   deletedState: SoftDeleteState.ACTIVE,
@@ -28,7 +29,7 @@ const DEFAULT_FILTERS: ProductAttributeListParams = {
 
 export function ProductAttributeListPage() {
   const [filters, setFilters] = useTableFilters<ProductAttributeListParams>(DEFAULT_FILTERS);
-  const [sort, setSort] = useState<SortState | undefined>();
+  const sort = parseSortParam(filters.sort);
   const [formOpen, setFormOpen] = useState(false);
   const [editingAttribute, setEditingAttribute] = useState<ProductAttribute | undefined>();
 
@@ -55,8 +56,7 @@ export function ProductAttributeListPage() {
   };
 
   const handleSortChange = (nextSort: SortState) => {
-    setSort(nextSort);
-    setFilters({ sort: `${nextSort.column},${nextSort.direction}` });
+    setFilters({ sort: buildSortParam(nextSort), page: 0 });
   };
 
   const handleSubmit = async (values: ProductAttributeFormValues) => {

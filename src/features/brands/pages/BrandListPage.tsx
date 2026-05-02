@@ -5,6 +5,7 @@ import { useTableFilters } from '@/shared/hooks/useTableFilters';
 import { useDebounce } from '@/shared/hooks/useDebounce';
 import { toast } from '@/shared/stores/uiStore';
 import { AppError, SoftDeleteState } from '@/shared/types/api.types';
+import { buildSortParam, parseSortParam } from '@/shared/utils/sort';
 import type { SortState } from '@/shared/components/table/types';
 import { useBrands } from '../hooks/useBrands';
 import { useCreateBrand } from '../hooks/useCreateBrand';
@@ -25,7 +26,7 @@ const DEFAULT_FILTERS: BrandListParams = {
 
 export function BrandListPage() {
   const [filters, setFilters] = useTableFilters<BrandListParams>(DEFAULT_FILTERS);
-  const [sort, setSort] = useState<SortState | undefined>();
+  const sort = parseSortParam(filters.sort);
   const [formOpen, setFormOpen] = useState(false);
   const [editingBrand, setEditingBrand] = useState<Brand | undefined>();
 
@@ -49,8 +50,7 @@ export function BrandListPage() {
   };
 
   const handleSortChange = (newSort: SortState) => {
-    setSort(newSort);
-    setFilters({ sort: `${newSort.column},${newSort.direction}` });
+    setFilters({ sort: buildSortParam(newSort), page: 0 });
   };
 
   const handleSubmit = async (values: BrandFormValues) => {

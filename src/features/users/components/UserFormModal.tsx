@@ -132,10 +132,10 @@ export function UserFormModal({ open, onClose, user }: UserFormModalProps) {
         toast.error(appError.message);
         break;
       case 'FORBIDDEN':
-        toast.error(appError.message || 'You do not have permission to update this user.');
+        toast.error(appError.message || 'You do not have permission to update this staff account.');
         break;
       default:
-        toast.error(appError.message || 'Failed to save user.');
+        toast.error(appError.message || 'Failed to save staff account.');
     }
   };
 
@@ -151,13 +151,13 @@ export function UserFormModal({ open, onClose, user }: UserFormModalProps) {
 
     try {
       await createUser.mutateAsync(payload);
-      toast.success('User created.');
+      toast.success('Staff account created.');
       onClose();
     } catch (error) {
       if (error instanceof Error && 'code' in error) {
         handleServerError(error as AppError, createForm);
       } else {
-        toast.error('Failed to create user.');
+        toast.error('Failed to create staff account.');
       }
     }
   });
@@ -173,13 +173,13 @@ export function UserFormModal({ open, onClose, user }: UserFormModalProps) {
 
     try {
       await updateUser.mutateAsync(payload);
-      toast.success('User updated.');
+      toast.success('Staff account updated.');
       onClose();
     } catch (error) {
       if (error instanceof Error && 'code' in error) {
         handleServerError(error as AppError, updateForm);
       } else {
-        toast.error('Failed to update user.');
+        toast.error('Failed to update staff account.');
       }
     }
   });
@@ -204,11 +204,11 @@ export function UserFormModal({ open, onClose, user }: UserFormModalProps) {
     <Modal
       open={open}
       onClose={handleClose}
-      title={isEditMode ? 'Edit User' : 'New User'}
+      title={isEditMode ? 'Edit Staff' : 'New Staff'}
       description={
         isEditMode
-          ? 'Update profile details, status, and role assignments.'
-          : 'Create a system user and assign one or more admin roles.'
+          ? 'Update staff profile, status, and system role assignments.'
+          : 'Create a staff account and assign one or more system roles.'
       }
       size="lg"
       closeOnBackdropClick={!isSubmitting}
@@ -218,7 +218,7 @@ export function UserFormModal({ open, onClose, user }: UserFormModalProps) {
             Cancel
           </Button>
           <Button size="sm" isLoading={isSubmitting} onClick={handleSubmitClick}>
-            {isEditMode ? 'Save changes' : 'Create user'}
+            {isEditMode ? 'Save changes' : 'Create staff'}
           </Button>
         </>
       }

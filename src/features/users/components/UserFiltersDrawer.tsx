@@ -82,7 +82,7 @@ export function UserFiltersDrawer({
     <Drawer
       open={open}
       onClose={onClose}
-      title="Filter Users"
+      title="Filter Staff"
       size="sm"
       footer={
         <>

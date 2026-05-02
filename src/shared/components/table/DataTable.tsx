@@ -2,7 +2,12 @@ import { useState, useMemo } from 'react';
 import { ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
 import { cn } from '@/shared/utils/cn';
 import { Checkbox } from '@/shared/components/ui/Checkbox';
+import { nextSortState } from '@/shared/utils/sort';
 import type { ColumnDef, SortState, RowSelectionState } from './types';
+
+function columnSortField<T>(col: ColumnDef<T>): string {
+  return col.sortField ?? col.id;
+}
 
 interface DataTableProps<T> {
   data: T[];
@@ -68,11 +73,7 @@ export function DataTable<T>({
 
   const handleSort = (col: ColumnDef<T>) => {
     if (!col.enableSorting || !onSortChange) return;
-    if (sort?.column === col.id) {
-      onSortChange({ column: col.id, direction: sort.direction === 'asc' ? 'desc' : 'asc' });
-    } else {
-      onSortChange({ column: col.id, direction: 'asc' });
-    }
+    onSortChange(nextSortState(sort, columnSortField(col)));
   };
 
   const hasSelectColumn = columns.some((c) => c.id === 'select');
@@ -94,7 +95,8 @@ export function DataTable<T>({
                   </th>
                 );
               }
-              const ariaSort = col.enableSorting && sort?.column === col.id
+              const sortKey = columnSortField(col);
+              const ariaSort = col.enableSorting && sort?.column === sortKey
                 ? sort.direction === 'asc' ? 'ascending' : 'descending'
                 : col.enableSorting ? 'none' : undefined;
               return (
@@ -118,7 +120,7 @@ export function DataTable<T>({
                 >
                   <span className="inline-flex items-center gap-1">
                     {typeof col.header === 'function' ? col.header() : col.header}
-                    {col.enableSorting && <SortIcon column={col.id} sort={sort} />}
+                    {col.enableSorting && <SortIcon column={sortKey} sort={sort} />}
                   </span>
                 </th>
               );

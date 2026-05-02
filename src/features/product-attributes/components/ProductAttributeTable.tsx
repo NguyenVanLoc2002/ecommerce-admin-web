@@ -83,6 +83,7 @@ export function ProductAttributeTable({
       {
         id: 'type',
         header: 'Type',
+        enableSorting: true,
         cell: ({ row }) => <AttributeTypeBadge type={row.original.type} />,
       },
       {
@@ -109,7 +110,6 @@ export function ProductAttributeTable({
       {
         id: 'updatedAt',
         header: 'Updated at',
-        enableSorting: true,
         cell: ({ row }) => (
           <span className="whitespace-nowrap text-xs text-gray-500">
             {formatDate(row.original.updatedAt)}

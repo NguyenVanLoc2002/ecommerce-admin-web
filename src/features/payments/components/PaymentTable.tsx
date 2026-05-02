@@ -88,7 +88,6 @@ export function PaymentTable({
       {
         id: 'amount',
         header: 'Amount',
-        enableSorting: true,
         headerClassName: 'text-right',
         className: 'text-right',
         cell: ({ row }) => (
@@ -108,7 +107,6 @@ export function PaymentTable({
       {
         id: 'paidAt',
         header: 'Paid At',
-        enableSorting: true,
         cell: ({ row }) => (
           <span className="text-xs text-gray-500 whitespace-nowrap">
             {row.original.paidAt ? (

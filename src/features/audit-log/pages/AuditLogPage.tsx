@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { AdminLayout } from '@/shared/components/layout/AdminLayout';
 import { PageHeader } from '@/shared/components/layout/PageHeader';
 import { useTableFilters } from '@/shared/hooks/useTableFilters';
+import { buildSortParam, parseSortParam } from '@/shared/utils/sort';
 import type { SortState } from '@/shared/components/table/types';
 import { useAuditLogs } from '../hooks/useAuditLogs';
 import { AuditLogTable } from '../components/AuditLogTable';
@@ -20,21 +21,15 @@ const DEFAULT_FILTERS: AuditLogListParams = {
   toDate: undefined,
 };
 
-const DEFAULT_SORT: SortState = {
-  column: 'createdAt',
-  direction: 'desc',
-};
-
 export function AuditLogPage() {
   const [filters, setFilters, resetFilters] = useTableFilters<AuditLogListParams>(DEFAULT_FILTERS);
-  const [sort, setSort] = useState<SortState | undefined>(DEFAULT_SORT);
+  const sort = parseSortParam(filters.sort);
   const [filtersOpen, setFiltersOpen] = useState(false);
 
   const { data, isLoading, isError, refetch } = useAuditLogs(filters);
 
   const handleSortChange = (newSort: SortState) => {
-    setSort(newSort);
-    setFilters({ sort: `${newSort.column},${newSort.direction}` });
+    setFilters({ sort: buildSortParam(newSort), page: 0 });
   };
 
   const handleFiltersApply = (updates: Partial<AuditLogListParams>) => {
@@ -42,7 +37,6 @@ export function AuditLogPage() {
   };
 
   const handleFiltersReset = () => {
-    setSort(DEFAULT_SORT);
     resetFilters();
   };
 

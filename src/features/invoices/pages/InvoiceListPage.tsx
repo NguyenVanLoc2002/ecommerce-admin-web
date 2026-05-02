@@ -3,6 +3,7 @@ import { AdminLayout } from '@/shared/components/layout/AdminLayout';
 import { PageHeader } from '@/shared/components/layout/PageHeader';
 import { useTableFilters } from '@/shared/hooks/useTableFilters';
 import { useDebounce } from '@/shared/hooks/useDebounce';
+import { buildSortParam, parseSortParam } from '@/shared/utils/sort';
 import type { SortState } from '@/shared/components/table/types';
 import { InvoiceTable } from '../components/InvoiceTable';
 import { InvoiceFiltersDrawer } from '../components/InvoiceFiltersDrawer';
@@ -22,7 +23,7 @@ const DEFAULT_FILTERS: InvoiceListParams = {
 
 export function InvoiceListPage() {
   const [filters, setFilters, resetFilters] = useTableFilters<InvoiceListParams>(DEFAULT_FILTERS);
-  const [sort, setSort] = useState<SortState | undefined>();
+  const sort = parseSortParam(filters.sort);
   const [filtersOpen, setFiltersOpen] = useState(false);
 
   const debouncedInvoiceCode = useDebounce(filters.invoiceCode ?? '', 300);
@@ -34,8 +35,7 @@ export function InvoiceListPage() {
   const { data, isLoading, isError, refetch } = useInvoices(queryParams);
 
   const handleSortChange = (nextSort: SortState) => {
-    setSort(nextSort);
-    setFilters({ sort: `${nextSort.column},${nextSort.direction}` });
+    setFilters({ sort: buildSortParam(nextSort), page: 0 });
   };
 
   const handleFiltersApply = (updates: Partial<InvoiceListParams>) => {

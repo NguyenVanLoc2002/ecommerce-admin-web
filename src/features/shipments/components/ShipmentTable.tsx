@@ -141,7 +141,6 @@ export function ShipmentTable({
       {
         id: 'estimatedDeliveryDate',
         header: 'Est. Delivery',
-        enableSorting: true,
         cell: ({ row }) => (
           <span className="text-sm text-gray-600 whitespace-nowrap">
             {row.original.estimatedDeliveryDate ? (
@@ -155,7 +154,6 @@ export function ShipmentTable({
       {
         id: 'updatedAt',
         header: 'Updated',
-        enableSorting: true,
         cell: ({ row }) => (
           <span className="text-xs text-gray-500 whitespace-nowrap">
             {formatDateTime(row.original.updatedAt)}

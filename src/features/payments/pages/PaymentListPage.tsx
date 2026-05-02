@@ -3,6 +3,7 @@ import { AdminLayout } from '@/shared/components/layout/AdminLayout';
 import { PageHeader } from '@/shared/components/layout/PageHeader';
 import { useTableFilters } from '@/shared/hooks/useTableFilters';
 import { useDebounce } from '@/shared/hooks/useDebounce';
+import { buildSortParam, parseSortParam } from '@/shared/utils/sort';
 import type { SortState } from '@/shared/components/table/types';
 import { usePayments } from '../hooks/usePayments';
 import { PaymentTable } from '../components/PaymentTable';
@@ -22,7 +23,7 @@ const DEFAULT_FILTERS: PaymentListParams = {
 
 export function PaymentListPage() {
   const [filters, setFilters, resetFilters] = useTableFilters<PaymentListParams>(DEFAULT_FILTERS);
-  const [sort, setSort] = useState<SortState | undefined>();
+  const sort = parseSortParam(filters.sort);
   const [filtersOpen, setFiltersOpen] = useState(false);
 
   const debouncedOrderCode = useDebounce(filters.orderCode ?? '', 300);
@@ -31,8 +32,7 @@ export function PaymentListPage() {
   const { data, isLoading, isError, refetch } = usePayments(queryParams);
 
   const handleSortChange = (newSort: SortState) => {
-    setSort(newSort);
-    setFilters({ sort: `${newSort.column},${newSort.direction}` });
+    setFilters({ sort: buildSortParam(newSort), page: 0 });
   };
 
   const handleFiltersApply = (updates: Partial<PaymentListParams>) => {

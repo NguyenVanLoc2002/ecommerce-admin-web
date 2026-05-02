@@ -78,6 +78,10 @@ export const routes = {
     list: '/users',
   },
 
+  customers: {
+    list: '/customers',
+  },
+
   auditLog: {
     list: '/audit-log',
   },

@@ -9,6 +9,7 @@ import { useDebounce } from '@/shared/hooks/useDebounce';
 import { usePermission } from '@/constants/permissions';
 import { routes } from '@/constants/routes';
 import { SoftDeleteState } from '@/shared/types/api.types';
+import { buildSortParam, parseSortParam } from '@/shared/utils/sort';
 import type { SortState } from '@/shared/components/table/types';
 import { usePromotions } from '../hooks/usePromotions';
 import { PromotionTable } from '../components/PromotionTable';
@@ -33,7 +34,7 @@ export function PromotionListPage() {
   const [filters, setFilters, resetFilters] = useTableFilters<PromotionListParams>(DEFAULT_FILTERS, {
     booleanKeys: ['active'],
   });
-  const [sort, setSort] = useState<SortState | undefined>();
+  const sort = parseSortParam(filters.sort);
   const [filtersOpen, setFiltersOpen] = useState(false);
 
   const debouncedName = useDebounce(filters.name ?? '', 300);
@@ -42,8 +43,7 @@ export function PromotionListPage() {
   const { data, isLoading, isError, refetch } = usePromotions(queryParams);
 
   const handleSortChange = (newSort: SortState) => {
-    setSort(newSort);
-    setFilters({ sort: `${newSort.column},${newSort.direction}` });
+    setFilters({ sort: buildSortParam(newSort), page: 0 });
   };
 
   const handleFiltersApply = (updates: Partial<PromotionListParams>) => {

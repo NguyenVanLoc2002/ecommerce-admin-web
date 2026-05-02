@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Plus, SlidersHorizontal, Users } from 'lucide-react';
+import { Heart, SlidersHorizontal, UsersRound } from 'lucide-react';
 import { DataTable } from '@/shared/components/table/DataTable';
 import { Pagination } from '@/shared/components/table/Pagination';
 import { TableToolbar } from '@/shared/components/table/TableToolbar';
@@ -10,32 +10,31 @@ import { Button } from '@/shared/components/ui/Button';
 import { formatDateTime } from '@/shared/utils/formatDate';
 import type { ColumnDef, SortState } from '@/shared/components/table/types';
 import type { PaginatedResponse } from '@/shared/types/api.types';
-import type { AdminUser, AdminUserListParams } from '../types/user.types';
-import { UserRoleBadge, UserStatusBadge } from './UserBadges';
-import { UserRowActions } from './UserRowActions';
+import type { AdminCustomer, AdminCustomerFilter } from '../types/customer.types';
+import { CustomerGenderBadge, CustomerStatusBadge } from './CustomerBadges';
+import { CustomerRowActions } from './CustomerRowActions';
 
-interface UserTableProps {
-  data: PaginatedResponse<AdminUser> | undefined;
+interface CustomerTableProps {
+  data: PaginatedResponse<AdminCustomer> | undefined;
   isLoading: boolean;
   isError: boolean;
   isSearching?: boolean;
   onRetry: () => void;
-  filters: AdminUserListParams;
-  onFiltersChange: (updates: Partial<AdminUserListParams>) => void;
+  filters: AdminCustomerFilter;
+  onFiltersChange: (updates: Partial<AdminCustomerFilter>) => void;
   sort: SortState | undefined;
   onSortChange: (sort: SortState) => void;
   onOpenFilters: () => void;
-  onCreate: () => void;
-  onView: (user: AdminUser) => void;
-  onEdit: (user: AdminUser) => void;
+  onView: (customer: AdminCustomer) => void;
+  onEdit: (customer: AdminCustomer) => void;
 }
 
-function formatName(user: AdminUser) {
-  const fullName = `${user.firstName} ${user.lastName ?? ''}`.trim();
-  return fullName || user.email;
+function formatName(customer: AdminCustomer) {
+  const fullName = `${customer.firstName} ${customer.lastName ?? ''}`.trim();
+  return fullName || customer.email;
 }
 
-export function UserTable({
+export function CustomerTable({
   data,
   isLoading,
   isError,
@@ -46,18 +45,22 @@ export function UserTable({
   sort,
   onSortChange,
   onOpenFilters,
-  onCreate,
   onView,
   onEdit,
-}: UserTableProps) {
+}: CustomerTableProps) {
   const activeFilterCount = [
     filters.email,
     filters.phoneNumber,
     filters.status,
-    filters.role,
+    filters.gender,
+    filters.minLoyaltyPoints,
+    filters.maxLoyaltyPoints,
+    filters.dateFrom,
+    filters.dateTo,
+    filters.deletedState && filters.deletedState !== 'ACTIVE' ? filters.deletedState : undefined,
   ].filter((value) => value !== undefined && value !== '').length;
 
-  const columns = useMemo<ColumnDef<AdminUser>[]>(
+  const columns = useMemo<ColumnDef<AdminCustomer>[]>(
     () => [
       {
         id: 'name',
@@ -71,7 +74,6 @@ export function UserTable({
       {
         id: 'email',
         header: 'Email',
-        enableSorting: true,
         cell: ({ row }) => (
           <span className="truncate font-medium text-gray-700">{row.original.email}</span>
         ),
@@ -79,7 +81,6 @@ export function UserTable({
       {
         id: 'phoneNumber',
         header: 'Phone',
-        enableSorting: true,
         cell: ({ row }) => (
           <span className="text-sm text-gray-700">
             {row.original.phoneNumber ?? 'Not provided'}
@@ -87,21 +88,26 @@ export function UserTable({
         ),
       },
       {
-        id: 'roles',
-        header: 'Roles',
-        cell: ({ row }) => (
-          <div className="flex flex-wrap gap-1.5">
-            {row.original.roles.map((role) => (
-              <UserRoleBadge key={role} role={role} />
-            ))}
-          </div>
-        ),
-      },
-      {
         id: 'status',
         header: 'Status',
         enableSorting: true,
-        cell: ({ row }) => <UserStatusBadge status={row.original.status} />,
+        cell: ({ row }) => <CustomerStatusBadge status={row.original.status} />,
+      },
+      {
+        id: 'gender',
+        header: 'Gender',
+        cell: ({ row }) => <CustomerGenderBadge gender={row.original.gender} />,
+      },
+      {
+        id: 'loyaltyPoints',
+        header: 'Loyalty Points',
+        enableSorting: true,
+        cell: ({ row }) => (
+          <span className="inline-flex items-center gap-1 text-sm font-medium text-gray-700">
+            <Heart className="h-3.5 w-3.5 text-rose-400" aria-hidden />
+            {row.original.loyaltyPoints.toLocaleString('vi-VN')}
+          </span>
+        ),
       },
       {
         id: 'createdAt',
@@ -118,7 +124,7 @@ export function UserTable({
         header: '',
         className: 'w-12',
         cell: ({ row }) => (
-          <UserRowActions user={row.original} onView={onView} onEdit={onEdit} />
+          <CustomerRowActions customer={row.original} onView={onView} onEdit={onEdit} />
         ),
       },
     ],
@@ -140,27 +146,22 @@ export function UserTable({
         onSearchChange={(keyword) =>
           onFiltersChange({ keyword: keyword || undefined, page: 0 })
         }
-        searchPlaceholder="Search staff by name, email, or phone..."
+        searchPlaceholder="Search customers by name, email, or phone..."
         isSearching={isSearching}
         actions={
-          <>
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={onOpenFilters}
-              leftIcon={<SlidersHorizontal className="h-4 w-4" />}
-            >
-              Filters
-              {activeFilterCount > 0 && (
-                <span className="ml-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary-600 text-[10px] font-bold text-white">
-                  {activeFilterCount}
-                </span>
-              )}
-            </Button>
-            <Button size="sm" onClick={onCreate} leftIcon={<Plus className="h-4 w-4" />}>
-              Add Staff
-            </Button>
-          </>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={onOpenFilters}
+            leftIcon={<SlidersHorizontal className="h-4 w-4" />}
+          >
+            Filters
+            {activeFilterCount > 0 && (
+              <span className="ml-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary-600 text-[10px] font-bold text-white">
+                {activeFilterCount}
+              </span>
+            )}
+          </Button>
         }
       />
 
@@ -173,10 +174,9 @@ export function UserTable({
         onRowClick={onView}
         emptyState={
           <EmptyState
-            icon={<Users className="h-10 w-10" />}
-            title="No staff users found"
-            message="Try adjusting your filters or create a new staff member."
-            action={{ label: 'Add Staff', onClick: onCreate }}
+            icon={<UsersRound className="h-10 w-10" />}
+            title="No customers found"
+            message="Try adjusting your filters to find customer accounts."
           />
         }
       />

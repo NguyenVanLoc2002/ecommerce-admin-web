@@ -57,8 +57,9 @@ export function OrderTable({
   const columns = useMemo<ColumnDef<OrderSummary>[]>(
     () => [
       {
-        id: 'code',
+        id: 'orderCode',
         header: 'Order',
+        enableSorting: true,
         cell: ({ row }) => (
           <button
             type="button"
@@ -99,7 +100,6 @@ export function OrderTable({
       {
         id: 'totalAmount',
         header: 'Total',
-        enableSorting: true,
         headerClassName: 'text-right',
         className: 'text-right tabular-nums',
         cell: ({ row }) => (

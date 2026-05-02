@@ -43,10 +43,10 @@ export function UserRowActions({ user, onView, onEdit }: UserRowActionsProps) {
     setMenuOpen(false);
 
     const ok = await confirm({
-      title: 'Deactivate user?',
+      title: 'Deactivate staff account?',
       description:
-        'This action may deactivate or soft-delete the user account depending on backend rules.',
-      confirmLabel: 'Deactivate user',
+        'This action may deactivate or soft-delete the staff account depending on backend rules.',
+      confirmLabel: 'Deactivate staff',
       variant: 'destructive',
     });
 
@@ -56,21 +56,21 @@ export function UserRowActions({ user, onView, onEdit }: UserRowActionsProps) {
 
     try {
       await deleteUser.mutateAsync(user.id);
-      toast.success('User deactivated.');
+      toast.success('Staff account deactivated.');
     } catch (error) {
       if (error instanceof AppError) {
         switch (error.code) {
           case 'USER_NOT_FOUND':
-            toast.error('User not found.');
+            toast.error('Staff account not found.');
             break;
           case 'FORBIDDEN':
-            toast.error(error.message || 'You cannot deactivate this user.');
+            toast.error(error.message || 'You cannot deactivate this staff account.');
             break;
           default:
-            toast.error(error.message || 'Failed to deactivate user.');
+            toast.error(error.message || 'Failed to deactivate staff account.');
         }
       } else {
-        toast.error('Failed to deactivate user.');
+        toast.error('Failed to deactivate staff account.');
       }
     }
   };
@@ -118,7 +118,7 @@ export function UserRowActions({ user, onView, onEdit }: UserRowActionsProps) {
           className="flex w-full items-center gap-2 px-3 py-2 text-sm text-danger-600 hover:bg-danger-50 disabled:cursor-not-allowed disabled:opacity-50"
           onClick={() => void handleDelete()}
           disabled={isCurrentUser || deleteUser.isPending}
-          title={isCurrentUser ? 'You cannot deactivate your own account.' : 'Deactivate user'}
+          title={isCurrentUser ? 'You cannot deactivate your own account.' : 'Deactivate staff'}
         >
           <Trash2 className="h-4 w-4" />
           Deactivate

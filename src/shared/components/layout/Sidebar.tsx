@@ -15,6 +15,7 @@ import {
   Ticket,
   Star,
   Users,
+  UsersRound,
   ClipboardList,
   User,
   X,
@@ -47,7 +48,8 @@ const navItems: NavItem[] = [
   { label: 'Promotions', to: routes.promotions.list, icon: Percent, adminOnly: true },
   { label: 'Vouchers', to: routes.vouchers.list, icon: Ticket, adminOnly: true },
   { label: 'Reviews', to: routes.reviews.list, icon: Star },
-  { label: 'Users', to: routes.users.list, icon: Users, adminOnly: true },
+  { label: 'Customers', to: routes.customers.list, icon: UsersRound },
+  { label: 'Staff', to: routes.users.list, icon: Users, adminOnly: true },
   { label: 'Audit Log', to: routes.auditLog.list, icon: ClipboardList, adminOnly: true },
 ];
 

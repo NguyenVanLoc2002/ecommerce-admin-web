@@ -36,7 +36,7 @@ export function UserDetailModal({
     refetch,
   } = useUser(open ? userId : undefined);
 
-  const title = user ? formatDisplayName(user) : 'User details';
+  const title = user ? formatDisplayName(user) : 'Staff details';
 
   return (
     <Modal
@@ -50,7 +50,7 @@ export function UserDetailModal({
           {user && <CopyValueButton value={user.id} label="Copy ID" />}
           {user && (
             <Button size="sm" onClick={() => onEdit(user)}>
-              Edit user
+              Edit staff
             </Button>
           )}
         </>
@@ -60,14 +60,14 @@ export function UserDetailModal({
         <SkeletonDetail />
       ) : isError ? (
         <ErrorCard
-          message={error instanceof Error ? error.message : 'Failed to load user details.'}
+          message={error instanceof Error ? error.message : 'Failed to load staff details.'}
           onRetry={() => void refetch()}
         />
       ) : !user ? (
         <EmptyState
           icon={<UserCircle className="h-10 w-10" />}
-          title="User not found"
-          message="This user does not exist or has already been deleted."
+          title="Staff user not found"
+          message="This staff account does not exist or has already been deleted."
         />
       ) : (
         <div className="space-y-5">

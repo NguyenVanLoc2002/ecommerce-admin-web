@@ -13,11 +13,10 @@ export const AdminUserRole = {
   STAFF: 'STAFF',
   ADMIN: 'ADMIN',
   SUPER_ADMIN: 'SUPER_ADMIN',
-  CUSTOMER: 'CUSTOMER',
 } as const;
 
 export type AdminUserRole = (typeof AdminUserRole)[keyof typeof AdminUserRole];
-export type AssignableAdminUserRole = Exclude<AdminUserRole, 'CUSTOMER'>;
+export type AssignableAdminUserRole = AdminUserRole;
 
 export interface AdminUser {
   id: EntityId;

@@ -2,14 +2,10 @@ import { Badge } from '@/shared/components/ui/Badge';
 import { formatEnumLabel } from '@/shared/utils/formatEnumLabel';
 import type { AdminUserRole, AdminUserStatus } from '../types/user.types';
 
-const roleVariantMap: Record<
-  AdminUserRole,
-  'default' | 'primary' | 'info' | 'warning'
-> = {
+const roleVariantMap: Record<AdminUserRole, 'default' | 'primary' | 'info'> = {
   STAFF: 'default',
   ADMIN: 'info',
   SUPER_ADMIN: 'primary',
-  CUSTOMER: 'warning',
 };
 
 const statusVariantMap: Record<

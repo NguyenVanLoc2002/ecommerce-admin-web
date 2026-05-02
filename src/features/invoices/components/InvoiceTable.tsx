@@ -99,7 +99,6 @@ export function InvoiceTable({
       {
         id: 'totalAmount',
         header: 'Total',
-        enableSorting: true,
         headerClassName: 'text-right',
         className: 'text-right',
         cell: ({ row }) => (

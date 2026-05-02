@@ -8,6 +8,7 @@ import { useDebounce } from '@/shared/hooks/useDebounce';
 import { toast } from '@/shared/stores/uiStore';
 import { routes } from '@/constants/routes';
 import { SoftDeleteState } from '@/shared/types/api.types';
+import { buildSortParam, parseSortParam } from '@/shared/utils/sort';
 import type { SortState, RowSelectionState } from '@/shared/components/table/types';
 import type { MultiSelectOption } from '@/shared/components/ui/MultiSelectDropdown';
 import { useProducts } from '../hooks/useProducts';
@@ -37,7 +38,7 @@ export function ProductListPage() {
   const navigate = useNavigate();
   const { confirm } = useConfirmDialog();
   const [filters, setFilters, resetFilters] = useTableFilters<ProductListParams>(DEFAULT_FILTERS);
-  const [sort, setSort] = useState<SortState | undefined>();
+  const sort = parseSortParam(filters.sort);
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [pendingBulk, setPendingBulk] = useState<BulkAction | null>(null);
@@ -60,8 +61,7 @@ export function ProductListPage() {
   }));
 
   const handleSortChange = (newSort: SortState) => {
-    setSort(newSort);
-    setFilters({ sort: `${newSort.column},${newSort.direction}` });
+    setFilters({ sort: buildSortParam(newSort), page: 0 });
   };
 
   const handleBulkPublish = async () => {

@@ -156,6 +156,15 @@ export const queryKeys = {
     detail: (id: EntityKey) => [...queryKeys.users.all, 'detail', id] as const,
   },
 
+  customers: {
+    all: ['customers'] as const,
+    lists: () => [...queryKeys.customers.all, 'list'] as const,
+    list: (params: object) =>
+      [...queryKeys.customers.lists(), cleanParams(params)] as const,
+    detail: (id: EntityKey) =>
+      [...queryKeys.customers.all, 'detail', id] as const,
+  },
+
   auditLog: {
     all: ['auditLog'] as const,
     lists: () => [...queryKeys.auditLog.all, 'list'] as const,

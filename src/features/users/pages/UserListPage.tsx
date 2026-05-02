@@ -3,6 +3,7 @@ import { AdminLayout } from '@/shared/components/layout/AdminLayout';
 import { PageHeader } from '@/shared/components/layout/PageHeader';
 import { useDebounce } from '@/shared/hooks/useDebounce';
 import { useTableFilters } from '@/shared/hooks/useTableFilters';
+import { buildSortParam, parseSortParam } from '@/shared/utils/sort';
 import type { SortState } from '@/shared/components/table/types';
 import { useUsers } from '../hooks/useUsers';
 import { UserDetailModal } from '../components/UserDetailModal';
@@ -25,7 +26,7 @@ const DEFAULT_FILTERS: AdminUserListParams = {
 export function UserListPage() {
   const [filters, setFilters, resetFilters] =
     useTableFilters<AdminUserListParams>(DEFAULT_FILTERS);
-  const [sort, setSort] = useState<SortState | undefined>();
+  const sort = parseSortParam(filters.sort);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [detailUserId, setDetailUserId] = useState<string | undefined>();
   const [editingUser, setEditingUser] = useState<AdminUser | undefined>();
@@ -40,8 +41,7 @@ export function UserListPage() {
   const { data, isLoading, isError, isFetching, refetch } = useUsers(queryParams);
 
   const handleSortChange = (nextSort: SortState) => {
-    setSort(nextSort);
-    setFilters({ sort: `${nextSort.column},${nextSort.direction}` });
+    setFilters({ sort: buildSortParam(nextSort), page: 0 });
   };
 
   const openCreateForm = () => {
@@ -72,8 +72,8 @@ export function UserListPage() {
     <AdminLayout>
       <div className="space-y-6 p-6">
         <PageHeader
-          title="Users"
-          description="Manage system users and roles."
+          title="Staff"
+          description="Manage internal staff, admins, and system access. Customer accounts are managed under Customers."
         />
 
         <UserTable

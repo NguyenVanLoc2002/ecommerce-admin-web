@@ -4,7 +4,7 @@ const PHONE_REGEX = /^(0|\+84)[3-9][0-9]{8}$/;
 const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,64}$/;
 
 export const ASSIGNABLE_ROLE_VALUES = ['STAFF', 'ADMIN', 'SUPER_ADMIN'] as const;
-export const USER_FILTER_ROLE_VALUES = ['STAFF', 'ADMIN', 'SUPER_ADMIN', 'CUSTOMER'] as const;
+export const USER_FILTER_ROLE_VALUES = ASSIGNABLE_ROLE_VALUES;
 export const USER_STATUS_VALUES = ['ACTIVE', 'INACTIVE', 'LOCKED'] as const;
 
 const optionalTrimmedString = (max: number) =>
