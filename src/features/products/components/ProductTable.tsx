@@ -16,13 +16,14 @@ import { resolveSoftDeleteState } from '@/shared/utils/softDelete';
 import { routes } from '@/constants/routes';
 import type { ColumnDef, SortState, RowSelectionState } from '@/shared/components/table/types';
 import { SoftDeleteState, type PaginatedResponse } from '@/shared/types/api.types';
-import type { ProductStatus } from '@/shared/types/enums';
 import type { ProductListItem, ProductListParams } from '../types/product.types';
+import type { MultiSelectOption } from '@/shared/components/ui/MultiSelectDropdown';
 import { ProductRowActions } from './ProductRowActions';
 
 interface ProductTableProps {
   data: PaginatedResponse<ProductListItem> | undefined;
   isLoading: boolean;
+  isSearching: boolean;
   isError: boolean;
   onRetry: () => void;
   filters: ProductListParams;
@@ -31,6 +32,8 @@ interface ProductTableProps {
   onOpenFilters: () => void;
   sort: SortState | undefined;
   onSortChange: (sort: SortState) => void;
+  categoryOptions: MultiSelectOption[];
+  brandOptions: MultiSelectOption[];
   rowSelection: RowSelectionState;
   onRowSelectionChange: (selection: RowSelectionState) => void;
   onBulkPublish: () => void;
@@ -43,6 +46,7 @@ interface ProductTableProps {
 export function ProductTable({
   data,
   isLoading,
+  isSearching,
   isError,
   onRetry,
   filters,
@@ -51,6 +55,8 @@ export function ProductTable({
   onOpenFilters,
   sort,
   onSortChange,
+  categoryOptions,
+  brandOptions,
   rowSelection,
   onRowSelectionChange,
   onBulkPublish,
@@ -118,7 +124,7 @@ export function ProductTable({
         id: 'status',
         header: 'Status',
         cell: ({ row }) => (
-          <StatusBadge type="product" status={row.original.status as ProductStatus} />
+          <StatusBadge type="product" status={row.original.status} />
         ),
       },
       {
@@ -149,23 +155,59 @@ export function ProductTable({
   );
 
   const selectedCount = Object.values(rowSelection).filter(Boolean).length;
+  const categoryLabelById = useMemo(
+    () => new Map(categoryOptions.map((option) => [String(option.value), option.label])),
+    [categoryOptions],
+  );
+  const brandLabelById = useMemo(
+    () => new Map(brandOptions.map((option) => [String(option.value), option.label])),
+    [brandOptions],
+  );
 
   const filterChips = useMemo<FilterChip[]>(() => {
     const chips: FilterChip[] = [];
+
+    if (filters.categoryId) {
+      chips.push({
+        key: 'categoryId',
+        label: 'Category',
+        value: categoryLabelById.get(String(filters.categoryId)) ?? String(filters.categoryId),
+      });
+    }
 
     if (filters.status) {
       chips.push({ key: 'status', label: 'Status', value: filters.status });
     }
 
     if (filters.brandId) {
-      chips.push({ key: 'brandId', label: 'Brand', value: filters.brandId });
+      chips.push({
+        key: 'brandId',
+        label: 'Brand',
+        value: brandLabelById.get(String(filters.brandId)) ?? String(filters.brandId),
+      });
     }
 
-    if (filters.featured) {
+    if (typeof filters.featured === 'boolean') {
       chips.push({
         key: 'featured',
         label: 'Featured',
-        value: filters.featured === 'true' ? 'Yes' : 'No',
+        value: filters.featured ? 'Yes' : 'No',
+      });
+    }
+
+    if (typeof filters.minPrice === 'number') {
+      chips.push({
+        key: 'minPrice',
+        label: 'Min price',
+        value: String(filters.minPrice),
+      });
+    }
+
+    if (typeof filters.maxPrice === 'number') {
+      chips.push({
+        key: 'maxPrice',
+        label: 'Max price',
+        value: String(filters.maxPrice),
       });
     }
 
@@ -178,7 +220,7 @@ export function ProductTable({
     }
 
     return chips;
-  }, [filters]);
+  }, [brandLabelById, categoryLabelById, filters]);
 
   if (isLoading) {
     return (
@@ -201,6 +243,7 @@ export function ProductTable({
         searchValue={filters.keyword ?? ''}
         onSearchChange={(keyword) => onFiltersChange({ keyword, page: 0 })}
         searchPlaceholder="Search products..."
+        isSearching={isSearching}
         filters={
           <Button variant="secondary" size="sm" onClick={onOpenFilters}>
             Filters

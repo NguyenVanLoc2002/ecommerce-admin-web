@@ -14,6 +14,7 @@ Giao diện quản trị cho hệ thống bán quần áo thời trang. Phục v
 6. [Build](#6-build)
 7. [Folder Structure](#7-folder-structure)
 8. [Key Conventions](#8-key-conventions)
+9. [Product Search Contract](#9-product-search-contract)
 
 ---
 
@@ -257,6 +258,18 @@ Page/Component
 | Auth state (tokens, user, role) | Zustand `authStore` |
 | UI state (sidebar, toast queue) | Zustand `uiStore` |
 | Local UI state (dropdown open…) | `useState` |
+
+---
+
+## 9. Product Search Contract
+
+- Product Management search still uses the public `keyword` query param. Do not rename it and do not add `searchText`.
+- Backend product keyword search now runs on MariaDB FULLTEXT over an internal `products.search_text` column. That field is backend-only and must never be sent to or rendered by the frontend.
+- FE sends the user’s raw keyword after trimming leading/trailing whitespace only. Do not lowercase, strip accents, or otherwise normalize Vietnamese input on the client.
+- When `keyword` is blank, FE omits it from the request and backend falls back to normal filtering.
+- When `keyword` has text, backend controls relevance ordering. FE must not client-filter, client-rerank, or try to reproduce FULLTEXT relevance.
+- Product list pagination uses `PagedResponse` fields: `items`, `page`, `size`, `totalItems`, `totalPages`, `hasNext`, `hasPrevious`.
+- Admin-only maintenance endpoint: `POST /api/v1/admin/products/search/reindex`.
 
 ### Role-based access
 

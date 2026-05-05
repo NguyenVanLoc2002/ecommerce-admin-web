@@ -176,11 +176,13 @@ export interface ApiResponse<T> {
 }
 
 export interface PaginatedResponse<T> {
-  content: T[];
-  totalElements: number;
+  items: T[];
+  totalItems: number;
   totalPages: number;
-  number: number;   // zero-based
+  page: number;     // zero-based
   size: number;
+  hasNext: boolean;
+  hasPrevious: boolean;
 }
 
 export interface ApiError {
@@ -431,7 +433,7 @@ Every screen must handle all of the following. None can be omitted.
 | Initial load | First render | `<SkeletonTable />` or `<SkeletonDetail />` |
 | Filter/sort/page change | User action after initial load | Spinner in table body; keep headers visible |
 | Action loading | Mutation in flight | Button spinner + disabled; label → "Saving…" |
-| Empty (no data) | `content.length === 0` | `<EmptyState icon message cta />` |
+| Empty (no data) | `items.length === 0` | `<EmptyState icon message cta />` |
 | Error (GET) | Non-2xx or network failure | `<ErrorCard message onRetry />` |
 | Validation error | 422 `fieldErrors` | Inline per-field message; red border on input |
 | Forbidden | 403 | `<ForbiddenState />` with back button |
@@ -613,3 +615,5 @@ When implementing features:
 - Keyword/text search inputs: 300 ms debounce before firing API request.
 - Numeric filter inputs: 500 ms debounce.
 - Show a spinner inside the search input while the debounced request is in-flight.
+- Product keyword search uses backend FULLTEXT. FE must keep sending the public `keyword` param, trim only leading/trailing whitespace, preserve Vietnamese accents, and never send or display `searchText` / `search_text`.
+- When product keyword search is active, FE must trust backend relevance ordering and must not client-filter or client-resort the returned product list.

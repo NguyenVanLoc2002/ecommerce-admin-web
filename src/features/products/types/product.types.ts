@@ -6,6 +6,17 @@ import type {
 } from '@/shared/types/api.types';
 import type { ProductStatus, VariantStatus } from '@/shared/types/enums';
 
+export const PRODUCT_KEYWORD_SORT_FIELDS = [
+  'createdAt',
+  'updatedAt',
+  'name',
+  'status',
+  'featured',
+] as const;
+
+export type ProductKeywordSortField =
+  (typeof PRODUCT_KEYWORD_SORT_FIELDS)[number];
+
 export interface ProductCategory {
   id: EntityId;
   name: string;
@@ -66,7 +77,7 @@ export interface ProductMedia {
   variantId: EntityId | null;
 }
 
-export interface ProductListItem extends SoftDeletableRecord {
+export interface ProductListItemResponse extends SoftDeletableRecord {
   id: EntityId;
   name: string;
   slug: string;
@@ -79,11 +90,14 @@ export interface ProductListItem extends SoftDeletableRecord {
   brandName: string | null;
   categoryNames: string[];
   createdAt: string;
+}
+
+export interface ProductListItem extends ProductListItemResponse {
   variantCount: number;
   activeVariantCount: number;
 }
 
-export interface Product extends ProductListItem {
+export interface ProductDetailResponse extends ProductListItemResponse {
   description: string | null;
   brand: ProductBrand | null;
   categories: ProductCategory[];
@@ -92,14 +106,23 @@ export interface Product extends ProductListItem {
   updatedAt: string;
 }
 
+export interface Product extends ProductDetailResponse {
+  variantCount: number;
+  activeVariantCount: number;
+}
+
 export interface ProductListParams extends PaginationParams, SoftDeleteFilterParams {
   keyword?: string;
-  status?: string;
+  status?: ProductStatus;
   categoryId?: EntityId;
   brandId?: EntityId;
   minPrice?: number;
   maxPrice?: number;
-  featured?: string;
+  featured?: boolean;
+}
+
+export interface ReindexResult {
+  totalProcessed: number;
 }
 
 export interface VariantListParams extends SoftDeleteFilterParams {}
