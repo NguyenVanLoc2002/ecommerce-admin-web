@@ -6,21 +6,30 @@ export const Role = {
 export type Role = (typeof Role)[keyof typeof Role];
 
 export interface AuthUser {
-  id: number;
-  email: string;
-  firstName: string;
-  lastName: string;
+  id?: string | number | null;
+  email?: string;
+  firstName?: string;
+  lastName?: string;
   phoneNumber?: string;
-  status: string;
+  status?: string;
   roles: string[];
-  createdAt: string;
+  createdAt?: string;
 }
 
-export interface Tokens {
+export interface AccessTokenResponse {
   accessToken: string;
-  refreshToken: string;
   tokenType?: string;
   expiresIn?: number;
+  user?: AuthUser | null;
+}
+
+export interface LegacyLoginResponse {
+  user: AuthUser;
+  tokens: {
+    accessToken: string;
+    tokenType?: string;
+    expiresIn?: number;
+  };
 }
 
 export interface LoginRequest {
@@ -28,18 +37,6 @@ export interface LoginRequest {
   password: string;
 }
 
-export interface LoginResponse {
-  user: AuthUser;
-  tokens: Tokens;
-}
+export type LoginResponse = AccessTokenResponse;
 
-export interface RefreshTokenRequest {
-  refreshToken: string;
-}
-
-export interface RefreshTokenResponse {
-  accessToken: string;
-  refreshToken: string;
-  tokenType?: string;
-  expiresIn?: number;
-}
+export type RefreshTokenResponse = AccessTokenResponse;

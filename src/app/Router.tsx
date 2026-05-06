@@ -24,7 +24,12 @@ import { NotFoundPage } from './pages/NotFoundPage';
 
 export function AuthGuard() {
   const accessToken = useAuthStore((state) => state.accessToken);
+  const isAuthResolved = useAuthStore((state) => state.isAuthResolved);
   const location = useLocation();
+
+  if (!isAuthResolved) {
+    return null;
+  }
 
   if (!accessToken) {
     const redirect = encodeURIComponent(location.pathname + location.search);
@@ -40,6 +45,11 @@ interface RoleGuardProps {
 
 export function RoleGuard({ required }: RoleGuardProps) {
   const role = useAuthStore((state) => state.role);
+  const isAuthResolved = useAuthStore((state) => state.isAuthResolved);
+
+  if (!isAuthResolved) {
+    return null;
+  }
 
   if (!role || !required.includes(role)) {
     return <Navigate to="/403" replace />;

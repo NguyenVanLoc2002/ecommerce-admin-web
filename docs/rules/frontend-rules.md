@@ -21,7 +21,7 @@
 | Variant Styling | class-variance-authority (`cva`) | latest |
 
 **Backend API**: `http://localhost:8080/api/v1` (via `VITE_API_BASE_URL`)
-**Auth**: JWT Bearer token (access + refresh)
+**Auth**: Bearer access token + HttpOnly refresh-token cookie
 **Roles**: `SUPER_ADMIN > ADMIN > STAFF`
 
 Do not add libraries outside this stack without explicit justification.
@@ -152,7 +152,10 @@ Never create a second Axios instance in any feature.
 **Request interceptor**: attach `Authorization: Bearer <accessToken>` from `authStore`.
 
 **Response interceptor**:
-- 401 → attempt token refresh via `POST /auth/refresh-token`
+- 401 on protected non-auth requests → attempt token refresh via `POST /auth/refresh-token`
+  - refresh/login/logout must use `withCredentials: true`
+  - do not send `refreshToken` in the request body
+  - never retry `/auth/login`, `/auth/register`, `/auth/refresh-token`, `/auth/logout`
   - Refresh success → retry original request once
   - Refresh fail → `authStore.clear()` → redirect to `/login?redirect=<current-path>` → toast "Session expired. Please sign in again."
 - Implement request queue: if refresh is already in-flight, queue other 401-ed requests and replay after refresh.
@@ -285,16 +288,17 @@ Filter state + pagination state must be synced to URL search params. See §6.
 // src/shared/stores/authStore.ts
 interface AuthState {
   accessToken: string | null;
-  refreshToken: string | null;
   user: AuthUser | null;
   role: Role | null;
-  setTokens: (tokens: Tokens) => void;
-  setUser: (user: AuthUser) => void;
+  isAuthResolved: boolean;
+  setSession: (session: AccessTokenResponse) => void;
+  setAuthResolved: (isResolved: boolean) => void;
   clear: () => void;
 }
 ```
 
-Tokens persisted to `localStorage` via Zustand `persist` middleware. Axios interceptor reads `accessToken` from the store, not directly from localStorage.
+`accessToken` should stay in memory when possible. Never store `refreshToken` in `localStorage` or `sessionStorage`, and never store `accessToken` in `localStorage`.
+`localStorage` is only for non-sensitive admin UI state such as theme, locale, sidebar state, filters, and table preferences.
 
 ### 5.2 URL State for Tables
 

@@ -10,8 +10,6 @@ export function LoginPage() {
   const [searchParams] = useSearchParams();
   const accessToken = useAuthStore((s) => s.accessToken);
 
-  // Redirect users who are already authenticated (e.g., direct URL visit or
-  // page refresh on /login while a valid session exists in localStorage).
   useEffect(() => {
     if (accessToken) {
       const redirect = searchParams.get('redirect');

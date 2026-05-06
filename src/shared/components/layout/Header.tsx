@@ -1,20 +1,12 @@
 import { Menu, LogOut } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { useAuthStore } from '@/shared/stores/authStore';
+import { useLogout } from '@/shared/hooks/useLogout';
 import { useUiStore } from '@/shared/stores/uiStore';
-import { routes } from '@/constants/routes';
 import { Button } from '@/shared/components/ui/Button';
 import { Breadcrumb } from './Breadcrumb';
 
 export function Header() {
   const toggleSidebar = useUiStore((s) => s.toggleSidebar);
-  const clear = useAuthStore((s) => s.clear);
-  const navigate = useNavigate();
-
-  const handleLogout = () => {
-    clear();
-    navigate(routes.login);
-  };
+  const logout = useLogout();
 
   return (
     <header className="flex h-16 shrink-0 items-center justify-between border-b border-gray-200 bg-white px-4 lg:px-6">
@@ -38,7 +30,7 @@ export function Header() {
         <Button
           variant="ghost"
           size="icon-sm"
-          onClick={handleLogout}
+          onClick={() => logout()}
           aria-label="Log out"
           title="Log out"
         >

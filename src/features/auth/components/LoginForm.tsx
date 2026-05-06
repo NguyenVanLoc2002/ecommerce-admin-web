@@ -49,7 +49,13 @@ export function LoginForm() {
 
   return (
     <FormProvider {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} noValidate className="space-y-5">
+      <form
+        onSubmit={(event) => {
+          void form.handleSubmit(onSubmit)(event);
+        }}
+        noValidate
+        className="space-y-5"
+      >
         <FormField
           name="email"
           label="Email address"

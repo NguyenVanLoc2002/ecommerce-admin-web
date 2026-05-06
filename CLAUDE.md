@@ -14,7 +14,7 @@ Admin Web cho hệ thống **Fashion Shop** — giao diện quản trị dành c
 - React Router v6 (routing)
 
 **Backend**: REST API tại `http://localhost:8080/api/v1`
-**Auth**: JWT Bearer token (access + refresh)
+**Auth**: Bearer access token + HttpOnly refresh-token cookie
 **Roles**: `SUPER_ADMIN > ADMIN > STAFF`
 
 ---
@@ -200,16 +200,19 @@ export const apiClient = axios.create({
 });
 ```
 
-**Request interceptor**: Attach `Authorization: Bearer <accessToken>` từ `authStore`.
+**Request interceptor**: Attach `Authorization: Bearer <accessToken>` from the in-memory `authStore`.
 
 **Response interceptor**:
-- 401 → attempt token refresh via `POST /auth/refresh-token`
-  - Refresh success → retry original request once
-  - Refresh fail → clear store → redirect to `/login?redirect=<path>`
+- 401 on protected non-auth requests → attempt token refresh via `POST /auth/refresh-token`
+  - send `withCredentials: true`
+  - do not send `refreshToken` in the request body
+  - never retry `/auth/login`, `/auth/register`, `/auth/refresh-token`, `/auth/logout`
+  - refresh success → retry original request once with a one-time `_retry` flag
+  - refresh fail → clear local auth state → redirect to `/login?redirect=<path>`
 - Unwrap `data` field từ `ApiResponse<T>` wrapper trước khi trả về caller
 - Normalize `fieldErrors` array thành object `{ [field]: message }` cho React Hook Form `setError`
 
-Chỉ có một Axios instance. Không tạo thêm instance trong các feature.
+Only protected API calls use `Authorization`. Login, refresh, and logout must use `withCredentials: true` so the browser can send the refresh cookie.
 
 ### 4.2 Response Types
 
@@ -547,32 +550,27 @@ Không dùng `alert()`, `confirm()` native browser. Dùng `useConfirmDialog` hoo
 
 interface AuthState {
   accessToken: string | null;
-  refreshToken: string | null;
   user: AuthUser | null;
   role: Role | null;
-  setTokens: (tokens: Tokens) => void;
-  setUser: (user: AuthUser) => void;
+  isAuthResolved: boolean;
+  setSession: (session: AccessTokenResponse) => void;
+  setAuthResolved: (isResolved: boolean) => void;
   clear: () => void;
 }
 
-export const useAuthStore = create<AuthState>()(
-  persist(
-    (set) => ({
-      accessToken: null,
-      refreshToken: null,
-      user: null,
-      role: null,
-      setTokens: (tokens) => set(tokens),
-      setUser: (user) => set({ user, role: user.roles[0] }),
-      clear: () => set({ accessToken: null, refreshToken: null, user: null, role: null }),
-    }),
-    { name: 'auth-storage' }
-  )
-);
+export const useAuthStore = create<AuthState>()((set) => ({
+  accessToken: null,
+  user: null,
+  role: null,
+  isAuthResolved: false,
+  setSession: ({ accessToken, user }) => set({ accessToken, user, role: null }),
+  setAuthResolved: (isAuthResolved) => set({ isAuthResolved }),
+  clear: () => set({ accessToken: null, user: null, role: null }),
+}));
 ```
 
-Tokens được persist vào `localStorage` qua Zustand `persist` middleware.
-Axios interceptor đọc `accessToken` từ store, không từ localStorage trực tiếp.
+`accessToken` stays in memory only. Frontend must never persist `refreshToken` in `localStorage` or `sessionStorage`, and must never persist `accessToken` in `localStorage`.
+Use `localStorage` only for non-sensitive UI state such as theme, locale, sidebar state, filters, and page-size preferences.
 
 ### 6.3 UI Store
 
@@ -841,15 +839,19 @@ Complete #1010
 ```env
 # .env.local
 VITE_API_BASE_URL=http://localhost:8080/api/v1
+VITE_SITE_URL=http://localhost:5173
 VITE_APP_TITLE=Fashion Shop Admin
 ```
 
 ```env
 # .env.production
 VITE_API_BASE_URL=https://api.fashionshop.com/api/v1
+VITE_SITE_URL=https://admin.fashionshop.com
 VITE_APP_TITLE=Fashion Shop Admin
 ```
 
+`VITE_SITE_URL` must match the frontend origin allowed by backend CORS/cookie settings.
+Login, refresh, and logout rely on the backend HttpOnly refresh-token cookie, so local development must keep origin, cookie attributes, and `allowCredentials` aligned.
 Không commit file `.env.local` hay `.env.production`. Chỉ commit `.env.example`.
 
 ---
