@@ -83,7 +83,7 @@ Sau đó điền giá trị vào `.env.local` (xem [§4 Environment Variables](#
 
 ```env
 VITE_API_BASE_URL=http://localhost:8080/api/v1
-VITE_SITE_URL=http://localhost:5173
+VITE_SITE_URL=http://localhost:5174
 VITE_APP_TITLE=Fashion Shop Admin
 ```
 
@@ -99,7 +99,7 @@ VITE_APP_TITLE=Fashion Shop Admin
 
 ```env
 VITE_API_BASE_URL=http://localhost:8080/api/v1
-VITE_SITE_URL=http://localhost:5173
+VITE_SITE_URL=http://localhost:5174
 VITE_APP_TITLE=Fashion Shop Admin
 ```
 
@@ -116,6 +116,7 @@ VITE_APP_TITLE=Fashion Shop Admin
 - `POST /api/v1/auth/login` trả `accessToken` trong JSON body và backend set `refreshToken` bằng HttpOnly cookie.
 - `POST /api/v1/auth/refresh-token` đọc cookie, không gửi `refreshToken` trong request body.
 - `POST /api/v1/auth/logout` phải gửi credentials để backend clear refresh cookie.
+- Admin logout luôn clear access token, user state, và React Query cache ở frontend ngay khi request logout kết thúc, kể cả khi backend trả lỗi hoặc cookie đã mất.
 - Admin-web chỉ giữ `accessToken` trong memory. Không lưu `accessToken` hay `refreshToken` vào `localStorage`.
 - `localStorage`/`sessionStorage` chỉ dùng cho UI data không nhạy cảm như theme, locale, sidebar state, page size, table preferences.
 - Role/permission state ở frontend chỉ để UI gating. Backend vẫn là source of truth.
@@ -123,8 +124,10 @@ VITE_APP_TITLE=Fashion Shop Admin
 ### Local development cookies/CORS
 
 - Frontend phải gọi login/refresh/logout với `withCredentials: true` để browser chấp nhận và gửi lại refresh cookie.
+- Frontend không gửi `refreshToken` trong request body cho login/refresh/logout.
 - Backend phải allow credentials cho `VITE_SITE_URL`, và cookie attributes phải phù hợp với môi trường local hiện tại.
 - Nếu session restore không chạy sau reload, kiểm tra trước: origin của frontend, backend CORS allow-credentials, cookie path `/api/v1/auth`, và `SameSite`/`Secure` của refresh cookie.
+- Theo `docs/api/api-common.md`, backend hiện đang stateless và đã tắt CSRF; admin-web hiện không cần gửi `X-XSRF-TOKEN` cho logout.
 
 ---
 
@@ -136,7 +139,7 @@ VITE_APP_TITLE=Fashion Shop Admin
 npm run dev
 ```
 
-App chạy tại: **http://localhost:5173**
+App chạy tại: **http://localhost:5174**
 
 ### Lint
 

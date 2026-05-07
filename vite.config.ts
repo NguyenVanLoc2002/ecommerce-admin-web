@@ -4,7 +4,16 @@ import { fileURLToPath, URL } from 'node:url';
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
-  const siteUrl = env.VITE_SITE_URL || 'http://localhost:5173';
+  const defaultSiteUrl = 'http://localhost:5174';
+  const siteUrl = env.VITE_SITE_URL || defaultSiteUrl;
+  const serverPort = (() => {
+    try {
+      const port = new URL(siteUrl).port;
+      return port ? Number.parseInt(port, 10) : 5174;
+    } catch {
+      return 5174;
+    }
+  })();
 
   return {
     plugins: [react()],
@@ -14,7 +23,7 @@ export default defineConfig(({ mode }) => {
       },
     },
     server: {
-      port: 5173,
+      port: serverPort,
       proxy: {
         '/api': {
           target: 'http://localhost:8080',

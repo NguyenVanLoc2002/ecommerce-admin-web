@@ -56,6 +56,7 @@ export function purgeLegacyAuthStorage() {
 
 export function clearClientAuthState() {
   purgeLegacyAuthStorage();
+  void queryClient.cancelQueries();
   useAuthStore.getState().clear();
   queryClient.clear();
 }

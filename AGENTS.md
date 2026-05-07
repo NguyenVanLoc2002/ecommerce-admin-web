@@ -22,7 +22,8 @@ Use `docs/api/api-common.md` and `docs/api/admin-api-contract.md` as the only ad
 
 - On app startup, remove legacy refresh-token keys such as `auth-storage` and `fashion-shop.refresh-token-hint`, then attempt cookie-based refresh.
 - On refresh failure, clear in-memory auth state and avoid retry loops.
-- On logout, clear local auth state and let the backend clear the cookie.
+- On logout, call the cookie-based backend endpoint with credentials, then clear local auth state and let the backend clear the cookie.
+- If logout fails, still clear local auth state and redirect to login.
 
 ## Environment
 

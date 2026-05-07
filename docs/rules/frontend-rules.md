@@ -156,11 +156,13 @@ Never create a second Axios instance in any feature.
   - refresh/login/logout must use `withCredentials: true`
   - do not send `refreshToken` in the request body
   - never retry `/auth/login`, `/auth/register`, `/auth/refresh-token`, `/auth/logout`
-  - Refresh success → retry original request once
-  - Refresh fail → `authStore.clear()` → redirect to `/login?redirect=<current-path>` → toast "Session expired. Please sign in again."
+- Refresh success → retry original request once
+- Refresh fail → `authStore.clear()` → redirect to `/login?redirect=<current-path>` → toast "Session expired. Please sign in again."
+- Logout must call `POST /auth/logout` with `withCredentials: true`, never include `refreshToken` in the body, and always clear in-memory auth state plus React Query cache after the request settles, even on `401/403/5xx` or network failure.
 - Implement request queue: if refresh is already in-flight, queue other 401-ed requests and replay after refresh.
 - Unwrap `data` field from `ApiResponse<T>` wrapper before returning to caller.
 - Normalize `fieldErrors[]` array to `{ [field]: message }` for React Hook Form `setError`.
+- Current backend docs say CSRF is disabled for this stateless JWT setup, so do not invent a client-side CSRF token flow for logout until the backend contract changes.
 
 **Network retry**:
 - Retry GET requests up to 2 times with 1 s delay on network failure.
@@ -299,6 +301,7 @@ interface AuthState {
 
 `accessToken` should stay in memory when possible. Never store `refreshToken` in `localStorage` or `sessionStorage`, and never store `accessToken` in `localStorage`.
 `localStorage` is only for non-sensitive admin UI state such as theme, locale, sidebar state, filters, and table preferences.
+Logout must not attempt to delete the HttpOnly refresh cookie in JavaScript; backend logout clears it server-side.
 
 ### 5.2 URL State for Tables
 

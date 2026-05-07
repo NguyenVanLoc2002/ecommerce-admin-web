@@ -209,10 +209,12 @@ export const apiClient = axios.create({
   - never retry `/auth/login`, `/auth/register`, `/auth/refresh-token`, `/auth/logout`
   - refresh success → retry original request once with a one-time `_retry` flag
   - refresh fail → clear local auth state → redirect to `/login?redirect=<path>`
+- logout must call `POST /auth/logout` with `withCredentials: true`, never send `refreshToken` in the request body, and must clear local auth state even if the backend request fails
 - Unwrap `data` field từ `ApiResponse<T>` wrapper trước khi trả về caller
 - Normalize `fieldErrors` array thành object `{ [field]: message }` cho React Hook Form `setError`
 
 Only protected API calls use `Authorization`. Login, refresh, and logout must use `withCredentials: true` so the browser can send the refresh cookie.
+Current backend docs also state CSRF is disabled for this stateless JWT flow, so frontend should not add an `X-XSRF-TOKEN` logout header unless the contract changes.
 
 ### 4.2 Response Types
 
@@ -839,7 +841,7 @@ Complete #1010
 ```env
 # .env.local
 VITE_API_BASE_URL=http://localhost:8080/api/v1
-VITE_SITE_URL=http://localhost:5173
+VITE_SITE_URL=http://localhost:5174
 VITE_APP_TITLE=Fashion Shop Admin
 ```
 

@@ -30,7 +30,8 @@ export function Header() {
         <Button
           variant="ghost"
           size="icon-sm"
-          onClick={() => logout()}
+          onClick={() => logout.mutate()}
+          isLoading={logout.isPending}
           aria-label="Log out"
           title="Log out"
         >
