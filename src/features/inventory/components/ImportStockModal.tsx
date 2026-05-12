@@ -62,10 +62,18 @@ export function ImportStockModal({
     });
   }, [context, form, open]);
 
+  const handleClose = () => {
+    if (isSubmitting) {
+      return;
+    }
+
+    onClose();
+  };
+
   return (
     <Modal
       open={open}
-      onClose={onClose}
+      onClose={handleClose}
       title="Import Stock"
       description="Add inventory to a warehouse."
       size="md"
@@ -85,6 +93,11 @@ export function ImportStockModal({
         <form
           id="import-stock-form"
           onSubmit={(event) => {
+            if (isSubmitting) {
+              event.preventDefault();
+              return;
+            }
+
             void form.handleSubmit(onSubmit)(event);
           }}
           noValidate

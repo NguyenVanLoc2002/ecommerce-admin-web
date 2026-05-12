@@ -129,6 +129,14 @@ VITE_APP_TITLE=Fashion Shop Admin
 - Nếu session restore không chạy sau reload, kiểm tra trước: origin của frontend, backend CORS allow-credentials, cookie path `/api/v1/auth`, và `SameSite`/`Secure` của refresh cookie.
 - Theo `docs/api/api-common.md`, backend hiện đang stateless và đã tắt CSRF; admin-web hiện không cần gửi `X-XSRF-TOKEN` cho logout.
 
+### Phase 3 admin concurrency notes
+
+- Admin APIs do **not** currently require client-supplied `Idempotency-Key` unless `docs/api/admin-api-contract.md` explicitly says otherwise.
+- Customer-only idempotency remains limited to `POST /api/v1/orders` and `POST /api/v1/payments/order/{orderId}/initiate`; that behavior belongs in Customer Web, not Admin Web.
+- Admin mutation screens must prevent duplicate submit via pending-state UI: disable action buttons, disable modal submit, and avoid closing the form/modal until the mutation succeeds.
+- After admin order, shipment, invoice, payment, or inventory mutations, refetch the related detail/list queries instead of trusting stale local UI state.
+- On concurrency-style backend errors such as `ORDER_STATUS_INVALID`, `CONFLICT`, `OPTIMISTIC_LOCK_CONFLICT`, `PAYMENT_ALREADY_PROCESSED`, or `SHIPMENT_ALREADY_EXISTS`, show a clear toast and refresh the latest server state.
+
 ---
 
 ## 5. Run

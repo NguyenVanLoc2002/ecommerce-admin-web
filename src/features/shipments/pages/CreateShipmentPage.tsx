@@ -1,13 +1,17 @@
-import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { routes } from '@/constants/routes';
 import { AdminLayout } from '@/shared/components/layout/AdminLayout';
 import { PageHeader } from '@/shared/components/layout/PageHeader';
 import { Button } from '@/shared/components/ui/Button';
 import { toast } from '@/shared/stores/uiStore';
 import { AppError } from '@/shared/types/api.types';
-import { routes } from '@/constants/routes';
-import { useCreateShipment } from '../hooks/useCreateShipment';
+import {
+  getPhase3AdminErrorMessage,
+  isConcurrencyErrorCode,
+} from '@/shared/utils/adminPhase3Errors';
 import { CreateShipmentForm } from '../components/CreateShipmentForm';
+import { useCreateShipment } from '../hooks/useCreateShipment';
 import type { CreateShipmentFormValues } from '../schemas/createShipmentSchema';
 
 export function CreateShipmentPage() {
@@ -15,6 +19,10 @@ export function CreateShipmentPage() {
   const createShipment = useCreateShipment();
 
   const handleSubmit = async (values: CreateShipmentFormValues) => {
+    if (createShipment.isPending) {
+      return;
+    }
+
     try {
       const shipment = await createShipment.mutateAsync({
         orderId: values.orderId,
@@ -25,18 +33,14 @@ export function CreateShipmentPage() {
       });
       toast.success('Shipment created. The order has been advanced to Shipped.');
       navigate(routes.shipments.detail(shipment.id));
-    } catch (err) {
-      if (err instanceof AppError) {
-        // Field-level errors are handled inside CreateShipmentForm via the thrown error;
-        // only non-field errors are toasted here.
-        if (!err.fieldErrors?.length) {
-          if (err.code === 'ORDER_NOT_FOUND') {
-            toast.error('Order not found. Please check the Order ID.');
-          } else if (err.code === 'SHIPMENT_ALREADY_EXISTS') {
-            toast.error('A shipment already exists for this order.');
-          } else {
-            toast.error(err.message || 'Failed to create shipment. Please try again.');
-          }
+    } catch (error) {
+      if (error instanceof AppError) {
+        if (!error.fieldErrors?.length) {
+          toast.error(getPhase3AdminErrorMessage(error, 'Failed to create shipment. Please try again.'));
+        }
+
+        if (error.code === 'SHIPMENT_ALREADY_EXISTS' || isConcurrencyErrorCode(error.code)) {
+          return;
         }
       } else {
         toast.error('Failed to create shipment. Please try again.');

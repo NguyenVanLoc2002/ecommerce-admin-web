@@ -1,10 +1,10 @@
-import { useEffect } from 'react';
-import { useForm, FormProvider } from 'react-hook-form';
+import { useEffect, useMemo } from 'react';
+import { FormProvider, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Modal } from '@/shared/components/ui/Modal';
 import { Button } from '@/shared/components/ui/Button';
-import { FormSelect } from '@/shared/components/form/FormSelect';
+import { Modal } from '@/shared/components/ui/Modal';
 import { FormField } from '@/shared/components/form/FormField';
+import { FormSelect } from '@/shared/components/form/FormSelect';
 import type { ShipmentStatus } from '@/shared/types/enums';
 import {
   updateStatusSchema,
@@ -44,12 +44,18 @@ export function ShipmentStatusUpdateModal({
   isSubmitting,
   onSubmit,
 }: ShipmentStatusUpdateModalProps) {
-  const allowedStatuses = ALLOWED_TRANSITIONS[currentStatus] ?? [];
-
-  const statusOptions = allowedStatuses.map((s) => ({
-    value: s,
-    label: STATUS_LABELS[s],
-  }));
+  const allowedStatuses = useMemo(
+    () => ALLOWED_TRANSITIONS[currentStatus] ?? [],
+    [currentStatus],
+  );
+  const statusOptions = useMemo(
+    () =>
+      allowedStatuses.map((status) => ({
+        value: status,
+        label: STATUS_LABELS[status],
+      })),
+    [allowedStatuses],
+  );
 
   const form = useForm<UpdateStatusFormValues>({
     resolver: zodResolver(updateStatusSchema),
@@ -59,18 +65,27 @@ export function ShipmentStatusUpdateModal({
     },
   });
 
-  // Reset form when reopened so stale values don't persist across sessions.
   useEffect(() => {
     if (open) {
       form.reset({ status: allowedStatuses[0], note: '' });
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
+  }, [allowedStatuses, form, open]);
 
   const handleClose = () => {
-    if (isSubmitting) return;
+    if (isSubmitting) {
+      return;
+    }
+
     form.reset();
     onClose();
+  };
+
+  const handleSubmit = () => {
+    if (isSubmitting) {
+      return;
+    }
+
+    void form.handleSubmit(onSubmit)();
   };
 
   return (
@@ -87,11 +102,7 @@ export function ShipmentStatusUpdateModal({
             <Button variant="secondary" size="sm" onClick={handleClose} disabled={isSubmitting}>
               Cancel
             </Button>
-            <Button
-              size="sm"
-              isLoading={isSubmitting}
-              onClick={form.handleSubmit(onSubmit)}
-            >
+            <Button size="sm" isLoading={isSubmitting} onClick={handleSubmit}>
               Update Status
             </Button>
           </>
@@ -114,13 +125,15 @@ export function ShipmentStatusUpdateModal({
               label="New Status"
               required
               options={statusOptions}
+              disabled={isSubmitting}
             />
             <FormField
               name="note"
               label="Note"
-              placeholder="Optional note about this status change…"
+              placeholder="Optional note about this status change..."
               multiline
               rows={3}
+              disabled={isSubmitting}
             />
           </div>
         </FormProvider>

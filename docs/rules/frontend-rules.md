@@ -547,12 +547,27 @@ After login success: read `?redirect` param and navigate to that path.
 
 | Code | Handling |
 |---|---|
-| `ORDER_STATUS_INVALID` | Toast "Order status changed. Refreshing…" + `refetch()` after 1 s |
-| `PAYMENT_ALREADY_PROCESSED` | Toast error; disable button |
+| `ORDER_STATUS_INVALID` | Toast clear concurrency message + refetch latest order detail/list |
+| `PAYMENT_ALREADY_PROCESSED` | Toast clear message + refetch latest payment/order detail |
+| `SHIPMENT_ALREADY_EXISTS` | Toast clear message + refetch latest shipment/order data |
+| `CONFLICT` | Treat as stale/concurrent data; toast clear message + refetch latest resource |
+| `OPTIMISTIC_LOCK_CONFLICT` | Treat as stale/concurrent data; toast clear message + refetch latest resource |
+| `IDEMPOTENCY_KEY_REQUIRED` | Show mapped backend message if ever returned; do not add the header globally for admin APIs |
+| `IDEMPOTENCY_KEY_TOO_LONG` | Show mapped backend message if ever returned |
+| `IDEMPOTENCY_KEY_CONFLICT` | Show mapped backend message if ever returned |
+| `IDEMPOTENCY_REQUEST_IN_PROGRESS` | Show mapped backend message if ever returned |
+| `IDEMPOTENCY_REPLAY_NOT_AVAILABLE` | Show mapped backend message if ever returned |
 | `INVENTORY_NOT_ENOUGH` | Toast error with specific message |
-| `CONFLICT` (409) | Map to field error via `setError` |
 | `INTERNAL_SERVER_ERROR` | Toast "Something went wrong. Please try again." |
 | `ACCOUNT_DISABLED` | Toast "Your account has been disabled. Contact support." |
+
+### Phase 3 admin mutation rules
+
+- Do not attach `Idempotency-Key` globally in the admin axios client or admin services.
+- Admin APIs currently rely on pending-state duplicate-submit prevention instead: disable action buttons, disable modal submit, and block repeated submit while the mutation is pending.
+- Close mutation modals only after a successful response. Keep them open on failure so the user can review errors.
+- After successful admin order, shipment, invoice, payment, and inventory mutations, invalidate/refetch the related detail and list queries.
+- On `ORDER_STATUS_INVALID`, `CONFLICT`, `OPTIMISTIC_LOCK_CONFLICT`, `PAYMENT_ALREADY_PROCESSED`, or `SHIPMENT_ALREADY_EXISTS`, refresh the latest server state instead of trusting stale local UI.
 
 ### Global Error Boundary
 

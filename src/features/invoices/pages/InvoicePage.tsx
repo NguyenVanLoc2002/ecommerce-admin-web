@@ -1,21 +1,25 @@
+import { ArrowLeft, FileText } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, FileText } from 'lucide-react';
+import { routes } from '@/constants/routes';
+import { EmptyState } from '@/shared/components/feedback/EmptyState';
+import { ErrorCard } from '@/shared/components/feedback/ErrorCard';
+import { SkeletonDetail } from '@/shared/components/feedback/Skeleton';
 import { AdminLayout } from '@/shared/components/layout/AdminLayout';
 import { PageHeader } from '@/shared/components/layout/PageHeader';
 import { useBreadcrumbLabel } from '@/shared/components/layout';
 import { Button } from '@/shared/components/ui/Button';
 import { CopyValueButton } from '@/shared/components/ui/CopyValueButton';
-import { SkeletonDetail } from '@/shared/components/feedback/Skeleton';
-import { ErrorCard } from '@/shared/components/feedback/ErrorCard';
-import { EmptyState } from '@/shared/components/feedback/EmptyState';
 import { toast } from '@/shared/stores/uiStore';
 import { AppError } from '@/shared/types/api.types';
-import { routes } from '@/constants/routes';
+import {
+  getPhase3AdminErrorMessage,
+  isConcurrencyErrorCode,
+} from '@/shared/utils/adminPhase3Errors';
+import { InvoiceStatusUpdateModal } from '../components/InvoiceStatusUpdateModal';
+import { InvoiceView } from '../components/InvoiceView';
 import { useInvoice } from '../hooks/useInvoice';
 import { useUpdateInvoiceStatus } from '../hooks/useUpdateInvoiceStatus';
-import { InvoiceView } from '../components/InvoiceView';
-import { InvoiceStatusUpdateModal } from '../components/InvoiceStatusUpdateModal';
 import type { UpdateInvoiceStatusFormValues } from '../schemas/updateInvoiceStatusSchema';
 
 export function InvoicePage() {
@@ -34,17 +38,20 @@ export function InvoicePage() {
   );
 
   const handleStatusUpdate = async (values: UpdateInvoiceStatusFormValues) => {
+    if (updateInvoiceStatus.isPending) {
+      return;
+    }
+
     try {
       await updateInvoiceStatus.mutateAsync(values);
       toast.success('Invoice status updated.');
       setStatusModalOpen(false);
-    } catch (err) {
-      if (err instanceof AppError) {
-        if (err.code === 'INVOICE_STATUS_INVALID') {
-          toast.error('Invoice was updated by another user. Refreshing...');
-          setTimeout(() => void refetch(), 1_000);
-        } else {
-          toast.error(err.message || 'Failed to update invoice.');
+    } catch (error) {
+      if (error instanceof AppError) {
+        toast.error(getPhase3AdminErrorMessage(error, 'Failed to update invoice.'));
+
+        if (error.code === 'INVOICE_STATUS_INVALID' || isConcurrencyErrorCode(error.code)) {
+          void refetch();
         }
       } else {
         toast.error('Failed to update invoice. Please try again.');
@@ -130,7 +137,11 @@ export function InvoicePage() {
             actions={
               <>
                 <CopyValueButton value={invoice.id} label="Copy ID" />
-                <Button size="sm" onClick={() => setStatusModalOpen(true)}>
+                <Button
+                  size="sm"
+                  disabled={updateInvoiceStatus.isPending}
+                  onClick={() => setStatusModalOpen(true)}
+                >
                   Update Status
                 </Button>
               </>

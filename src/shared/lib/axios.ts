@@ -84,6 +84,17 @@ function redirectToLogin() {
   window.location.replace(`/login?redirect=${redirectPath}`);
 }
 
+function isApiErrorResponse(value: unknown): value is ApiError {
+  return (
+    value !== null &&
+    typeof value === 'object' &&
+    'code' in value &&
+    'message' in value &&
+    'path' in value &&
+    'timestamp' in value
+  );
+}
+
 instance.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   const token = useAuthStore.getState().accessToken;
   if (token) {
@@ -164,8 +175,8 @@ instance.interceptors.response.use(
       }
     }
 
-    if (error.response?.data) {
-      const apiError = error.response.data as ApiError;
+    if (isApiErrorResponse(error.response?.data)) {
+      const apiError = error.response.data;
       throw new AppError(apiError);
     }
 

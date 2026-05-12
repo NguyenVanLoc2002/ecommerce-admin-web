@@ -33,7 +33,17 @@ export function CreateShipmentForm({
 
   return (
     <FormProvider {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} noValidate>
+      <form
+        onSubmit={(event) => {
+          if (isSubmitting) {
+            event.preventDefault();
+            return;
+          }
+
+          void form.handleSubmit(onSubmit)(event);
+        }}
+        noValidate
+      >
         <div className="space-y-5">
           <div>
             <h3 className="mb-4 text-sm font-semibold text-gray-900">Order</h3>
@@ -43,6 +53,7 @@ export function CreateShipmentForm({
               required
               placeholder="Enter order UUID"
               hint="Enter the UUID of the order to ship."
+              disabled={isSubmitting}
             />
           </div>
 
@@ -54,17 +65,20 @@ export function CreateShipmentForm({
                 label="Carrier"
                 placeholder="e.g. ViettelPost, GHTK, GHN"
                 hint="Shipping carrier name."
+                disabled={isSubmitting}
               />
               <FormField
                 name="trackingNumber"
                 label="Tracking Code"
                 placeholder="e.g. VT123456789VN"
                 hint="Carrier tracking number."
+                disabled={isSubmitting}
               />
               <FormField
                 name="estimatedDeliveryDate"
                 label="Estimated Delivery"
                 type="date"
+                disabled={isSubmitting}
               />
             </div>
           </div>
@@ -76,6 +90,7 @@ export function CreateShipmentForm({
               placeholder="Internal notes about this shipment..."
               multiline
               rows={3}
+              disabled={isSubmitting}
             />
           </div>
 

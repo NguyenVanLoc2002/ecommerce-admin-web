@@ -70,10 +70,18 @@ export function AdjustStockModal({
     });
   }, [context, form, open]);
 
+  const handleClose = () => {
+    if (isSubmitting) {
+      return;
+    }
+
+    onClose();
+  };
+
   return (
     <Modal
       open={open}
-      onClose={onClose}
+      onClose={handleClose}
       title="Adjust Stock"
       description="Apply a correction to the current inventory level."
       size="md"
@@ -93,6 +101,11 @@ export function AdjustStockModal({
         <form
           id="adjust-stock-form"
           onSubmit={(event) => {
+            if (isSubmitting) {
+              event.preventDefault();
+              return;
+            }
+
             void form.handleSubmit(onSubmit)(event);
           }}
           noValidate

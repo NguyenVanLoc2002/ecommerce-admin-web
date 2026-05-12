@@ -23,6 +23,8 @@ Shared response, error, auth, enum, and pagination rules are defined in [api-com
 - The shared auth backend returns only the access token in the JSON response body for all user types.
 - The shared auth backend stores the refresh token in an HttpOnly cookie for all user types.
 - There is no separate admin login controller or separate admin refresh-token mechanism.
+- Admin routes under `/api/v1/admin/**` do **not** currently require a client-supplied `Idempotency-Key` header unless a specific endpoint in this file explicitly says so.
+- The current Phase 3 `Idempotency-Key` contract remains customer-only on `POST /api/v1/orders` and `POST /api/v1/payments/order/{orderId}/initiate` outside the admin surface.
 - URL-level access for `/api/v1/admin/**`: `STAFF`, `ADMIN`, or `SUPER_ADMIN`
 - Some endpoints are stricter via `@PreAuthorize`.
 

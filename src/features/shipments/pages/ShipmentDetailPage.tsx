@@ -1,22 +1,26 @@
+import { ArrowLeft, Truck } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Truck } from 'lucide-react';
+import { routes } from '@/constants/routes';
+import { EmptyState } from '@/shared/components/feedback/EmptyState';
+import { ErrorCard } from '@/shared/components/feedback/ErrorCard';
+import { SkeletonDetail } from '@/shared/components/feedback/Skeleton';
 import { AdminLayout } from '@/shared/components/layout/AdminLayout';
 import { PageHeader } from '@/shared/components/layout/PageHeader';
 import { useBreadcrumbLabel } from '@/shared/components/layout';
 import { Button } from '@/shared/components/ui/Button';
 import { CopyValueButton } from '@/shared/components/ui/CopyValueButton';
-import { SkeletonDetail } from '@/shared/components/feedback/Skeleton';
-import { ErrorCard } from '@/shared/components/feedback/ErrorCard';
-import { EmptyState } from '@/shared/components/feedback/EmptyState';
 import { toast } from '@/shared/stores/uiStore';
 import { AppError } from '@/shared/types/api.types';
-import { routes } from '@/constants/routes';
+import {
+  getPhase3AdminErrorMessage,
+  isConcurrencyErrorCode,
+} from '@/shared/utils/adminPhase3Errors';
+import { ShipmentDetail } from '../components/ShipmentDetail';
+import { ShipmentStatusUpdateModal } from '../components/ShipmentStatusUpdateModal';
 import { useShipment } from '../hooks/useShipment';
 import { useShipmentEvents } from '../hooks/useShipmentEvents';
 import { useUpdateShipmentStatus } from '../hooks/useUpdateShipmentStatus';
-import { ShipmentDetail } from '../components/ShipmentDetail';
-import { ShipmentStatusUpdateModal } from '../components/ShipmentStatusUpdateModal';
 import type { UpdateStatusFormValues } from '../schemas/updateStatusSchema';
 
 export function ShipmentDetailPage() {
@@ -44,6 +48,10 @@ export function ShipmentDetailPage() {
   );
 
   const handleUpdateStatus = async (values: UpdateStatusFormValues) => {
+    if (updateStatus.isPending) {
+      return;
+    }
+
     try {
       await updateStatus.mutateAsync({ status: values.status, description: values.note });
 
@@ -56,13 +64,13 @@ export function ShipmentDetailPage() {
       }
 
       setStatusModalOpen(false);
-    } catch (err) {
-      if (err instanceof AppError) {
-        if (err.code === 'ORDER_STATUS_INVALID') {
-          toast.error('Shipment was updated by another user. Refreshing...');
-          setTimeout(() => void refetch(), 1_000);
-        } else {
-          toast.error(err.message || 'Failed to update shipment status.');
+    } catch (error) {
+      if (error instanceof AppError) {
+        toast.error(getPhase3AdminErrorMessage(error, 'Failed to update shipment status.'));
+
+        if (error.code === 'ORDER_STATUS_INVALID' || isConcurrencyErrorCode(error.code)) {
+          void refetch();
+          void refetchEvents();
         }
       } else {
         toast.error('Failed to update shipment status. Please try again.');

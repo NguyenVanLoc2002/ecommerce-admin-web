@@ -1,29 +1,33 @@
 import { useState } from 'react';
-import { AdminLayout } from '@/shared/components/layout/AdminLayout';
-import { PageHeader } from '@/shared/components/layout/PageHeader';
-import { useTableFilters } from '@/shared/hooks/useTableFilters';
-import { useDebounce } from '@/shared/hooks/useDebounce';
-import { toast } from '@/shared/stores/uiStore';
-import { AppError } from '@/shared/types/api.types';
-import { cn } from '@/shared/utils/cn';
-import { cleanParams } from '@/shared/utils/cleanParams';
-import { useInventoryStock } from '../hooks/useInventoryStock';
-import { useStockMovements } from '../hooks/useStockMovements';
-import { useImportStock } from '../hooks/useImportStock';
-import { useAdjustStock } from '../hooks/useAdjustStock';
-import { useWarehouseOptions } from '../hooks/useWarehouseOptions';
+import { AdjustStockModal } from '../components/AdjustStockModal';
+import { ImportStockModal } from '../components/ImportStockModal';
+import { InventoryFiltersDrawer } from '../components/InventoryFiltersDrawer';
 import { InventoryStockTable } from '../components/InventoryStockTable';
 import { StockMovementsTable } from '../components/StockMovementsTable';
-import { ImportStockModal } from '../components/ImportStockModal';
-import { AdjustStockModal } from '../components/AdjustStockModal';
-import { InventoryFiltersDrawer } from '../components/InventoryFiltersDrawer';
+import { useAdjustStock } from '../hooks/useAdjustStock';
+import { useImportStock } from '../hooks/useImportStock';
+import { useInventoryStock } from '../hooks/useInventoryStock';
+import { useStockMovements } from '../hooks/useStockMovements';
+import { useWarehouseOptions } from '../hooks/useWarehouseOptions';
+import type { AdjustStockFormValues } from '../schemas/adjustStockSchema';
+import type { ImportStockFormValues } from '../schemas/importStockSchema';
 import type {
   InventoryStock,
   InventoryStockParams,
   StockMovementParams,
 } from '../types/inventory.types';
-import type { ImportStockFormValues } from '../schemas/importStockSchema';
-import type { AdjustStockFormValues } from '../schemas/adjustStockSchema';
+import { AdminLayout } from '@/shared/components/layout/AdminLayout';
+import { PageHeader } from '@/shared/components/layout/PageHeader';
+import { useDebounce } from '@/shared/hooks/useDebounce';
+import { useTableFilters } from '@/shared/hooks/useTableFilters';
+import { toast } from '@/shared/stores/uiStore';
+import { AppError } from '@/shared/types/api.types';
+import {
+  getPhase3AdminErrorMessage,
+  isConcurrencyErrorCode,
+} from '@/shared/utils/adminPhase3Errors';
+import { cn } from '@/shared/utils/cn';
+import { cleanParams } from '@/shared/utils/cleanParams';
 
 type ActiveTab = 'stock' | 'movements';
 
@@ -41,6 +45,7 @@ const DEFAULT_STOCK_FILTERS: InventoryStockParams = {
   lowStock: undefined,
   lowStockThreshold: undefined,
 };
+
 const DEFAULT_MOVEMENT_FILTERS: StockMovementParams = {
   page: 0,
   size: 20,
@@ -57,14 +62,20 @@ export function StockPage() {
   const [stockFiltersOpen, setStockFiltersOpen] = useState(false);
   const [stockContext, setStockContext] = useState<InventoryStock | undefined>();
 
-  const [stockFilters, setStockFilters, resetStockFilters] = useTableFilters<InventoryStockParams>(DEFAULT_STOCK_FILTERS, {
-    namespace: 'stock',
-    booleanKeys: ['outOfStock', 'lowStock'],
-    numberKeys: ['lowStockThreshold'],
-  });
-  const [movementFilters, setMovementFilters] = useTableFilters<StockMovementParams>(DEFAULT_MOVEMENT_FILTERS, {
-    namespace: 'movements',
-  });
+  const [stockFilters, setStockFilters, resetStockFilters] = useTableFilters<InventoryStockParams>(
+    DEFAULT_STOCK_FILTERS,
+    {
+      namespace: 'stock',
+      booleanKeys: ['outOfStock', 'lowStock'],
+      numberKeys: ['lowStockThreshold'],
+    },
+  );
+  const [movementFilters, setMovementFilters] = useTableFilters<StockMovementParams>(
+    DEFAULT_MOVEMENT_FILTERS,
+    {
+      namespace: 'movements',
+    },
+  );
 
   const debouncedKeyword = useDebounce(stockFilters.keyword ?? '', 300);
   const stockQueryParams: InventoryStockParams = {
@@ -85,15 +96,41 @@ export function StockPage() {
     }),
   ).length;
 
-  const { data: stockData, isLoading: stockLoading, isError: stockError, refetch: refetchStock } =
-    useInventoryStock(stockQueryParams);
-  const { data: movementsData, isLoading: movementsLoading, isError: movementsError, refetch: refetchMovements } =
-    useStockMovements(movementFilters);
+  const {
+    data: stockData,
+    isLoading: stockLoading,
+    isError: stockError,
+    refetch: refetchStock,
+  } = useInventoryStock(stockQueryParams);
+  const {
+    data: movementsData,
+    isLoading: movementsLoading,
+    isError: movementsError,
+    refetch: refetchMovements,
+  } = useStockMovements(movementFilters);
   const { data: warehouseData } = useWarehouseOptions();
   const importStock = useImportStock();
   const adjustStock = useAdjustStock();
 
   const warehouses = warehouseData ?? [];
+
+  const closeImport = () => {
+    if (importStock.isPending) {
+      return;
+    }
+
+    setImportOpen(false);
+    setStockContext(undefined);
+  };
+
+  const closeAdjust = () => {
+    if (adjustStock.isPending) {
+      return;
+    }
+
+    setAdjustOpen(false);
+    setStockContext(undefined);
+  };
 
   const openImport = (stock?: InventoryStock) => {
     setStockContext(stock);
@@ -106,14 +143,22 @@ export function StockPage() {
   };
 
   const handleImport = async (values: ImportStockFormValues) => {
+    if (importStock.isPending) {
+      return;
+    }
+
     try {
       await importStock.mutateAsync(values);
       toast.success('Stock imported successfully.');
-      setImportOpen(false);
-      setStockContext(undefined);
-    } catch (err) {
-      if (err instanceof AppError) {
-        toast.error(err.message || 'Failed to import stock. Please try again.');
+      closeImport();
+    } catch (error) {
+      if (error instanceof AppError) {
+        toast.error(getPhase3AdminErrorMessage(error, 'Failed to import stock. Please try again.'));
+
+        if (isConcurrencyErrorCode(error.code)) {
+          void refetchStock();
+          void refetchMovements();
+        }
       } else {
         toast.error('Failed to import stock. Please try again.');
       }
@@ -121,14 +166,22 @@ export function StockPage() {
   };
 
   const handleAdjust = async (values: AdjustStockFormValues) => {
+    if (adjustStock.isPending) {
+      return;
+    }
+
     try {
       await adjustStock.mutateAsync(values);
       toast.success('Stock adjusted successfully.');
-      setAdjustOpen(false);
-      setStockContext(undefined);
-    } catch (err) {
-      if (err instanceof AppError) {
-        toast.error(err.message || 'Failed to adjust stock. Please try again.');
+      closeAdjust();
+    } catch (error) {
+      if (error instanceof AppError) {
+        toast.error(getPhase3AdminErrorMessage(error, 'Failed to adjust stock. Please try again.'));
+
+        if (isConcurrencyErrorCode(error.code)) {
+          void refetchStock();
+          void refetchMovements();
+        }
       } else {
         toast.error('Failed to adjust stock. Please try again.');
       }
@@ -148,7 +201,6 @@ export function StockPage() {
           description="Track stock levels across all warehouses."
         />
 
-        {/* Tab bar */}
         <div className="border-b border-gray-200">
           <nav className="-mb-px flex gap-6" aria-label="Inventory tabs">
             {tabs.map((tab) => (
@@ -157,10 +209,10 @@ export function StockPage() {
                 type="button"
                 onClick={() => setActiveTab(tab.id)}
                 className={cn(
-                  'py-3 px-1 text-sm font-medium border-b-2 transition-colors',
+                  'border-b-2 px-1 py-3 text-sm font-medium transition-colors',
                   activeTab === tab.id
                     ? 'border-primary-600 text-primary-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
+                    : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700',
                 )}
               >
                 {tab.label}
@@ -210,10 +262,7 @@ export function StockPage() {
 
       <ImportStockModal
         open={importOpen}
-        onClose={() => {
-          setImportOpen(false);
-          setStockContext(undefined);
-        }}
+        onClose={closeImport}
         context={
           stockContext
             ? {
@@ -232,10 +281,7 @@ export function StockPage() {
 
       <AdjustStockModal
         open={adjustOpen}
-        onClose={() => {
-          setAdjustOpen(false);
-          setStockContext(undefined);
-        }}
+        onClose={closeAdjust}
         context={
           stockContext
             ? {

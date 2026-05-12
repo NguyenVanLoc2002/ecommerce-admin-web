@@ -65,6 +65,10 @@ export function InvoiceStatusUpdateModal({
   };
 
   const handleSaveClick = () => {
+    if (isSubmitting) {
+      return;
+    }
+
     void form.handleSubmit(onSubmit)();
   };
 
@@ -94,6 +98,7 @@ export function InvoiceStatusUpdateModal({
             label="Status"
             required
             options={STATUS_OPTIONS}
+            disabled={isSubmitting}
           />
           <FormField
             name="notes"
@@ -102,6 +107,7 @@ export function InvoiceStatusUpdateModal({
             multiline
             rows={4}
             hint="Up to 1000 characters."
+            disabled={isSubmitting}
           />
         </div>
       </FormProvider>
