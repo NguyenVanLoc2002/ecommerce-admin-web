@@ -3,6 +3,8 @@ import { Drawer } from '@/shared/components/ui/Drawer';
 import { Button } from '@/shared/components/ui/Button';
 import { Select } from '@/shared/components/ui/Select';
 import { Input } from '@/shared/components/ui/Input';
+import { useActiveCarrierOptions } from '@/features/carriers/hooks/useActiveCarrierOptions';
+import { formatEnumLabel } from '@/shared/utils/formatEnumLabel';
 import type { ShipmentStatus } from '@/shared/types/enums';
 import type { ShipmentListParams } from '../types/shipment.types';
 
@@ -33,6 +35,7 @@ export function ShipmentFiltersDrawer({
   onReset,
 }: ShipmentFiltersDrawerProps) {
   const [local, setLocal] = useState<Partial<ShipmentListParams>>({});
+  const { data: carrierOptionsData } = useActiveCarrierOptions();
 
   const merged = { ...filters, ...local };
 
@@ -97,6 +100,21 @@ export function ShipmentFiltersDrawer({
             placeholder="e.g. GHTK"
             value={merged.carrier ?? ''}
             onChange={(e) => set({ carrier: e.target.value || undefined })}
+          />
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <label className="text-sm font-medium text-gray-700">Configured carrier</label>
+          <Select
+            options={[
+              { value: '', label: 'All configured carriers' },
+              ...(carrierOptionsData?.items ?? []).map((carrier) => ({
+                value: carrier.id,
+                label: `${carrier.name} (${formatEnumLabel(carrier.providerType)})`,
+              })),
+            ]}
+            value={merged.carrierId ?? ''}
+            onChange={(e) => set({ carrierId: e.target.value || undefined })}
           />
         </div>
 

@@ -19,6 +19,7 @@ const DEFAULT_FILTERS: ShipmentListParams = {
   orderId: undefined,
   orderCode: undefined,
   carrier: undefined,
+  carrierId: undefined,
   status: undefined,
   dateFrom: undefined,
   dateTo: undefined,

@@ -26,6 +26,10 @@ export const routes = {
     list: '/brands',
   },
 
+  carriers: {
+    list: '/carriers',
+  },
+
   warehouses: {
     list: '/warehouses',
   },
@@ -49,6 +53,7 @@ export const routes = {
   shipments: {
     list: '/shipments',
     create: '/shipments/new',
+    createForOrder: (orderId: EntityKey) => `/shipments/new?orderId=${encodeURIComponent(String(orderId))}`,
     detail: (id: EntityKey) => `/shipments/${id}`,
   },
 

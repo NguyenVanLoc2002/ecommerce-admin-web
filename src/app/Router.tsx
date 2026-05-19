@@ -8,6 +8,7 @@ import { ProductListPage, ProductEditPage, ProductVariantsPage } from '@/feature
 import { ProductAttributeListPage } from '@/features/product-attributes';
 import { CategoryListPage } from '@/features/categories';
 import { BrandListPage } from '@/features/brands';
+import { CarrierListPage } from '@/features/carriers';
 import { WarehouseListPage, StockPage, ReservationListPage } from '@/features/inventory';
 import { OrderListPage, OrderDetailPage } from '@/features/orders';
 import { ShipmentListPage, ShipmentDetailPage, CreateShipmentPage } from '@/features/shipments';
@@ -76,6 +77,7 @@ export function Router() {
 
           <Route path={routes.categories.list} element={<CategoryListPage />} />
           <Route path={routes.brands.list} element={<BrandListPage />} />
+          <Route path={routes.carriers.list} element={<CarrierListPage />} />
 
           <Route path={routes.warehouses.list} element={<WarehouseListPage />} />
           <Route path={routes.inventory.warehouses} element={<Navigate to={routes.warehouses.list} replace />} />

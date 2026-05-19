@@ -12,6 +12,7 @@ export function useCreateShipment() {
     onSuccess: (shipment, variables) => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.shipments.detail(shipment.id) });
       void queryClient.invalidateQueries({ queryKey: queryKeys.shipments.lists() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.shipments.byOrder(variables.orderId) });
       // Creating a shipment auto-advances the linked order to SHIPPED.
       void queryClient.invalidateQueries({ queryKey: queryKeys.orders.all });
       void queryClient.invalidateQueries({ queryKey: queryKeys.orders.detail(variables.orderId) });
@@ -23,6 +24,7 @@ export function useCreateShipment() {
 
       if (error.code === 'SHIPMENT_ALREADY_EXISTS' || isConcurrencyErrorCode(error.code)) {
         void queryClient.invalidateQueries({ queryKey: queryKeys.shipments.all });
+        void queryClient.invalidateQueries({ queryKey: queryKeys.shipments.byOrder(variables.orderId) });
         void queryClient.invalidateQueries({ queryKey: queryKeys.orders.all });
         void queryClient.invalidateQueries({ queryKey: queryKeys.orders.detail(variables.orderId) });
       }

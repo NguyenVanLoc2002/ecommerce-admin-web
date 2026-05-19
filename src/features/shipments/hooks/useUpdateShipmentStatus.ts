@@ -14,7 +14,7 @@ export function useUpdateShipmentStatus(shipmentId: string) {
     onSuccess: (updatedShipment) => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.shipments.detail(shipmentId) });
       void queryClient.invalidateQueries({ queryKey: queryKeys.shipments.lists() });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.shipments.events(shipmentId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.shipments.byOrder(updatedShipment.orderId) });
       void queryClient.invalidateQueries({ queryKey: queryKeys.orders.detail(updatedShipment.orderId) });
       void queryClient.invalidateQueries({ queryKey: queryKeys.orders.lists() });
 
@@ -31,7 +31,6 @@ export function useUpdateShipmentStatus(shipmentId: string) {
       if (error.code === 'ORDER_STATUS_INVALID' || isConcurrencyErrorCode(error.code)) {
         void queryClient.invalidateQueries({ queryKey: queryKeys.shipments.detail(shipmentId) });
         void queryClient.invalidateQueries({ queryKey: queryKeys.shipments.lists() });
-        void queryClient.invalidateQueries({ queryKey: queryKeys.shipments.events(shipmentId) });
         void queryClient.invalidateQueries({ queryKey: queryKeys.orders.all });
       }
     },

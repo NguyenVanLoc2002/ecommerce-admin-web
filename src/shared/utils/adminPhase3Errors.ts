@@ -21,6 +21,18 @@ export const PHASE3_ADMIN_ERROR_MESSAGES: Record<string, string> = {
     'Dữ liệu đã được thay đổi bởi thao tác khác. Vui lòng tải lại.',
   SHIPMENT_ALREADY_EXISTS:
     'Đơn hàng này đã có vận đơn. Vui lòng tải lại dữ liệu.',
+  CARRIER_NOT_FOUND:
+    'Carrier no longer exists. Please refresh and try again.',
+  CARRIER_CONFIG_MISSING:
+    'This carrier is not fully configured yet. Open carrier settings and complete its config first.',
+  CARRIER_CONFIG_DISABLED:
+    'This carrier config is disabled. Re-enable it in carrier settings before using provider-backed shipment flows.',
+  CARRIER_REQUEST_FAILED:
+    'The carrier provider rejected the request. Review the carrier config and try again.',
+  CARRIER_PROVIDER_STATUS_UNKNOWN:
+    'The provider returned a status the admin app does not interpret. Refresh the shipment to inspect the raw provider status.',
+  CARRIER_PROVIDER_NOT_SUPPORTED:
+    'This carrier provider is not supported by the backend environment.',
 };
 
 const CONCURRENCY_ERROR_CODES = new Set(['CONFLICT', 'OPTIMISTIC_LOCK_CONFLICT']);

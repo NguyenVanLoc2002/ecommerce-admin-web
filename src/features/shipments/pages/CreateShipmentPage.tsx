@@ -1,51 +1,35 @@
 import { ArrowLeft } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { routes } from '@/constants/routes';
 import { AdminLayout } from '@/shared/components/layout/AdminLayout';
 import { PageHeader } from '@/shared/components/layout/PageHeader';
 import { Button } from '@/shared/components/ui/Button';
 import { toast } from '@/shared/stores/uiStore';
-import { AppError } from '@/shared/types/api.types';
-import {
-  getPhase3AdminErrorMessage,
-  isConcurrencyErrorCode,
-} from '@/shared/utils/adminPhase3Errors';
-import { CreateShipmentForm } from '../components/CreateShipmentForm';
 import { useCreateShipment } from '../hooks/useCreateShipment';
+import { useShipmentOrderReference } from '../hooks/useShipmentOrderReference';
+import { CreateShipmentForm } from '../components/CreateShipmentForm';
 import type { CreateShipmentFormValues } from '../schemas/createShipmentSchema';
+import { mapShipmentFormToCreateRequest } from '../utils/shipmentPayload';
 
 export function CreateShipmentPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const orderId = searchParams.get('orderId') ?? undefined;
   const createShipment = useCreateShipment();
+  const {
+    data: order,
+    isLoading: orderLoading,
+  } = useShipmentOrderReference(orderId);
 
   const handleSubmit = async (values: CreateShipmentFormValues) => {
     if (createShipment.isPending) {
       return;
     }
 
-    try {
-      const shipment = await createShipment.mutateAsync({
-        orderId: values.orderId,
-        carrier: values.carrier ?? null,
-        trackingNumber: values.trackingNumber ?? null,
-        estimatedDeliveryDate: values.estimatedDeliveryDate ?? null,
-        note: values.notes ?? null,
-      });
-      toast.success('Shipment created. The order has been advanced to Shipped.');
-      navigate(routes.shipments.detail(shipment.id));
-    } catch (error) {
-      if (error instanceof AppError) {
-        if (!error.fieldErrors?.length) {
-          toast.error(getPhase3AdminErrorMessage(error, 'Failed to create shipment. Please try again.'));
-        }
+    const shipment = await createShipment.mutateAsync(mapShipmentFormToCreateRequest(values));
 
-        if (error.code === 'SHIPMENT_ALREADY_EXISTS' || isConcurrencyErrorCode(error.code)) {
-          return;
-        }
-      } else {
-        toast.error('Failed to create shipment. Please try again.');
-      }
-    }
+    toast.success('Shipment created. The order has been advanced to Shipped.');
+    navigate(routes.shipments.detail(shipment.id));
   };
 
   return (
@@ -66,11 +50,14 @@ export function CreateShipmentPage() {
           />
         </div>
 
-        <div className="mx-auto max-w-lg">
+        <div className="mx-auto max-w-2xl">
           <div className="rounded-lg border border-gray-200 bg-white p-6">
             <CreateShipmentForm
+              defaultOrderId={orderId}
+              order={order}
+              orderLoading={orderLoading}
               isSubmitting={createShipment.isPending}
-              onSubmit={(values) => void handleSubmit(values)}
+              onSubmit={handleSubmit}
               onCancel={() => navigate(routes.shipments.list)}
             />
           </div>

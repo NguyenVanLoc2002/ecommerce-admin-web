@@ -3,9 +3,11 @@ import type { EntityId, PaginatedResponse } from '@/shared/types/api.types';
 import { cleanParams } from '@/shared/utils/cleanParams';
 import type {
   Shipment,
+  ShipmentOrderReference,
   ShipmentSummary,
   ShipmentEvent,
   ShipmentListParams,
+  CancelShipmentProviderRequest,
   CreateShipmentRequest,
   UpdateShipmentRequest,
   UpdateShipmentStatusRequest,
@@ -28,19 +30,38 @@ export const shipmentService = {
     return normalizeShipment(response);
   },
 
-  async getEvents(id: EntityId): Promise<ShipmentEvent[]> {
-    const response = await apiClient.get<unknown[]>(`/admin/shipments/${id}/events`);
-    return response.map((item) => normalizeShipmentEvent(item));
+  async getByOrderId(orderId: EntityId): Promise<Shipment> {
+    const response = await apiClient.get<unknown>(`/admin/shipments/order/${orderId}`);
+    return normalizeShipment(response);
   },
 
-  create: (body: CreateShipmentRequest) =>
-    apiClient.post<Shipment>('/admin/shipments', body),
+  getOrderReference: (orderId: EntityId) =>
+    apiClient.get<ShipmentOrderReference>(`/admin/orders/${orderId}`),
 
-  update: (id: EntityId, body: UpdateShipmentRequest) =>
-    apiClient.patch<Shipment>(`/admin/shipments/${id}`, body),
+  async create(body: CreateShipmentRequest): Promise<Shipment> {
+    const response = await apiClient.post<unknown>('/admin/shipments', body);
+    return normalizeShipment(response);
+  },
 
-  updateStatus: (id: EntityId, body: UpdateShipmentStatusRequest) =>
-    apiClient.patch<Shipment>(`/admin/shipments/${id}/status`, body),
+  async update(id: EntityId, body: UpdateShipmentRequest): Promise<Shipment> {
+    const response = await apiClient.patch<unknown>(`/admin/shipments/${id}`, body);
+    return normalizeShipment(response);
+  },
+
+  async updateStatus(id: EntityId, body: UpdateShipmentStatusRequest): Promise<Shipment> {
+    const response = await apiClient.patch<unknown>(`/admin/shipments/${id}/status`, body);
+    return normalizeShipment(response);
+  },
+
+  async syncProvider(id: EntityId): Promise<Shipment> {
+    const response = await apiClient.post<unknown>(`/admin/shipments/${id}/provider/sync`);
+    return normalizeShipment(response);
+  },
+
+  async cancelProvider(id: EntityId, body: CancelShipmentProviderRequest): Promise<Shipment> {
+    const response = await apiClient.post<unknown>(`/admin/shipments/${id}/provider/cancel`, body);
+    return normalizeShipment(response);
+  },
 };
 
 function sanitizeShipmentParams(params: ShipmentListParams) {
@@ -51,6 +72,7 @@ function sanitizeShipmentParams(params: ShipmentListParams) {
     orderId: normalizeString(params.orderId),
     orderCode: normalizeString(params.orderCode),
     carrier: normalizeString(params.carrier),
+    carrierId: normalizeString(params.carrierId),
     status: params.status,
     dateFrom: normalizeString(params.dateFrom),
     dateTo: normalizeString(params.dateTo),
@@ -66,12 +88,21 @@ function normalizeShipmentSummary(input: unknown): ShipmentSummary {
     orderCode: asString(record.orderCode),
     shipmentCode: asString(record.shipmentCode),
     customer: normalizeShipmentCustomer(record),
+    carrierId: asNullableString(record.carrierId),
     trackingNumber: asNullableString(record.trackingNumber),
     carrier: asNullableString(record.carrier),
+    carrierCode: asNullableString(record.carrierCode),
+    carrierProviderType:
+      asNullableString(record.carrierProviderType) as ShipmentSummary['carrierProviderType'],
+    carrierShipmentId: asNullableString(record.carrierShipmentId),
+    providerStatus: asNullableString(record.providerStatus),
+    providerTrackingUrl: asNullableString(record.providerTrackingUrl),
     status: asString(record.status) as ShipmentSummary['status'],
     estimatedDeliveryDate: asNullableString(record.estimatedDeliveryDate),
     shippedAt: asNullableString(record.shippedAt),
     deliveredAt: asNullableString(record.deliveredAt),
+    shippingFee: asNullableNumber(record.shippingFee),
+    note: asNullableString(record.note),
     createdAt: asString(record.createdAt),
     updatedAt: asString(record.updatedAt ?? record.createdAt),
   };
@@ -92,7 +123,9 @@ function normalizeShipment(input: unknown): Shipment {
       district: asString(record.shippingDistrict ?? shippingAddress.district),
       province: asString(record.shippingCity ?? shippingAddress.province),
     },
+    shippingFee: asNullableNumber(record.shippingFee),
     note: asNullableString(record.note),
+    events: normalizeShipmentEvents(record.events),
   };
 }
 
@@ -106,6 +139,14 @@ function normalizeShipmentEvent(input: unknown): ShipmentEvent {
     createdAt: asString(record.createdAt ?? record.eventTime),
     createdBy: asNullableString(record.createdBy),
   };
+}
+
+function normalizeShipmentEvents(value: unknown): ShipmentEvent[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value.map((item) => normalizeShipmentEvent(item));
 }
 
 function normalizeShipmentCustomer(record: Record<string, unknown>) {
@@ -130,6 +171,19 @@ function asString(value: unknown): string {
 
 function asNullableString(value: unknown): string | null {
   return value == null || value === '' ? null : String(value);
+}
+
+function asNullableNumber(value: unknown): number | null {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value;
+  }
+
+  if (typeof value === 'string' && value.trim() !== '') {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+
+  return null;
 }
 
 function normalizeString(value: string | undefined) {
