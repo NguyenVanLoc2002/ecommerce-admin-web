@@ -3,28 +3,21 @@ import type { PaginatedResponse, EntityId } from '@/shared/types/api.types';
 import type {
   Product,
   ProductListItem,
-  ProductListParams,
   ProductVariant,
   ProductBrand,
   ProductCategory,
   ProductMedia,
   CreateProductRequest,
   UpdateProductRequest,
+  ReindexResult,
 } from '../types/product.types';
 import type { ProductStatus } from '@/shared/types/enums';
-import { cleanParams } from '@/shared/utils/cleanParams';
-import { toSoftDeleteQuery } from '@/shared/utils/softDelete';
+import type { ProductListRequestParams } from '../utils/productListQuery';
 
 export const productService = {
-  async getList({
-    deletedState,
-    ...params
-  }: ProductListParams): Promise<PaginatedResponse<ProductListItem>> {
+  async getList(params: ProductListRequestParams): Promise<PaginatedResponse<ProductListItem>> {
     const response = await apiClient.get<PaginatedResponse<unknown>>('/admin/products', {
-      params: cleanParams({
-        ...params,
-        ...toSoftDeleteQuery(deletedState),
-      }),
+      params,
     });
 
     return {
@@ -49,6 +42,9 @@ export const productService = {
 
   remove: (id: EntityId) =>
     apiClient.delete<void>(`/admin/products/${id}`),
+
+  reindexSearch: () =>
+    apiClient.post<ReindexResult>('/admin/products/search/reindex'),
 };
 
 function normalizeProductListItem(input: unknown): ProductListItem {
@@ -176,7 +172,9 @@ function firstPrimaryMediaUrl(input: unknown): string | null {
     return null;
   }
 
-  const primary = input.find((entry) => Boolean(toRecord(entry).primary)) ?? input[0];
+  const mediaEntries = input as unknown[];
+  const primary = mediaEntries.find((entry) => Boolean(toRecord(entry).primary))
+    ?? mediaEntries[0];
   return primary ? asNullableString(toRecord(primary).mediaUrl) : null;
 }
 

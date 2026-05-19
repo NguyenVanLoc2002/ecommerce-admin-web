@@ -33,12 +33,26 @@ Authorization: Bearer <accessToken>
 ### 2.2 JWT model
 
 - The API is stateless JWT only.
-- No session or cookie auth is used by the backend.
-- Login/register/refresh responses return:
+- Access tokens are sent in `Authorization: Bearer <accessToken>`.
+- Refresh tokens are transported primarily via an HttpOnly cookie on `/api/v1/auth/**`.
+- CORS allows credentials for configured frontend origins so refresh/logout can use cookies.
+- `POST /api/v1/auth/register` and `POST /api/v1/auth/login` return:
   - `accessToken`
-  - `refreshToken`
   - `tokenType`
   - `expiresIn`
+- `POST /api/v1/auth/register` and `POST /api/v1/auth/login` also set a refresh-token cookie.
+- `POST /api/v1/auth/refresh-token` also returns:
+  - `accessToken`
+  - `tokenType`
+  - `expiresIn`
+- `POST /api/v1/auth/refresh-token` reads the refresh token from the HttpOnly cookie.
+- `POST /api/v1/auth/refresh-token` still accepts `RefreshTokenRequest` in the JSON body as a temporary backward-compatible fallback and that body contract is deprecated.
+- Refresh rotates the refresh token on every success and returns only a new access token in the JSON body.
+- `POST /api/v1/auth/logout` is public/idempotent at the filter-chain level so it can still clear the cookie when the access token is missing or expired.
+- `POST /api/v1/auth/logout` blacklists the presented access token when valid, revokes the refresh session when a refresh cookie is present, and clears the refresh cookie.
+- No password-change or password-reset API is implemented in the current source tree.
+- `AuthService.revokeAllRefreshSessions(principalType, principalId)` exists as the reusable integration point for a future password-change flow.
+- The same `/api/v1/auth/login` flow authenticates `CUSTOMER`, `STAFF`, `ADMIN`, and `SUPER_ADMIN` accounts.
 
 ### 2.3 Role hierarchy
 
@@ -57,6 +71,11 @@ These routes are currently unauthenticated at the filter-chain level:
 - `POST /api/v1/auth/register`
 - `POST /api/v1/auth/login`
 - `POST /api/v1/auth/refresh-token`
+- `POST /api/v1/auth/logout`
+- `POST /api/v1/auth/password/forgot`
+- `POST /api/v1/auth/password/forgot/verify`
+- `POST /api/v1/auth/password/reset`
+- `POST /api/v1/payments/callback` — gateway callback, server-to-server, no bearer token
 - `GET /api/v1/products/**`
 - `GET /api/v1/categories/**`
 - `GET /api/v1/brands/**`
@@ -75,9 +94,70 @@ These routes are currently unauthenticated at the filter-chain level:
   - user creation
 - All other routes require authentication unless explicitly whitelisted above.
 
-### 2.6 Important current-code note
 
-`POST /api/v1/payments/callback` is described in its controller as a gateway callback, but it is **not** whitelisted in `SecurityConfig`. In the current backend source, it therefore requires authentication.
+
+### 2.6 Payment callback route
+
+`POST /api/v1/payments/callback` is a public route called server-to-server by the payment gateway. No `Authorization` header is required or expected.
+
+**Security note:** HMAC/signature verification is a TODO inside `PaymentServiceImpl.processCallback`. Until it is implemented, the only protection against spoofed callbacks is application-level state-machine guards (idempotent on duplicate `providerTxnId`, no backward state transitions). See `docs/security.md §10` for details.
+
+### 2.7 Idempotency
+
+Two customer-driven mutation endpoints require an `Idempotency-Key` header:
+
+| Endpoint | Required |
+|---|---|
+| `POST /api/v1/orders` | Yes |
+| `POST /api/v1/payments/order/{orderId}/initiate` | Yes |
+
+All other endpoints (including gateway callbacks) use provider-event-id or state-machine guards for duplicate protection — they do **not** use client-supplied `Idempotency-Key`.
+
+**Header format:**
+
+```http
+Idempotency-Key: <client-generated-unique-string>
+```
+
+**Constraints:**
+- Required: non-blank string
+- Maximum length: 100 characters
+
+**Behavior table:**
+
+| Scenario | Response |
+|---|---|
+| New key + any payload | Executes business action, records COMPLETED |
+| Same key + same payload (COMPLETED) | Returns original result — no side effect |
+| Same key + different payload | `409 IDEMPOTENCY_KEY_CONFLICT` |
+| Concurrent same key | Waiting request gets `409 IDEMPOTENCY_REQUEST_IN_PROGRESS` |
+| Missing or blank header | `400 IDEMPOTENCY_KEY_REQUIRED` |
+| Header > 100 chars | `400 IDEMPOTENCY_KEY_TOO_LONG` |
+| FAILED + retryable action (checkout, payment initiate) | Deletes failed record, executes again |
+| FAILED + non-retryable action | `409 IDEMPOTENCY_REPLAY_NOT_AVAILABLE` |
+
+**Error codes:**
+
+| Code | HTTP | When |
+|---|---|---|
+| `IDEMPOTENCY_KEY_REQUIRED` | 400 | Header missing or blank |
+| `IDEMPOTENCY_KEY_TOO_LONG` | 400 | Header > 100 characters |
+| `IDEMPOTENCY_KEY_CONFLICT` | 409 | Same key, different request body hash |
+| `IDEMPOTENCY_REQUEST_IN_PROGRESS` | 409 | Concurrent request with same key is still processing |
+| `IDEMPOTENCY_REPLAY_NOT_AVAILABLE` | 409 | Key maps to a non-retryable FAILED action |
+
+**Frontend guidance:**
+- Generate one UUID per user-initiated action (tap "Place Order", tap "Pay Now").
+- On network timeout or 5xx, reuse the same key to retry — you will get the original result back if the server already succeeded.
+- Do not reuse a key for a different order or different payment provider.
+- On `IDEMPOTENCY_REQUEST_IN_PROGRESS`, the original request is still processing — poll or wait before retrying.
+- On `IDEMPOTENCY_KEY_CONFLICT`, you sent a different body with the same key — generate a new key.
+
+### 2.8 Current refresh-token limitations
+
+- A temporary deprecated fallback still allows sending `refreshToken` in the JSON body to `/api/v1/auth/refresh-token`.
+- No password-change endpoint exists yet, so session-family revocation is not yet wired into an account-credential change flow.
+- `SecurityConfig` remains stateless and CSRF is disabled; cookie-based refresh relies on restricted CORS origins, `SameSite`, and the narrow `/api/v1/auth` cookie path rather than a dedicated CSRF token.
 
 ---
 
@@ -325,7 +405,13 @@ The current `ErrorCode` enum defines these domain codes.
 - `PAYMENT_NOT_FOUND`
 - `PAYMENT_FAILED`
 - `PAYMENT_ALREADY_PROCESSED`
-- `PAYMENT_CALLBACK_INVALID`
+- `PAYMENT_CALLBACK_INVALID` — IPN order not found, or amount mismatch between IPN and stored payment
+- `PAYMENT_REFUND_NOT_FOUND`
+- `PAYMENT_REFUND_AMOUNT_EXCEEDED`
+- `PAYMENT_REFUND_INVALID_STATUS`
+- `PAYMENT_WEBHOOK_SIGNATURE_INVALID` — HMAC or partnerCode verification failed; IPN rejected without state mutation
+- `PAYMENT_PROVIDER_NOT_SUPPORTED`
+- `PAYMENT_CURRENCY_UNSUPPORTED` — order currency is not compatible with the requested payment provider (e.g. VND order to PayPal USD without test conversion enabled)
 
 ### 7.10 Promotion and voucher
 
@@ -344,7 +430,15 @@ The current `ErrorCode` enum defines these domain codes.
 
 - `SHIPMENT_NOT_FOUND`
 - `SHIPMENT_ALREADY_EXISTS`
+- `SHIPMENT_PROVIDER_ORDER_NOT_FOUND`
 - `SHIPMENT_STATUS_INVALID`
+- `CARRIER_NOT_FOUND`
+- `CARRIER_CONFIG_MISSING`
+- `CARRIER_CONFIG_DISABLED`
+- `CARRIER_REQUEST_FAILED`
+- `CARRIER_WEBHOOK_SIGNATURE_INVALID`
+- `CARRIER_PROVIDER_STATUS_UNKNOWN`
+- `CARRIER_PROVIDER_NOT_SUPPORTED`
 - `INVOICE_NOT_FOUND`
 - `INVOICE_ALREADY_EXISTS`
 - `INVOICE_STATUS_INVALID`
@@ -359,6 +453,29 @@ The current `ErrorCode` enum defines these domain codes.
 ### 7.13 Notification
 
 - `NOTIFICATION_NOT_FOUND`
+
+### 7.14 Password reset / OTP
+
+- `OTP_INVALID` — submitted OTP does not match
+- `OTP_EXPIRED` — OTP past `expires_at`
+- `OTP_USED` — OTP has already been verified or superseded
+- `OTP_TOO_MANY_ATTEMPTS` — verify-attempts exceeded `max_attempts`
+- `OTP_RATE_LIMITED` — send cooldown active or per-window limit reached
+- `RESET_TOKEN_INVALID` — reset token unknown, malformed, or already used
+- `RESET_TOKEN_EXPIRED` — reset token past `expires_at`
+- `PASSWORD_MISMATCH` — `confirmPassword` does not equal `newPassword`
+- `PASSWORD_POLICY_VIOLATED` — password fails length / character-class policy
+- `PASSWORD_REUSED` — new password equals current password
+- `CURRENT_PASSWORD_INVALID` — supplied current password is wrong
+- `CSRF_TOKEN_INVALID` — CSRF double-submit cookie/header mismatch
+
+### 7.15 Idempotency
+
+- `IDEMPOTENCY_KEY_REQUIRED` — `Idempotency-Key` header is missing or blank
+- `IDEMPOTENCY_KEY_TOO_LONG` — `Idempotency-Key` exceeds 100 characters
+- `IDEMPOTENCY_KEY_CONFLICT` — same key was used with a different request body
+- `IDEMPOTENCY_REQUEST_IN_PROGRESS` — a request with this key is currently being processed
+- `IDEMPOTENCY_REPLAY_NOT_AVAILABLE` — previous attempt failed for a non-retryable action
 
 ---
 
@@ -403,6 +520,33 @@ All other pageable routes use Spring `sort=field,direction`.
 ### 8.4 No universal controller clamp
 
 The codebase contains `PaginationUtils` and `MAX_PAGE_SIZE = 100`, but current controllers bind `Pageable` directly. There is no shared controller-layer clamp applied across all endpoints.
+
+### 8.5 Keyword search
+
+Modules with a `keyword` filter use simple substring matching by default
+(LIKE on the relevant column, case-insensitive).
+
+The product module is the exception: its `keyword` filter runs through a
+**MariaDB FULLTEXT** index over a denormalized `products.search_text` column.
+
+- When `keyword` is blank, the standard JPA Specification path is used.
+- When `keyword` has text, the FULLTEXT path is used:
+  `MATCH(products.name, products.slug, products.search_text) AGAINST (? IN BOOLEAN MODE)`.
+- Search is **case-insensitive** and **accent-insensitive**: input is
+  normalised (lowercase, trim, NFD-strip Vietnamese accents, `đ`→`d`) before
+  hitting the database, so `Áo Thun`, `áo thun` and `ao thun` all match the
+  same rows.
+- Results with a keyword are ordered by FULLTEXT relevance first, then by
+  the requested `sort` (whitelisted columns: `createdAt`, `updatedAt`,
+  `name`, `status`, `featured`).
+- Public query params (`keyword`, `categoryId`, `brandId`, `minPrice`,
+  `maxPrice`, `featured`, `status`, `isDeleted`, `includeDeleted`),
+  pagination, and the response DTO are unchanged.
+- `products.search_text` is **internal** and never exposed in API responses.
+- MariaDB remains the only search engine — Elasticsearch is intentionally
+  not introduced in this phase.
+- Existing rows must be reindexed once after the V17 migration via
+  `POST /api/v1/admin/products/search/reindex`.
 
 ---
 

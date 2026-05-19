@@ -1,5 +1,5 @@
 import type { PaginationParams, EntityId } from '@/shared/types/api.types';
-import type { ShipmentStatus } from '@/shared/types/enums';
+import type { CarrierProviderType, ShipmentStatus } from '@/shared/types/enums';
 
 export interface ShipmentAddress {
   fullName: string;
@@ -16,18 +16,37 @@ export interface ShipmentCustomer {
   phone: string;
 }
 
+export interface ShipmentOrderReference {
+  id: EntityId;
+  orderCode: string;
+  carrierId: EntityId | null;
+  carrierCode: string | null;
+  carrierName: string | null;
+  carrierProviderType: CarrierProviderType | null;
+  shippingFee: number;
+  totalAmount: number;
+}
+
 export interface ShipmentSummary {
   id: EntityId;
   orderId: EntityId;
   orderCode: string;
   shipmentCode: string;
   customer: ShipmentCustomer;
+  carrierId: EntityId | null;
   trackingNumber: string | null;
   carrier: string | null;
+  carrierCode: string | null;
+  carrierProviderType: CarrierProviderType | null;
+  carrierShipmentId: string | null;
+  providerStatus: string | null;
+  providerTrackingUrl: string | null;
   status: ShipmentStatus;
   estimatedDeliveryDate: string | null;
   shippedAt: string | null;
   deliveredAt: string | null;
+  shippingFee: number | null;
+  note: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -39,13 +58,21 @@ export interface Shipment {
   shipmentCode: string;
   customer: ShipmentCustomer;
   shippingAddress: ShipmentAddress;
+  carrierId: EntityId | null;
   trackingNumber: string | null;
   carrier: string | null;
+  carrierCode: string | null;
+  carrierProviderType: CarrierProviderType | null;
+  carrierShipmentId: string | null;
+  providerStatus: string | null;
+  providerTrackingUrl: string | null;
   status: ShipmentStatus;
   estimatedDeliveryDate: string | null;
   shippedAt: string | null;
   deliveredAt: string | null;
+  shippingFee: number | null;
   note: string | null;
+  events: ShipmentEvent[];
   createdAt: string;
   updatedAt: string;
 }
@@ -61,6 +88,7 @@ export interface ShipmentEvent {
 export interface ShipmentListParams extends PaginationParams {
   orderCode?: string;
   carrier?: string;
+  carrierId?: EntityId;
   status?: ShipmentStatus;
   orderId?: EntityId;
   dateFrom?: string;
@@ -69,16 +97,20 @@ export interface ShipmentListParams extends PaginationParams {
 
 export interface CreateShipmentRequest {
   orderId: EntityId;
-  carrier: string | null;
+  carrierId?: EntityId | null;
+  carrier?: string | null;
   trackingNumber: string | null;
   estimatedDeliveryDate: string | null;
+  shippingFee?: number | null;
   note: string | null;
 }
 
 export interface UpdateShipmentRequest {
+  carrierId?: EntityId | null;
   carrier?: string | null;
   trackingNumber?: string | null;
   estimatedDeliveryDate?: string | null;
+  shippingFee?: number | null;
   note?: string | null;
 }
 
@@ -87,4 +119,8 @@ export interface UpdateShipmentStatusRequest {
   description?: string;
   location?: string;
   eventTime?: string;
+}
+
+export interface CancelShipmentProviderRequest {
+  reason: string;
 }

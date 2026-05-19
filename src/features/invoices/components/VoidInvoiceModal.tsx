@@ -31,14 +31,27 @@ export function VoidInvoiceModal({
 
   const isConfirmDisabled = !form.formState.isValid || isSubmitting;
 
+  const handleClose = () => {
+    if (isSubmitting) {
+      return;
+    }
+
+    form.reset({ note: '' });
+    onClose();
+  };
+
   const handleSubmit = (values: VoidInvoiceFormValues) => {
+    if (isSubmitting) {
+      return;
+    }
+
     onSubmit(values.note);
   };
 
   return (
     <Modal
       open={open}
-      onClose={onClose}
+      onClose={handleClose}
       title="Void this invoice?"
       description="This action cannot be undone. The invoice will be permanently marked as voided."
       size="md"
@@ -63,7 +76,9 @@ export function VoidInvoiceModal({
       <FormProvider {...form}>
         <form
           id="void-invoice-form"
-          onSubmit={form.handleSubmit(handleSubmit)}
+          onSubmit={(event) => {
+            void form.handleSubmit(handleSubmit)(event);
+          }}
           noValidate
         >
           <FormField

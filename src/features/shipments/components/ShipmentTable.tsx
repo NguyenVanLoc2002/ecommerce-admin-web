@@ -11,6 +11,8 @@ import { SkeletonTable } from '@/shared/components/feedback/Skeleton';
 import { ErrorCard } from '@/shared/components/feedback/ErrorCard';
 import { EmptyState } from '@/shared/components/feedback/EmptyState';
 import { formatDate, formatDateTime } from '@/shared/utils/formatDate';
+import { formatMoney } from '@/shared/utils/formatMoney';
+import { formatEnumLabel } from '@/shared/utils/formatEnumLabel';
 import { routes } from '@/constants/routes';
 import { cn } from '@/shared/utils/cn';
 import type { ColumnDef, SortState } from '@/shared/components/table/types';
@@ -31,7 +33,13 @@ interface ShipmentTableProps {
   onCreateNew: () => void;
 }
 
-function TrackingCell({ code }: { code: string }) {
+function TrackingCell({
+  code,
+  url,
+}: {
+  code: string;
+  url?: string | null;
+}) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = useCallback(
@@ -47,7 +55,19 @@ function TrackingCell({ code }: { code: string }) {
 
   return (
     <span className="group inline-flex items-center gap-1">
-      <span className="font-mono text-sm font-semibold text-primary-600">{code}</span>
+      {url ? (
+        <a
+          href={url}
+          target="_blank"
+          rel="noreferrer"
+          onClick={(event) => event.stopPropagation()}
+          className="font-mono text-sm font-semibold text-primary-600 hover:text-primary-700 hover:underline"
+        >
+          {code}
+        </a>
+      ) : (
+        <span className="font-mono text-sm font-semibold text-primary-600">{code}</span>
+      )}
       <button
         type="button"
         onClick={handleCopy}
@@ -82,7 +102,8 @@ export function ShipmentTable({
     filters.dateFrom !== undefined ||
     filters.dateTo !== undefined ||
     filters.orderId !== undefined ||
-    filters.carrier !== undefined;
+    filters.carrier !== undefined ||
+    filters.carrierId !== undefined;
 
   const columns = useMemo<ColumnDef<ShipmentSummary>[]>(
     () => [
@@ -97,7 +118,10 @@ export function ShipmentTable({
               className="group/tracking"
             >
               {row.original.trackingNumber ? (
-                <TrackingCell code={row.original.trackingNumber} />
+                <TrackingCell
+                  code={row.original.trackingNumber}
+                  url={row.original.providerTrackingUrl}
+                />
               ) : (
                 <span className="text-sm font-semibold text-primary-600 hover:text-primary-700 hover:underline">
                   {row.original.carrier ? `${row.original.carrier} shipment` : 'Shipment record'}
@@ -125,9 +149,23 @@ export function ShipmentTable({
         id: 'carrier',
         header: 'Carrier',
         cell: ({ row }) => (
-          <span className="text-sm text-gray-600">
-            {row.original.carrier ?? <span className="text-gray-300">—</span>}
-          </span>
+          <div>
+            <p className="text-sm text-gray-700">
+              {row.original.carrier ?? row.original.carrierCode ?? <span className="text-gray-300">—</span>}
+            </p>
+            {(row.original.carrierCode || row.original.carrierProviderType) && (
+              <p className="text-xs text-gray-400">
+                {[
+                  row.original.carrierCode,
+                  row.original.carrierProviderType
+                    ? formatEnumLabel(row.original.carrierProviderType)
+                    : null,
+                ]
+                  .filter(Boolean)
+                  .join(' • ')}
+              </p>
+            )}
+          </div>
         ),
       },
       {
@@ -135,7 +173,25 @@ export function ShipmentTable({
         header: 'Status',
         enableSorting: true,
         cell: ({ row }) => (
-          <StatusBadge type="shipment" status={row.original.status} />
+          <div className="space-y-1">
+            <StatusBadge type="shipment" status={row.original.status} />
+            {row.original.providerStatus && (
+              <p className="text-xs text-gray-400">{row.original.providerStatus}</p>
+            )}
+          </div>
+        ),
+      },
+      {
+        id: 'shippingFee',
+        header: 'Shipping Fee',
+        cell: ({ row }) => (
+          <span className="text-sm text-gray-600 whitespace-nowrap">
+            {row.original.shippingFee !== null ? (
+              formatMoney(row.original.shippingFee)
+            ) : (
+              <span className="text-gray-300">â€”</span>
+            )}
+          </span>
         ),
       },
       {

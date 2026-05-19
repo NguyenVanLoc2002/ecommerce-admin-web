@@ -1,21 +1,25 @@
-import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, CreditCard } from 'lucide-react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { routes } from '@/constants/routes';
+import { EmptyState } from '@/shared/components/feedback/EmptyState';
+import { ErrorCard } from '@/shared/components/feedback/ErrorCard';
+import { SkeletonDetail } from '@/shared/components/feedback/Skeleton';
 import { AdminLayout } from '@/shared/components/layout/AdminLayout';
 import { PageHeader } from '@/shared/components/layout/PageHeader';
 import { useBreadcrumbLabel } from '@/shared/components/layout';
 import { Button } from '@/shared/components/ui/Button';
 import { CopyValueButton } from '@/shared/components/ui/CopyValueButton';
-import { SkeletonDetail } from '@/shared/components/feedback/Skeleton';
-import { ErrorCard } from '@/shared/components/feedback/ErrorCard';
-import { EmptyState } from '@/shared/components/feedback/EmptyState';
 import { useConfirmDialog } from '@/shared/hooks/useConfirmDialog';
 import { toast } from '@/shared/stores/uiStore';
 import { AppError } from '@/shared/types/api.types';
-import { routes } from '@/constants/routes';
+import {
+  getPhase3AdminErrorMessage,
+  isConcurrencyErrorCode,
+} from '@/shared/utils/adminPhase3Errors';
+import { PaymentDetail } from '../components/PaymentDetail';
+import { useMarkPaymentPaid } from '../hooks/useMarkPaymentPaid';
 import { usePayment } from '../hooks/usePayment';
 import { usePaymentTransactions } from '../hooks/usePaymentTransactions';
-import { useMarkPaymentPaid } from '../hooks/useMarkPaymentPaid';
-import { PaymentDetail } from '../components/PaymentDetail';
 
 export function PaymentDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -30,7 +34,7 @@ export function PaymentDetailPage() {
     isError: transactionsError,
     refetch: refetchTransactions,
   } = usePaymentTransactions(paymentId);
-  const markPaid = useMarkPaymentPaid();
+  const markPaid = useMarkPaymentPaid(paymentId);
 
   useBreadcrumbLabel(
     routes.payments.detail(paymentId),
@@ -40,7 +44,10 @@ export function PaymentDetailPage() {
   );
 
   const handleMarkPaid = async () => {
-    if (!payment) return;
+    if (!payment || markPaid.isPending) {
+      return;
+    }
+
     const ok = await confirm({
       title: 'Mark payment as paid?',
       description:
@@ -48,18 +55,20 @@ export function PaymentDetailPage() {
       confirmLabel: 'Mark as Paid',
       variant: 'default',
     });
-    if (!ok) return;
+    if (!ok) {
+      return;
+    }
 
     try {
       await markPaid.mutateAsync(payment.orderId);
       toast.success('Payment marked as paid.');
-    } catch (err) {
-      if (err instanceof AppError) {
-        if (err.code === 'PAYMENT_ALREADY_PROCESSED') {
-          toast.error('This payment was already processed. Refreshing...');
-          setTimeout(() => void refetch(), 1_000);
-        } else {
-          toast.error(err.message || 'Failed to update payment.');
+    } catch (error) {
+      if (error instanceof AppError) {
+        toast.error(getPhase3AdminErrorMessage(error, 'Failed to update payment.'));
+
+        if (error.code === 'PAYMENT_ALREADY_PROCESSED' || isConcurrencyErrorCode(error.code)) {
+          void refetch();
+          void refetchTransactions();
         }
       } else {
         toast.error('Failed to update payment. Please try again.');

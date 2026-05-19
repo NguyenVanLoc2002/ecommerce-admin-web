@@ -13,6 +13,7 @@ import { formatDateTime } from '@/shared/utils/formatDate';
 import { routes } from '@/constants/routes';
 import type { OrderStatus } from '@/shared/types/enums';
 import { useOrder } from '../hooks/useOrder';
+import { OrderCarrierSnapshotCard } from '../components/OrderCarrierSnapshotCard';
 import { OrderStatusStepper } from '../components/OrderStatusStepper';
 import { OrderActionPanel } from '../components/OrderActionPanel';
 import { OrderAddressCard } from '../components/OrderAddressCard';
@@ -125,6 +126,10 @@ export function OrderDetailPage() {
                   paymentMethod={order.paymentMethod}
                   paymentStatus={order.paymentStatus}
                   totalAmount={order.totalAmount}
+                />
+                <OrderCarrierSnapshotCard
+                  order={order}
+                  onCreateShipment={() => navigate(routes.shipments.createForOrder(order.id))}
                 />
               </div>
             </div>

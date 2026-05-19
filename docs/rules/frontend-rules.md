@@ -21,7 +21,7 @@
 | Variant Styling | class-variance-authority (`cva`) | latest |
 
 **Backend API**: `http://localhost:8080/api/v1` (via `VITE_API_BASE_URL`)
-**Auth**: JWT Bearer token (access + refresh)
+**Auth**: Bearer access token + HttpOnly refresh-token cookie
 **Roles**: `SUPER_ADMIN > ADMIN > STAFF`
 
 Do not add libraries outside this stack without explicit justification.
@@ -152,12 +152,17 @@ Never create a second Axios instance in any feature.
 **Request interceptor**: attach `Authorization: Bearer <accessToken>` from `authStore`.
 
 **Response interceptor**:
-- 401 → attempt token refresh via `POST /auth/refresh-token`
-  - Refresh success → retry original request once
-  - Refresh fail → `authStore.clear()` → redirect to `/login?redirect=<current-path>` → toast "Session expired. Please sign in again."
+- 401 on protected non-auth requests → attempt token refresh via `POST /auth/refresh-token`
+  - refresh/login/logout must use `withCredentials: true`
+  - do not send `refreshToken` in the request body
+  - never retry `/auth/login`, `/auth/register`, `/auth/refresh-token`, `/auth/logout`
+- Refresh success → retry original request once
+- Refresh fail → `authStore.clear()` → redirect to `/login?redirect=<current-path>` → toast "Session expired. Please sign in again."
+- Logout must call `POST /auth/logout` with `withCredentials: true`, never include `refreshToken` in the body, and always clear in-memory auth state plus React Query cache after the request settles, even on `401/403/5xx` or network failure.
 - Implement request queue: if refresh is already in-flight, queue other 401-ed requests and replay after refresh.
 - Unwrap `data` field from `ApiResponse<T>` wrapper before returning to caller.
 - Normalize `fieldErrors[]` array to `{ [field]: message }` for React Hook Form `setError`.
+- Current backend docs say CSRF is disabled for this stateless JWT setup, so do not invent a client-side CSRF token flow for logout until the backend contract changes.
 
 **Network retry**:
 - Retry GET requests up to 2 times with 1 s delay on network failure.
@@ -176,11 +181,13 @@ export interface ApiResponse<T> {
 }
 
 export interface PaginatedResponse<T> {
-  content: T[];
-  totalElements: number;
+  items: T[];
+  totalItems: number;
   totalPages: number;
-  number: number;   // zero-based
+  page: number;     // zero-based
   size: number;
+  hasNext: boolean;
+  hasPrevious: boolean;
 }
 
 export interface ApiError {
@@ -283,16 +290,18 @@ Filter state + pagination state must be synced to URL search params. See §6.
 // src/shared/stores/authStore.ts
 interface AuthState {
   accessToken: string | null;
-  refreshToken: string | null;
   user: AuthUser | null;
   role: Role | null;
-  setTokens: (tokens: Tokens) => void;
-  setUser: (user: AuthUser) => void;
+  isAuthResolved: boolean;
+  setSession: (session: AccessTokenResponse) => void;
+  setAuthResolved: (isResolved: boolean) => void;
   clear: () => void;
 }
 ```
 
-Tokens persisted to `localStorage` via Zustand `persist` middleware. Axios interceptor reads `accessToken` from the store, not directly from localStorage.
+`accessToken` should stay in memory when possible. Never store `refreshToken` in `localStorage` or `sessionStorage`, and never store `accessToken` in `localStorage`.
+`localStorage` is only for non-sensitive admin UI state such as theme, locale, sidebar state, filters, and table preferences.
+Logout must not attempt to delete the HttpOnly refresh cookie in JavaScript; backend logout clears it server-side.
 
 ### 5.2 URL State for Tables
 
@@ -431,7 +440,7 @@ Every screen must handle all of the following. None can be omitted.
 | Initial load | First render | `<SkeletonTable />` or `<SkeletonDetail />` |
 | Filter/sort/page change | User action after initial load | Spinner in table body; keep headers visible |
 | Action loading | Mutation in flight | Button spinner + disabled; label → "Saving…" |
-| Empty (no data) | `content.length === 0` | `<EmptyState icon message cta />` |
+| Empty (no data) | `items.length === 0` | `<EmptyState icon message cta />` |
 | Error (GET) | Non-2xx or network failure | `<ErrorCard message onRetry />` |
 | Validation error | 422 `fieldErrors` | Inline per-field message; red border on input |
 | Forbidden | 403 | `<ForbiddenState />` with back button |
@@ -538,12 +547,27 @@ After login success: read `?redirect` param and navigate to that path.
 
 | Code | Handling |
 |---|---|
-| `ORDER_STATUS_INVALID` | Toast "Order status changed. Refreshing…" + `refetch()` after 1 s |
-| `PAYMENT_ALREADY_PROCESSED` | Toast error; disable button |
+| `ORDER_STATUS_INVALID` | Toast clear concurrency message + refetch latest order detail/list |
+| `PAYMENT_ALREADY_PROCESSED` | Toast clear message + refetch latest payment/order detail |
+| `SHIPMENT_ALREADY_EXISTS` | Toast clear message + refetch latest shipment/order data |
+| `CONFLICT` | Treat as stale/concurrent data; toast clear message + refetch latest resource |
+| `OPTIMISTIC_LOCK_CONFLICT` | Treat as stale/concurrent data; toast clear message + refetch latest resource |
+| `IDEMPOTENCY_KEY_REQUIRED` | Show mapped backend message if ever returned; do not add the header globally for admin APIs |
+| `IDEMPOTENCY_KEY_TOO_LONG` | Show mapped backend message if ever returned |
+| `IDEMPOTENCY_KEY_CONFLICT` | Show mapped backend message if ever returned |
+| `IDEMPOTENCY_REQUEST_IN_PROGRESS` | Show mapped backend message if ever returned |
+| `IDEMPOTENCY_REPLAY_NOT_AVAILABLE` | Show mapped backend message if ever returned |
 | `INVENTORY_NOT_ENOUGH` | Toast error with specific message |
-| `CONFLICT` (409) | Map to field error via `setError` |
 | `INTERNAL_SERVER_ERROR` | Toast "Something went wrong. Please try again." |
 | `ACCOUNT_DISABLED` | Toast "Your account has been disabled. Contact support." |
+
+### Phase 3 admin mutation rules
+
+- Do not attach `Idempotency-Key` globally in the admin axios client or admin services.
+- Admin APIs currently rely on pending-state duplicate-submit prevention instead: disable action buttons, disable modal submit, and block repeated submit while the mutation is pending.
+- Close mutation modals only after a successful response. Keep them open on failure so the user can review errors.
+- After successful admin order, shipment, invoice, payment, and inventory mutations, invalidate/refetch the related detail and list queries.
+- On `ORDER_STATUS_INVALID`, `CONFLICT`, `OPTIMISTIC_LOCK_CONFLICT`, `PAYMENT_ALREADY_PROCESSED`, or `SHIPMENT_ALREADY_EXISTS`, refresh the latest server state instead of trusting stale local UI.
 
 ### Global Error Boundary
 
@@ -613,3 +637,5 @@ When implementing features:
 - Keyword/text search inputs: 300 ms debounce before firing API request.
 - Numeric filter inputs: 500 ms debounce.
 - Show a spinner inside the search input while the debounced request is in-flight.
+- Product keyword search uses backend FULLTEXT. FE must keep sending the public `keyword` param, trim only leading/trailing whitespace, preserve Vietnamese accents, and never send or display `searchText` / `search_text`.
+- When product keyword search is active, FE must trust backend relevance ordering and must not client-filter or client-resort the returned product list.

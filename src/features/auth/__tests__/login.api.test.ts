@@ -1,59 +1,62 @@
 /**
  * Integration tests for POST /auth/login and related auth endpoints.
- * These tests call the real backend at localhost:8080 — the server must be running.
+ * These tests call the real backend at localhost:8080 - the server must be running.
  */
 
 import { beforeAll, describe, expect, it } from 'vitest';
+import type { ApiError, ApiResponse } from '@/shared/types/api.types';
 
 const BASE = 'http://localhost:8080/api/v1';
 
-async function post(path: string, body: unknown) {
+type AuthResponseBody = {
+  accessToken?: string;
+  tokenType?: string;
+  expiresIn?: number;
+  refreshToken?: string;
+};
+
+async function post(
+  path: string,
+  body?: unknown,
+  headers: Record<string, string> = {},
+): Promise<{
+  status: number;
+  body: ApiResponse<AuthResponseBody> | ApiError;
+  cookie: string | null;
+}> {
   const res = await fetch(`${BASE}${path}`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
+    headers: {
+      'Content-Type': 'application/json',
+      ...headers,
+    },
+    body: body === undefined ? undefined : JSON.stringify(body),
   });
-  return { status: res.status, body: await res.json() };
-}
 
-// ---------------------------------------------------------------------------
-// POST /auth/login
-// ---------------------------------------------------------------------------
+  return {
+    status: res.status,
+    body: (await res.json()) as ApiResponse<AuthResponseBody> | ApiError,
+    cookie: res.headers.get('set-cookie'),
+  };
+}
 
 describe('POST /auth/login', () => {
   describe('success', () => {
-    it('returns 200 with user + tokens on valid credentials', async () => {
+    it('returns 200 with an access token body and no refresh token in JSON', async () => {
       const { status, body } = await post('/auth/login', {
         email: 'hayzolady@gmail.com',
         password: 'Ln123456',
       });
+      const successBody = body as ApiResponse<AuthResponseBody>;
 
       expect(status).toBe(200);
-      expect(body.success).toBe(true);
-      expect(body.code).toBe('SUCCESS');
-
-      // Top-level shape
-      expect(body.data).toHaveProperty('user');
-      expect(body.data).toHaveProperty('tokens');
-
-      // User shape
-      const { user } = body.data;
-      expect(user.email).toBe('hayzolady@gmail.com');
-      expect(typeof user.id).toBe('number');
-      expect(typeof user.firstName).toBe('string');
-      expect(typeof user.lastName).toBe('string');
-      expect(Array.isArray(user.roles)).toBe(true);
-      expect(user.roles.length).toBeGreaterThan(0);
-      expect(['STAFF', 'ADMIN', 'SUPER_ADMIN']).toContain(user.roles[0]);
-
-      // Token shape
-      const { tokens } = body.data;
-      expect(typeof tokens.accessToken).toBe('string');
-      expect(tokens.accessToken.length).toBeGreaterThan(0);
-      expect(typeof tokens.refreshToken).toBe('string');
-      expect(tokens.refreshToken.length).toBeGreaterThan(0);
-      expect(tokens.tokenType).toBe('Bearer');
-      expect(typeof tokens.expiresIn).toBe('number');
+      expect(successBody.success).toBe(true);
+      expect(successBody.code).toBe('SUCCESS');
+      expect(typeof successBody.data.accessToken).toBe('string');
+      expect(successBody.data.accessToken?.length).toBeGreaterThan(0);
+      expect(successBody.data.tokenType).toBe('Bearer');
+      expect(typeof successBody.data.expiresIn).toBe('number');
+      expect(successBody.data.refreshToken).toBeUndefined();
     });
   });
 
@@ -63,10 +66,11 @@ describe('POST /auth/login', () => {
         email: 'hayzolady@gmail.com',
         password: 'wrongpassword',
       });
+      const errorBody = body as ApiError;
 
       expect(status).toBe(401);
-      expect(body.success).toBe(false);
-      expect(body.code).toBe('INVALID_CREDENTIALS');
+      expect(errorBody.success).toBe(false);
+      expect(errorBody.code).toBe('INVALID_CREDENTIALS');
     });
 
     it('returns 401 INVALID_CREDENTIALS on unknown email', async () => {
@@ -74,22 +78,24 @@ describe('POST /auth/login', () => {
         email: 'nobody@nowhere.com',
         password: 'Ln123456',
       });
+      const errorBody = body as ApiError;
 
       expect(status).toBe(401);
-      expect(body.success).toBe(false);
-      expect(body.code).toBe('INVALID_CREDENTIALS');
+      expect(errorBody.success).toBe(false);
+      expect(errorBody.code).toBe('INVALID_CREDENTIALS');
     });
   });
 
   describe('validation errors', () => {
     it('returns 422 VALIDATION_ERROR with field errors on empty body', async () => {
       const { status, body } = await post('/auth/login', {});
+      const errorBody = body as ApiError;
 
       expect(status).toBe(422);
-      expect(body.success).toBe(false);
-      expect(body.code).toBe('VALIDATION_ERROR');
-      expect(Array.isArray(body.errors)).toBe(true);
-      const fields = (body.errors as Array<{ field: string }>).map((e) => e.field);
+      expect(errorBody.success).toBe(false);
+      expect(errorBody.code).toBe('VALIDATION_ERROR');
+      expect(Array.isArray(errorBody.errors)).toBe(true);
+      const fields = (errorBody.errors ?? []).map((error) => error.field);
       expect(fields).toContain('email');
       expect(fields).toContain('password');
     });
@@ -99,10 +105,11 @@ describe('POST /auth/login', () => {
         email: 'notanemail',
         password: 'Ln123456',
       });
+      const errorBody = body as ApiError;
 
       expect(status).toBe(422);
-      expect(body.code).toBe('VALIDATION_ERROR');
-      const fields = (body.errors as Array<{ field: string }>).map((e) => e.field);
+      expect(errorBody.code).toBe('VALIDATION_ERROR');
+      const fields = (errorBody.errors ?? []).map((error) => error.field);
       expect(fields).toContain('email');
     });
 
@@ -110,59 +117,67 @@ describe('POST /auth/login', () => {
       const { status, body } = await post('/auth/login', {
         email: 'hayzolady@gmail.com',
       });
+      const errorBody = body as ApiError;
 
       expect(status).toBe(422);
-      expect(body.code).toBe('VALIDATION_ERROR');
-      const fields = (body.errors as Array<{ field: string }>).map((e) => e.field);
+      expect(errorBody.code).toBe('VALIDATION_ERROR');
+      const fields = (errorBody.errors ?? []).map((error) => error.field);
       expect(fields).toContain('password');
       expect(fields).not.toContain('email');
     });
   });
 });
 
-// ---------------------------------------------------------------------------
-// POST /auth/refresh-token
-// ---------------------------------------------------------------------------
-
 describe('POST /auth/refresh-token', () => {
-  let validRefreshToken: string;
+  let refreshCookie: string | null = null;
 
   beforeAll(async () => {
-    const { body } = await post('/auth/login', {
+    const { cookie } = await post('/auth/login', {
       email: 'hayzolady@gmail.com',
       password: 'Ln123456',
     });
-    validRefreshToken = body.data.tokens.refreshToken as string;
+
+    refreshCookie = cookie?.split(';')[0] ?? null;
   });
 
-  it('returns 200 with new tokens on valid refresh token', async () => {
-    const { status, body } = await post('/auth/refresh-token', {
-      refreshToken: validRefreshToken,
-    });
+  it('returns 200 with a fresh access token when the refresh cookie is present', async () => {
+    expect(refreshCookie).toBeTruthy();
+
+    const { status, body } = await post(
+      '/auth/refresh-token',
+      undefined,
+      refreshCookie ? { Cookie: refreshCookie } : {},
+    );
+    const successBody = body as ApiResponse<AuthResponseBody>;
 
     expect(status).toBe(200);
-    expect(body.success).toBe(true);
-    expect(typeof body.data.accessToken).toBe('string');
-    expect(typeof body.data.refreshToken).toBe('string');
-    // accessToken is always a fresh JWT; refreshToken may or may not rotate depending on backend policy
-    expect(body.data.accessToken.split('.').length).toBe(3); // valid JWT structure
+    expect(successBody.success).toBe(true);
+    expect(typeof successBody.data.accessToken).toBe('string');
+    expect(successBody.data.refreshToken).toBeUndefined();
+    expect(successBody.data.accessToken?.split('.').length).toBe(3);
   });
 
-  it('returns error on invalid refresh token', async () => {
-    const { status, body } = await post('/auth/refresh-token', {
-      refreshToken: 'invalid.token.value',
-    });
+  it('returns error when the refresh cookie is missing or invalid', async () => {
+    const { status, body } = await post(
+      '/auth/refresh-token',
+      undefined,
+      { Cookie: 'refreshToken=invalid.token.value' },
+    );
+    const errorBody = body as ApiError;
 
     expect(status).not.toBe(200);
-    expect(body.success).toBe(false);
+    expect(errorBody.success).toBe(false);
   });
 
-  it('returns 422 VALIDATION_ERROR when refreshToken field is missing', async () => {
-    const { status, body } = await post('/auth/refresh-token', {});
+  it('does not require a JSON refreshToken body', async () => {
+    expect(refreshCookie).toBeTruthy();
 
-    expect(status).toBe(422);
-    expect(body.code).toBe('VALIDATION_ERROR');
-    const fields = (body.errors as Array<{ field: string }>).map((e) => e.field);
-    expect(fields).toContain('refreshToken');
+    const { status } = await post(
+      '/auth/refresh-token',
+      undefined,
+      refreshCookie ? { Cookie: refreshCookie } : {},
+    );
+
+    expect(status).toBe(200);
   });
 });

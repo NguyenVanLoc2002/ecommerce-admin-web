@@ -60,6 +60,19 @@ export const queryKeys = {
       [...queryKeys.brands.lists(), cleanParams(params)] as const,
   },
 
+  carriers: {
+    all: ['carriers'] as const,
+    lists: () => [...queryKeys.carriers.all, 'list'] as const,
+    list: (params: object) =>
+      [...queryKeys.carriers.lists(), cleanParams(params)] as const,
+    detail: (id: EntityKey) => [...queryKeys.carriers.all, 'detail', id] as const,
+    activeOptions: () => [...queryKeys.carriers.all, 'activeOptions'] as const,
+    ahamoveIntegration: (id: EntityKey) =>
+      [...queryKeys.carriers.all, 'ahamoveIntegration', id] as const,
+    ahamoveWebhookSetup: (id: EntityKey) =>
+      [...queryKeys.carriers.all, 'ahamoveWebhookSetup', id] as const,
+  },
+
   // ── Phase 6: Inventory ──────────────────────────────────────────────────
   warehouses: {
     all: ['warehouses'] as const,
@@ -96,7 +109,9 @@ export const queryKeys = {
     list: (params: object) =>
       [...queryKeys.shipments.lists(), cleanParams(params)] as const,
     detail: (id: EntityKey) => [...queryKeys.shipments.all, 'detail', id] as const,
-    events: (id: EntityKey) => [...queryKeys.shipments.all, 'events', id] as const,
+    byOrder: (orderId: EntityKey) => [...queryKeys.shipments.all, 'order', orderId] as const,
+    orderReference: (orderId: EntityKey) =>
+      [...queryKeys.shipments.all, 'orderReference', orderId] as const,
   },
 
   // ── Phase 9: Payments ───────────────────────────────────────────────────

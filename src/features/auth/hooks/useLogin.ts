@@ -4,14 +4,12 @@ import { authService } from '../services/authService';
 import type { LoginRequest } from '@/shared/types/auth.types';
 
 export function useLogin() {
-  const setTokens = useAuthStore((s) => s.setTokens);
-  const setUser = useAuthStore((s) => s.setUser);
+  const setSession = useAuthStore((s) => s.setSession);
 
   return useMutation({
     mutationFn: (request: LoginRequest) => authService.login(request),
     onSuccess: (data) => {
-      setTokens(data.tokens);
-      setUser(data.user);
+      setSession(data);
     },
   });
 }

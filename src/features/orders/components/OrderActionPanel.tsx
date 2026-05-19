@@ -1,12 +1,16 @@
 import { useState } from 'react';
-import { CheckCircle2, PackageCheck, XCircle, ArrowRight } from 'lucide-react';
+import { ArrowRight, CheckCircle2, PackageCheck, XCircle } from 'lucide-react';
 import { Button } from '@/shared/components/ui/Button';
 import { useConfirmDialog } from '@/shared/hooks/useConfirmDialog';
 import { toast } from '@/shared/stores/uiStore';
 import { AppError } from '@/shared/types/api.types';
+import {
+  getPhase3AdminErrorMessage,
+  isConcurrencyErrorCode,
+} from '@/shared/utils/adminPhase3Errors';
+import type { OrderStatus } from '@/shared/types/enums';
 import { useOrderAction } from '../hooks/useUpdateOrderStatus';
 import type { Order, OrderAction } from '../types/order.types';
-import type { OrderStatus } from '@/shared/types/enums';
 
 interface ActionDef {
   label: string;
@@ -112,32 +116,37 @@ export function OrderActionPanel({ order, refetch }: OrderActionPanelProps) {
   if (actions.length === 0) {
     return (
       <div className="rounded-lg border border-gray-200 bg-white p-4">
-        <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">Actions</p>
+        <p className="text-xs font-medium uppercase tracking-wide text-gray-400">Actions</p>
         <p className="mt-2 text-sm text-gray-500">No actions available for this status.</p>
       </div>
     );
   }
 
   const handleAction = async (actionDef: ActionDef) => {
+    if (pendingAction !== null || orderAction.isPending) {
+      return;
+    }
+
     const ok = await confirm({
       title: actionDef.confirmTitle,
       description: actionDef.confirmDescription,
       confirmLabel: actionDef.confirmLabel,
       variant: actionDef.confirmVariant ?? 'default',
     });
-    if (!ok) return;
+    if (!ok) {
+      return;
+    }
 
     setPendingAction(actionDef.action);
     try {
       await orderAction.mutateAsync(actionDef.action);
       toast.success('Order status updated.');
-    } catch (err) {
-      if (err instanceof AppError) {
-        if (err.code === 'ORDER_STATUS_INVALID') {
-          toast.error('Order was updated by someone else. Refreshing…');
-          setTimeout(() => refetch(), 1000);
-        } else {
-          toast.error(err.message || 'Failed to update order status.');
+    } catch (error) {
+      if (error instanceof AppError) {
+        toast.error(getPhase3AdminErrorMessage(error, 'Failed to update order status.'));
+
+        if (error.code === 'ORDER_STATUS_INVALID' || isConcurrencyErrorCode(error.code)) {
+          void refetch();
         }
       } else {
         toast.error('Failed to update order status. Please try again.');
@@ -151,10 +160,11 @@ export function OrderActionPanel({ order, refetch }: OrderActionPanelProps) {
 
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-4">
-      <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-3">Actions</p>
+      <p className="mb-3 text-xs font-medium uppercase tracking-wide text-gray-400">Actions</p>
       <div className="flex flex-col gap-2">
         {actions.map((actionDef) => {
           const isDanger = actionDef.variant === 'danger';
+
           return (
             <Button
               key={actionDef.action}

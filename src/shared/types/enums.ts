@@ -167,3 +167,13 @@ export const EntityStatus = {
   INACTIVE: 'INACTIVE',
 } as const;
 export type EntityStatus = (typeof EntityStatus)[keyof typeof EntityStatus];
+
+export const CarrierProviderType = {
+  MANUAL: 'MANUAL',
+  MOCK: 'MOCK',
+  AHAMOVE: 'AHAMOVE',
+  GHN: 'GHN',
+  GHTK: 'GHTK',
+} as const;
+export type CarrierProviderType =
+  (typeof CarrierProviderType)[keyof typeof CarrierProviderType];

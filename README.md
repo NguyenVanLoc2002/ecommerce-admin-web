@@ -14,6 +14,7 @@ Giao diện quản trị cho hệ thống bán quần áo thời trang. Phục v
 6. [Build](#6-build)
 7. [Folder Structure](#7-folder-structure)
 8. [Key Conventions](#8-key-conventions)
+9. [Product Search Contract](#9-product-search-contract)
 
 ---
 
@@ -82,6 +83,7 @@ Sau đó điền giá trị vào `.env.local` (xem [§4 Environment Variables](#
 
 ```env
 VITE_API_BASE_URL=http://localhost:8080/api/v1
+VITE_SITE_URL=http://localhost:5174
 VITE_APP_TITLE=Fashion Shop Admin
 ```
 
@@ -89,13 +91,15 @@ VITE_APP_TITLE=Fashion Shop Admin
 
 ```env
 VITE_API_BASE_URL=https://api.fashionshop.com/api/v1
+VITE_SITE_URL=https://admin.fashionshop.com
 VITE_APP_TITLE=Fashion Shop Admin
 ```
 
 ### File `.env.example` (checked into git)
 
 ```env
-VITE_API_BASE_URL=
+VITE_API_BASE_URL=http://localhost:8080/api/v1
+VITE_SITE_URL=http://localhost:5174
 VITE_APP_TITLE=Fashion Shop Admin
 ```
 
@@ -104,7 +108,34 @@ VITE_APP_TITLE=Fashion Shop Admin
 | Variable | Required | Description |
 |---|---|---|
 | `VITE_API_BASE_URL` | ✅ | Base URL của backend API (không có trailing slash) |
+| `VITE_SITE_URL` | ✅ | Public site URL của admin-web. Backend CORS + cookie origin phải match giá trị này |
 | `VITE_APP_TITLE` | ✅ | Tên hiển thị trên browser tab |
+
+### Admin auth contract
+
+- `POST /api/v1/auth/login` trả `accessToken` trong JSON body và backend set `refreshToken` bằng HttpOnly cookie.
+- `POST /api/v1/auth/refresh-token` đọc cookie, không gửi `refreshToken` trong request body.
+- `POST /api/v1/auth/logout` phải gửi credentials để backend clear refresh cookie.
+- Admin logout luôn clear access token, user state, và React Query cache ở frontend ngay khi request logout kết thúc, kể cả khi backend trả lỗi hoặc cookie đã mất.
+- Admin-web chỉ giữ `accessToken` trong memory. Không lưu `accessToken` hay `refreshToken` vào `localStorage`.
+- `localStorage`/`sessionStorage` chỉ dùng cho UI data không nhạy cảm như theme, locale, sidebar state, page size, table preferences.
+- Role/permission state ở frontend chỉ để UI gating. Backend vẫn là source of truth.
+
+### Local development cookies/CORS
+
+- Frontend phải gọi login/refresh/logout với `withCredentials: true` để browser chấp nhận và gửi lại refresh cookie.
+- Frontend không gửi `refreshToken` trong request body cho login/refresh/logout.
+- Backend phải allow credentials cho `VITE_SITE_URL`, và cookie attributes phải phù hợp với môi trường local hiện tại.
+- Nếu session restore không chạy sau reload, kiểm tra trước: origin của frontend, backend CORS allow-credentials, cookie path `/api/v1/auth`, và `SameSite`/`Secure` của refresh cookie.
+- Theo `docs/api/api-common.md`, backend hiện đang stateless và đã tắt CSRF; admin-web hiện không cần gửi `X-XSRF-TOKEN` cho logout.
+
+### Phase 3 admin concurrency notes
+
+- Admin APIs do **not** currently require client-supplied `Idempotency-Key` unless `docs/api/admin-api-contract.md` explicitly says otherwise.
+- Customer-only idempotency remains limited to `POST /api/v1/orders` and `POST /api/v1/payments/order/{orderId}/initiate`; that behavior belongs in Customer Web, not Admin Web.
+- Admin mutation screens must prevent duplicate submit via pending-state UI: disable action buttons, disable modal submit, and avoid closing the form/modal until the mutation succeeds.
+- After admin order, shipment, invoice, payment, or inventory mutations, refetch the related detail/list queries instead of trusting stale local UI state.
+- On concurrency-style backend errors such as `ORDER_STATUS_INVALID`, `CONFLICT`, `OPTIMISTIC_LOCK_CONFLICT`, `PAYMENT_ALREADY_PROCESSED`, or `SHIPMENT_ALREADY_EXISTS`, show a clear toast and refresh the latest server state.
 
 ---
 
@@ -116,7 +147,7 @@ VITE_APP_TITLE=Fashion Shop Admin
 npm run dev
 ```
 
-App chạy tại: **http://localhost:5173**
+App chạy tại: **http://localhost:5174**
 
 ### Lint
 
@@ -207,7 +238,7 @@ src/
 │   │   ├── queryClient.ts          # TanStack Query client config
 │   │   └── zod.ts                  # Shared Zod helpers
 │   ├── stores/
-│   │   ├── authStore.ts            # Zustand: tokens + user + role
+│   │   ├── authStore.ts            # Zustand: in-memory access token + derived auth session + role
 │   │   └── uiStore.ts              # Zustand: sidebar state + toast queue
 │   ├── types/
 │   │   ├── api.types.ts            # ApiResponse, PaginatedResponse, FieldError
@@ -254,9 +285,21 @@ Page/Component
 | Server data (fetched from API) | TanStack Query |
 | Form state | React Hook Form |
 | URL state (filters, pagination) | URL search params |
-| Auth state (tokens, user, role) | Zustand `authStore` |
+| Auth state (in-memory access token, derived user, role) | Zustand `authStore` |
 | UI state (sidebar, toast queue) | Zustand `uiStore` |
 | Local UI state (dropdown open…) | `useState` |
+
+---
+
+## 9. Product Search Contract
+
+- Product Management search still uses the public `keyword` query param. Do not rename it and do not add `searchText`.
+- Backend product keyword search now runs on MariaDB FULLTEXT over an internal `products.search_text` column. That field is backend-only and must never be sent to or rendered by the frontend.
+- FE sends the user’s raw keyword after trimming leading/trailing whitespace only. Do not lowercase, strip accents, or otherwise normalize Vietnamese input on the client.
+- When `keyword` is blank, FE omits it from the request and backend falls back to normal filtering.
+- When `keyword` has text, backend controls relevance ordering. FE must not client-filter, client-rerank, or try to reproduce FULLTEXT relevance.
+- Product list pagination uses `PagedResponse` fields: `items`, `page`, `size`, `totalItems`, `totalPages`, `hasNext`, `hasPrevious`.
+- Admin-only maintenance endpoint: `POST /api/v1/admin/products/search/reindex`.
 
 ### Role-based access
 

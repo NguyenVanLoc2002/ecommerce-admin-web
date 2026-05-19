@@ -72,12 +72,16 @@ export interface Toast {
 
 export class AppError extends Error {
   readonly code: string;
+  readonly path: string;
+  readonly timestamp: string;
   readonly fieldErrors?: FieldError[];
 
   constructor(apiError: ApiError) {
     super(apiError.message);
     this.name = 'AppError';
     this.code = apiError.code;
+    this.path = apiError.path;
+    this.timestamp = apiError.timestamp;
     this.fieldErrors = apiError.errors;
   }
 }

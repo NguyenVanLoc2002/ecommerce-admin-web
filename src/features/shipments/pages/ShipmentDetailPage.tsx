@@ -1,38 +1,48 @@
+import { ArrowLeft, Truck } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Truck } from 'lucide-react';
+import { routes } from '@/constants/routes';
+import { EmptyState } from '@/shared/components/feedback/EmptyState';
+import { ErrorCard } from '@/shared/components/feedback/ErrorCard';
+import { SkeletonDetail } from '@/shared/components/feedback/Skeleton';
 import { AdminLayout } from '@/shared/components/layout/AdminLayout';
 import { PageHeader } from '@/shared/components/layout/PageHeader';
 import { useBreadcrumbLabel } from '@/shared/components/layout';
 import { Button } from '@/shared/components/ui/Button';
 import { CopyValueButton } from '@/shared/components/ui/CopyValueButton';
-import { SkeletonDetail } from '@/shared/components/feedback/Skeleton';
-import { ErrorCard } from '@/shared/components/feedback/ErrorCard';
-import { EmptyState } from '@/shared/components/feedback/EmptyState';
 import { toast } from '@/shared/stores/uiStore';
 import { AppError } from '@/shared/types/api.types';
-import { routes } from '@/constants/routes';
-import { useShipment } from '../hooks/useShipment';
-import { useShipmentEvents } from '../hooks/useShipmentEvents';
-import { useUpdateShipmentStatus } from '../hooks/useUpdateShipmentStatus';
+import {
+  getPhase3AdminErrorMessage,
+  isConcurrencyErrorCode,
+} from '@/shared/utils/adminPhase3Errors';
+import { CancelShipmentProviderModal } from '../components/CancelShipmentProviderModal';
 import { ShipmentDetail } from '../components/ShipmentDetail';
+import { ShipmentEditModal } from '../components/ShipmentEditModal';
 import { ShipmentStatusUpdateModal } from '../components/ShipmentStatusUpdateModal';
+import { useCancelShipmentProvider } from '../hooks/useCancelShipmentProvider';
+import { useShipment } from '../hooks/useShipment';
+import { useSyncShipmentProvider } from '../hooks/useSyncShipmentProvider';
+import { useUpdateShipment } from '../hooks/useUpdateShipment';
+import { useUpdateShipmentStatus } from '../hooks/useUpdateShipmentStatus';
+import type { CancelShipmentProviderFormValues } from '../schemas/cancelShipmentProviderSchema';
+import type { CreateShipmentFormValues } from '../schemas/createShipmentSchema';
 import type { UpdateStatusFormValues } from '../schemas/updateStatusSchema';
+import { mapShipmentFormToUpdateRequest } from '../utils/shipmentPayload';
 
 export function ShipmentDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const shipmentId = id ?? '';
   const [statusModalOpen, setStatusModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [cancelProviderOpen, setCancelProviderOpen] = useState(false);
 
   const { data: shipment, isLoading, isError, refetch } = useShipment(shipmentId);
-  const {
-    data: events,
-    isLoading: eventsLoading,
-    isError: eventsError,
-    refetch: refetchEvents,
-  } = useShipmentEvents(shipmentId);
   const updateStatus = useUpdateShipmentStatus(shipmentId);
+  const updateShipment = useUpdateShipment(shipmentId);
+  const syncProvider = useSyncShipmentProvider(shipmentId);
+  const cancelProvider = useCancelShipmentProvider(shipmentId);
 
   useBreadcrumbLabel(
     routes.shipments.detail(shipmentId),
@@ -44,6 +54,10 @@ export function ShipmentDetailPage() {
   );
 
   const handleUpdateStatus = async (values: UpdateStatusFormValues) => {
+    if (updateStatus.isPending) {
+      return;
+    }
+
     try {
       await updateStatus.mutateAsync({ status: values.status, description: values.note });
 
@@ -56,16 +70,67 @@ export function ShipmentDetailPage() {
       }
 
       setStatusModalOpen(false);
-    } catch (err) {
-      if (err instanceof AppError) {
-        if (err.code === 'ORDER_STATUS_INVALID') {
-          toast.error('Shipment was updated by another user. Refreshing...');
-          setTimeout(() => void refetch(), 1_000);
-        } else {
-          toast.error(err.message || 'Failed to update shipment status.');
+    } catch (error) {
+      if (error instanceof AppError) {
+        toast.error(getPhase3AdminErrorMessage(error, 'Failed to update shipment status.'));
+
+        if (error.code === 'ORDER_STATUS_INVALID' || isConcurrencyErrorCode(error.code)) {
+          void refetch();
         }
       } else {
         toast.error('Failed to update shipment status. Please try again.');
+      }
+    }
+  };
+
+  const handleEditShipment = async (values: CreateShipmentFormValues) => {
+    try {
+      await updateShipment.mutateAsync(mapShipmentFormToUpdateRequest(values));
+      toast.success('Shipment details updated.');
+      setEditModalOpen(false);
+    } catch (error) {
+      if (
+        error instanceof AppError &&
+        (error.code === 'SHIPMENT_ALREADY_EXISTS' || isConcurrencyErrorCode(error.code))
+      ) {
+        void refetch();
+      }
+
+      throw error;
+    }
+  };
+
+  const handleSyncProvider = async () => {
+    if (syncProvider.isPending) {
+      return;
+    }
+
+    try {
+      await syncProvider.mutateAsync();
+      toast.success('Shipment provider status synced.');
+    } catch (error) {
+      if (error instanceof AppError) {
+        toast.error(getPhase3AdminErrorMessage(error, 'Failed to sync provider shipment.'));
+      } else {
+        toast.error('Failed to sync provider shipment. Please try again.');
+      }
+    }
+  };
+
+  const handleCancelProvider = async (values: CancelShipmentProviderFormValues) => {
+    if (cancelProvider.isPending) {
+      return;
+    }
+
+    try {
+      await cancelProvider.mutateAsync({ reason: values.reason });
+      toast.success('Provider shipment cancelled.');
+      setCancelProviderOpen(false);
+    } catch (error) {
+      if (error instanceof AppError) {
+        toast.error(getPhase3AdminErrorMessage(error, 'Failed to cancel provider shipment.'));
+      } else {
+        toast.error('Failed to cancel provider shipment. Please try again.');
       }
     }
   };
@@ -130,13 +195,22 @@ export function ShipmentDetailPage() {
 
         <ShipmentDetail
           shipment={shipment}
-          events={events}
-          eventsLoading={eventsLoading}
-          eventsError={eventsError}
-          onRetryEvents={() => void refetchEvents()}
+          onEdit={() => setEditModalOpen(true)}
           onUpdateStatus={() => setStatusModalOpen(true)}
+          onSyncProvider={() => void handleSyncProvider()}
+          onCancelProvider={() => setCancelProviderOpen(true)}
+          providerSyncPending={syncProvider.isPending}
+          providerCancelPending={cancelProvider.isPending}
         />
       </div>
+
+      <ShipmentEditModal
+        open={editModalOpen}
+        onClose={() => setEditModalOpen(false)}
+        shipment={shipment}
+        isSubmitting={updateShipment.isPending}
+        onSubmit={handleEditShipment}
+      />
 
       <ShipmentStatusUpdateModal
         open={statusModalOpen}
@@ -144,6 +218,13 @@ export function ShipmentDetailPage() {
         currentStatus={shipment.status}
         isSubmitting={updateStatus.isPending}
         onSubmit={(values) => void handleUpdateStatus(values)}
+      />
+
+      <CancelShipmentProviderModal
+        open={cancelProviderOpen}
+        onClose={() => setCancelProviderOpen(false)}
+        isSubmitting={cancelProvider.isPending}
+        onSubmit={(values) => void handleCancelProvider(values)}
       />
     </AdminLayout>
   );

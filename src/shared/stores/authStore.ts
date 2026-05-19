@@ -1,30 +1,54 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import type { AuthUser, Role, Tokens } from '../types/auth.types';
+import { deriveAuthUserFromAccessToken, selectPrimaryRole } from '../lib/jwt';
+import type { AccessTokenResponse, AuthUser, Role } from '../types/auth.types';
 
 interface AuthState {
   accessToken: string | null;
-  refreshToken: string | null;
   user: AuthUser | null;
   role: Role | null;
-  setTokens: (tokens: Tokens) => void;
-  setUser: (user: AuthUser) => void;
+  isAuthResolved: boolean;
+  setSession: (session: AccessTokenResponse) => void;
+  setAuthResolved: (isResolved: boolean) => void;
   clear: () => void;
 }
 
-export const useAuthStore = create<AuthState>()(
-  persist(
-    (set) => ({
+function mergeSessionUser(accessToken: string, user?: AuthUser | null): AuthUser | null {
+  const derivedUser = deriveAuthUserFromAccessToken(accessToken);
+
+  if (!user && !derivedUser) {
+    return null;
+  }
+
+  if (!user) {
+    return derivedUser;
+  }
+
+  return {
+    ...derivedUser,
+    ...user,
+    roles: user.roles.length > 0 ? user.roles : (derivedUser?.roles ?? []),
+  };
+}
+
+export const useAuthStore = create<AuthState>()((set) => ({
+  accessToken: null,
+  user: null,
+  role: null,
+  isAuthResolved: false,
+  setSession: ({ accessToken, user }) => {
+    const resolvedUser = mergeSessionUser(accessToken, user);
+
+    set({
+      accessToken,
+      user: resolvedUser,
+      role: selectPrimaryRole(resolvedUser?.roles ?? []),
+    });
+  },
+  setAuthResolved: (isAuthResolved) => set({ isAuthResolved }),
+  clear: () =>
+    set({
       accessToken: null,
-      refreshToken: null,
       user: null,
       role: null,
-      setTokens: (tokens) =>
-        set({ accessToken: tokens.accessToken, refreshToken: tokens.refreshToken }),
-      setUser: (user) => set({ user, role: (user.roles[0] as Role) ?? null }),
-      clear: () =>
-        set({ accessToken: null, refreshToken: null, user: null, role: null }),
     }),
-    { name: 'auth-storage' },
-  ),
-);
+}));

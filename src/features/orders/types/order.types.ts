@@ -1,5 +1,6 @@
 import type { PaginationParams, EntityId } from '@/shared/types/api.types';
 import type {
+  CarrierProviderType,
   OrderStatus,
   OrderPaymentStatus,
   PaymentMethod,
@@ -32,6 +33,10 @@ export interface Order {
   shippingDistrict: string;
   shippingCity: string;
   shippingPostalCode: string | null;
+  carrierId: EntityId | null;
+  carrierCode: string | null;
+  carrierName: string | null;
+  carrierProviderType: CarrierProviderType | null;
   subTotal: number;
   discountAmount: number;
   shippingFee: number;

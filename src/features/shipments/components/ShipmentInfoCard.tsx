@@ -1,5 +1,8 @@
-import { Truck, Hash, Calendar, Clock, CheckCircle2 } from 'lucide-react';
+import { Truck, Hash, Calendar, Clock, CheckCircle2, ExternalLink } from 'lucide-react';
+import { Badge } from '@/shared/components/ui/Badge';
 import { formatDate, formatDateTime } from '@/shared/utils/formatDate';
+import { formatEnumLabel } from '@/shared/utils/formatEnumLabel';
+import { formatMoney } from '@/shared/utils/formatMoney';
 import type { Shipment } from '../types/shipment.types';
 
 interface ShipmentInfoCardProps {
@@ -17,9 +20,25 @@ export function ShipmentInfoCard({ shipment }: ShipmentInfoCardProps) {
       </div>
 
       <div className="space-y-2.5">
+        {shipment.carrierId && (
+          <Row icon={<Hash className="h-4 w-4 text-gray-400" />} label="Carrier ID">
+            <span className="font-mono text-xs text-gray-600">{shipment.carrierId}</span>
+          </Row>
+        )}
+
         {shipment.carrier && (
           <Row icon={<Truck className="h-4 w-4 text-gray-400" />} label="Carrier">
-            <span className="text-sm font-medium text-gray-800">{shipment.carrier}</span>
+            <div className="space-y-1 text-right">
+              <span className="text-sm font-medium text-gray-800">{shipment.carrier}</span>
+              {(shipment.carrierCode || shipment.carrierProviderType) && (
+                <div className="flex flex-wrap justify-end gap-1">
+                  {shipment.carrierCode && <Badge variant="default">{shipment.carrierCode}</Badge>}
+                  {shipment.carrierProviderType && (
+                    <Badge variant="info">{formatEnumLabel(shipment.carrierProviderType)}</Badge>
+                  )}
+                </div>
+              )}
+            </div>
           </Row>
         )}
 
@@ -29,9 +48,41 @@ export function ShipmentInfoCard({ shipment }: ShipmentInfoCardProps) {
           </Row>
         )}
 
+        {shipment.carrierShipmentId && (
+          <Row icon={<Hash className="h-4 w-4 text-gray-400" />} label="Carrier Shipment ID">
+            <span className="font-mono text-sm text-gray-700">{shipment.carrierShipmentId}</span>
+          </Row>
+        )}
+
+        {shipment.providerStatus && (
+          <Row icon={<Truck className="h-4 w-4 text-gray-400" />} label="Provider Status">
+            <Badge variant="info">{shipment.providerStatus}</Badge>
+          </Row>
+        )}
+
+        {shipment.providerTrackingUrl && (
+          <Row icon={<ExternalLink className="h-4 w-4 text-gray-400" />} label="Tracking URL">
+            <a
+              href={shipment.providerTrackingUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1 text-sm text-primary-600 hover:text-primary-700 hover:underline"
+            >
+              Open tracking
+              <ExternalLink className="h-3.5 w-3.5" />
+            </a>
+          </Row>
+        )}
+
         {shipment.estimatedDeliveryDate && (
           <Row icon={<Calendar className="h-4 w-4 text-gray-400" />} label="Est. Delivery">
             <span className="text-sm text-gray-700">{formatDate(shipment.estimatedDeliveryDate)}</span>
+          </Row>
+        )}
+
+        {shipment.shippingFee !== null && (
+          <Row icon={<Hash className="h-4 w-4 text-gray-400" />} label="Shipping Fee">
+            <span className="text-sm text-gray-700">{formatMoney(shipment.shippingFee)}</span>
           </Row>
         )}
 

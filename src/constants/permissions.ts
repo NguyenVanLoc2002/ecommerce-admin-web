@@ -8,6 +8,7 @@ export const permissions = {
     read: ['STAFF', 'ADMIN', 'SUPER_ADMIN'] as const,
     write: ['STAFF', 'ADMIN', 'SUPER_ADMIN'] as const,
     delete: ['STAFF', 'ADMIN', 'SUPER_ADMIN'] as const,
+    maintenance: ['ADMIN', 'SUPER_ADMIN'] as const,
   },
   categories: {
     read: ['STAFF', 'ADMIN', 'SUPER_ADMIN'] as const,
