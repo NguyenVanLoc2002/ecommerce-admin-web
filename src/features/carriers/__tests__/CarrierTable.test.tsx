@@ -55,12 +55,13 @@ describe('CarrierTable', () => {
       />,
     );
 
-    expect(markup).toContain('Search shipping providers...');
+    expect(markup).toContain('Search provider, code, or base URL...');
     expect(markup).toContain('All providers');
     expect(markup).toContain('All statuses');
     expect(markup).toContain('Giao Hang Nhanh');
     expect(markup).toContain('GHN_MAIN');
     expect(markup).toContain('Enabled');
+    expect(markup).toContain('2 / 3');
     expect(markup).toContain('Failed');
     expect(markup).toContain('Provider rejected the API key');
   });

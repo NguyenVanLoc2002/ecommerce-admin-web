@@ -19,12 +19,15 @@ export function Breadcrumb({ className }: BreadcrumbProps) {
     <nav aria-label="Breadcrumb" className={cn('flex items-center', className)}>
       <ol className="flex items-center gap-1">
         {crumbs.map((crumb, index) => (
-          <li key={crumb.path} className="flex items-center gap-1">
+          <li key={`${crumb.path ?? crumb.label}-${index}`} className="flex items-center gap-1">
             {index > 0 && (
               <ChevronRight className="h-3.5 w-3.5 text-gray-400 shrink-0" aria-hidden />
             )}
-            {crumb.isCurrent ? (
-              <span className="text-sm font-medium text-gray-700 truncate max-w-[180px]" aria-current="page">
+            {crumb.isCurrent || !crumb.path ? (
+              <span
+                className="text-sm font-medium text-gray-700 truncate max-w-[180px]"
+                aria-current={crumb.isCurrent ? 'page' : undefined}
+              >
                 {crumb.label}
               </span>
             ) : (

@@ -14,6 +14,7 @@ interface ModalProps {
   footer?: React.ReactNode;
   className?: string;
   closeOnBackdropClick?: boolean;
+  inline?: boolean;
 }
 
 const sizeClasses: Record<NonNullable<ModalProps['size']>, string> = {
@@ -43,6 +44,7 @@ export function Modal({
   footer,
   className,
   closeOnBackdropClick = true,
+  inline = false,
 }: ModalProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   const uid = useId();
@@ -50,7 +52,7 @@ export function Modal({
   const descId = `${uid}-desc`;
 
   useEffect(() => {
-    if (!open) return;
+    if (!open || inline) return;
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
@@ -60,14 +62,14 @@ export function Modal({
       document.removeEventListener('keydown', handleKey);
       document.body.style.overflow = '';
     };
-  }, [open, onClose]);
+  }, [inline, open, onClose]);
 
   useEffect(() => {
     if (open) panelRef.current?.focus();
   }, [open]);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open || inline) return;
     const panel = panelRef.current;
     if (!panel) return;
     const trap = (e: KeyboardEvent) => {
@@ -84,9 +86,52 @@ export function Modal({
     };
     document.addEventListener('keydown', trap);
     return () => document.removeEventListener('keydown', trap);
-  }, [open]);
+  }, [inline, open]);
 
   if (!open) return null;
+
+  if (inline) {
+    return (
+      <div
+        ref={panelRef}
+        role="dialog"
+        aria-modal={false}
+        aria-labelledby={title ? titleId : undefined}
+        aria-describedby={description ? descId : undefined}
+        tabIndex={-1}
+        className={cn(
+          'w-full rounded-lg border border-gray-200 bg-white shadow-sm focus-visible:outline-none',
+          className,
+        )}
+      >
+        {title && (
+          <div className="flex items-start justify-between border-b px-6 py-4">
+            <div>
+              <h2 id={titleId} className="text-base font-semibold text-gray-900">
+                {title}
+              </h2>
+              {description && (
+                <p id={descId} className="mt-1 text-sm text-gray-500">
+                  {description}
+                </p>
+              )}
+            </div>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onClick={onClose}
+              aria-label="Close"
+              className="ml-4 shrink-0"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
+        <div className="px-6 py-4">{children}</div>
+        {footer && <div className="flex justify-end gap-3 border-t px-6 py-4">{footer}</div>}
+      </div>
+    );
+  }
 
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">

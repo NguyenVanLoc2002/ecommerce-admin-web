@@ -5,7 +5,12 @@ describe('buildCrumbs', () => {
   it('hides unresolved route ids until a human-readable label is available', () => {
     const crumbs = buildCrumbs('/products/011396e7-600c-5952-90ed-123456789abc');
 
-    expect(crumbs.map((crumb) => crumb.label)).toEqual(['Dashboard', 'Products', 'Loading...']);
+    expect(crumbs.map((crumb) => crumb.label)).toEqual([
+      'Dashboard',
+      'Catalog',
+      'Products',
+      'Loading...',
+    ]);
   });
 
   it('uses dynamic labels for loaded entity breadcrumbs', () => {
@@ -15,6 +20,7 @@ describe('buildCrumbs', () => {
 
     expect(crumbs.map((crumb) => crumb.label)).toEqual([
       'Dashboard',
+      'Catalog',
       'Products',
       'Routine Running Shorts 116',
     ]);
@@ -27,9 +33,34 @@ describe('buildCrumbs', () => {
 
     expect(crumbs.map((crumb) => crumb.label)).toEqual([
       'Dashboard',
+      'Marketing',
       'Vouchers',
       'SPRING20',
       'Usages',
+    ]);
+  });
+
+  it('inserts sales grouping for operational payment routes', () => {
+    const crumbs = buildCrumbs('/payments/pay-001', {
+      '/payments/pay-001': 'PAY20260520001',
+    });
+
+    expect(crumbs.map((crumb) => crumb.label)).toEqual([
+      'Dashboard',
+      'Sales',
+      'Payments',
+      'PAY20260520001',
+    ]);
+  });
+
+  it('keeps explicit integration route labels user-friendly', () => {
+    const crumbs = buildCrumbs('/integrations/payment-providers/paypal');
+
+    expect(crumbs.map((crumb) => crumb.label)).toEqual([
+      'Dashboard',
+      'Integrations',
+      'Payment Providers',
+      'PayPal',
     ]);
   });
 });
