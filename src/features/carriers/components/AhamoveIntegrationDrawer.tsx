@@ -10,6 +10,7 @@ import { Modal } from '@/shared/components/ui/Modal';
 import { Spinner } from '@/shared/components/ui/Spinner';
 import { Toggle } from '@/shared/components/ui/Toggle';
 import { FormField } from '@/shared/components/form/FormField';
+import { IntegrationErrorAlert } from '@/shared/components/integrations/IntegrationErrorAlert';
 import { cleanParams } from '@/shared/utils/cleanParams';
 import { formatDateTime, formatDateTimeSeconds } from '@/shared/utils/formatDate';
 import { toast } from '@/shared/stores/uiStore';
@@ -38,6 +39,7 @@ interface AhamoveIntegrationDrawerProps {
   open: boolean;
   onClose: () => void;
   carrier?: Carrier;
+  inline?: boolean;
 }
 
 const DEFAULT_FORM_VALUES: AhamoveIntegrationFormValues = {
@@ -222,10 +224,27 @@ function ResultPanel({
   );
 }
 
+function getAhamoveLoadMessage(error: unknown) {
+  if (error instanceof AppError) {
+    if (error.code.includes('NOT_FOUND')) {
+      return 'Unable to load AhaMove settings. Check whether this carrier has an AhaMove provider mapping, then retry.';
+    }
+
+    if (error.code.includes('FORBIDDEN') || error.code.includes('ACCESS_DENIED')) {
+      return 'You do not have permission to manage integrations.';
+    }
+
+    return 'Backend failed to load provider configuration.';
+  }
+
+  return 'Backend failed to load provider configuration.';
+}
+
 export function AhamoveIntegrationDrawer({
   open,
   onClose,
   carrier,
+  inline = false,
 }: AhamoveIntegrationDrawerProps) {
   const form = useForm<AhamoveIntegrationFormValues>({
     resolver: zodResolver(ahamoveIntegrationSchema),
@@ -388,6 +407,7 @@ export function AhamoveIntegrationDrawer({
         title={carrier ? `Configure ${carrier.name}` : 'Configure AhaMove'}
         description="Structured AhaMove setup with write-only secrets, health checks, and webhook onboarding."
         size="lg"
+        inline={inline}
         footer={
           <>
             <Button variant="secondary" onClick={onClose} disabled={isBusy}>
@@ -414,9 +434,11 @@ export function AhamoveIntegrationDrawer({
               ) : null}
 
               {integrationQuery.isError && !integration ? (
-                <div className="rounded-xl border border-danger-200 bg-danger-50 px-4 py-4 text-sm text-danger-700">
-                  Unable to load the AhaMove integration settings for this carrier.
-                </div>
+                <IntegrationErrorAlert
+                  title="Unable to load AhaMove settings."
+                  message={getAhamoveLoadMessage(integrationQuery.error)}
+                  onRetry={() => void integrationQuery.refetch()}
+                />
               ) : null}
 
               {rootError && (
@@ -700,9 +722,11 @@ export function AhamoveIntegrationDrawer({
                 )}
 
                 {showSetupInstructions && webhookSetupQuery.isError && (
-                  <div className="rounded-xl border border-danger-200 bg-danger-50 px-4 py-4 text-sm text-danger-700">
-                    Unable to load the webhook setup instructions for this carrier.
-                  </div>
+                  <IntegrationErrorAlert
+                    title="Unable to load webhook setup."
+                    message={getAhamoveLoadMessage(webhookSetupQuery.error)}
+                    onRetry={() => void webhookSetupQuery.refetch()}
+                  />
                 )}
 
                 {showSetupInstructions && webhookSetupQuery.data && (

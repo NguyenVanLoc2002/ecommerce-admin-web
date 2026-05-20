@@ -16,6 +16,7 @@ interface CarrierConfigModalProps {
   carrier?: Carrier;
   isSubmitting: boolean;
   onSubmit: (values: CarrierConfigFormValues) => Promise<void>;
+  inline?: boolean;
 }
 
 function SecretState({
@@ -39,6 +40,7 @@ export function CarrierConfigModal({
   carrier,
   isSubmitting,
   onSubmit,
+  inline = false,
 }: CarrierConfigModalProps) {
   const form = useForm<CarrierConfigFormValues>({
     resolver: zodResolver(carrierConfigSchema),
@@ -105,6 +107,7 @@ export function CarrierConfigModal({
       title={carrier ? `Configure ${carrier.name}` : 'Configure Carrier'}
       description="Legacy configuration fallback for providers that do not yet have a structured setup drawer."
       size="xl"
+      inline={inline}
       closeOnBackdropClick={false}
       footer={
         <>

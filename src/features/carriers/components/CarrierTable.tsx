@@ -133,7 +133,7 @@ export function CarrierTable({
     () => [
       {
         id: 'name',
-        header: 'Carrier',
+        header: 'Provider / Carrier',
         enableSorting: true,
         cell: ({ row }) => (
           <div className="flex items-center gap-3">
@@ -147,7 +147,7 @@ export function CarrierTable({
       },
       {
         id: 'providerType',
-        header: 'Provider',
+        header: 'Provider code / type',
         enableSorting: true,
         cell: ({ row }) => (
           <div className="space-y-1">
@@ -173,21 +173,23 @@ export function CarrierTable({
       },
       {
         id: 'configEnabled',
-        header: 'Config',
+        header: 'Config status',
         cell: ({ row }) => (
-          <div className="space-y-1">
-            <Badge variant={row.original.configEnabled ? 'success' : 'default'}>
-              {row.original.configEnabled ? 'Enabled' : 'Disabled'}
-            </Badge>
-            <p className="text-xs text-gray-500">
-              {countSavedSecrets(row.original)} / 3 secrets saved
-            </p>
-          </div>
+          <Badge variant={row.original.configEnabled ? 'success' : 'default'}>
+            {row.original.configEnabled ? 'Enabled' : 'Disabled'}
+          </Badge>
+        ),
+      },
+      {
+        id: 'savedSecrets',
+        header: 'Secrets saved',
+        cell: ({ row }) => (
+          <span className="text-sm text-gray-600">{countSavedSecrets(row.original)} / 3</span>
         ),
       },
       {
         id: 'connectionStatus',
-        header: 'Connection',
+        header: 'Connection status',
         cell: ({ row }) => (
           <div className="space-y-1">
             <CarrierConnectionBadge status={row.original.connectionStatus} />
@@ -237,7 +239,7 @@ export function CarrierTable({
       <TableToolbar
         searchValue={filters.keyword ?? ''}
         onSearchChange={(keyword) => onFiltersChange({ keyword: keyword || undefined })}
-        searchPlaceholder="Search shipping providers..."
+        searchPlaceholder="Search provider, code, or base URL..."
         filters={
           <>
             <Select
@@ -270,7 +272,7 @@ export function CarrierTable({
         }
         actions={
           <Button size="md" onClick={onCreateNew} leftIcon={<Plus className="h-4 w-4" />}>
-            Add carrier
+            Add provider
           </Button>
         }
       />
@@ -284,9 +286,9 @@ export function CarrierTable({
         emptyState={
           <EmptyState
             icon={<Truck className="h-10 w-10" />}
-            title="No shipping providers found"
-            message="Create carrier entries before staff start using provider-backed shipment flows."
-            action={{ label: 'Add carrier', onClick: onCreateNew }}
+            title="No shipping provider integrations found."
+            message="Create or configure a provider before staff start using provider-backed shipment flows."
+            action={{ label: 'Add provider', onClick: onCreateNew }}
           />
         }
       />

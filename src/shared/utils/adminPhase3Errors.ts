@@ -29,6 +29,8 @@ export const PHASE3_ADMIN_ERROR_MESSAGES: Record<string, string> = {
     'This carrier config is disabled. Re-enable it in carrier settings before using provider-backed shipment flows.',
   CARRIER_REQUEST_FAILED:
     'The carrier provider rejected the request. Review the carrier config and try again.',
+  PAYMENT_CONFIG_MISSING:
+    'This payment provider is missing required effective config. Add the missing values or disable the provider before saving.',
   CARRIER_PROVIDER_STATUS_UNKNOWN:
     'The provider returned a status the admin app does not interpret. Refresh the shipment to inspect the raw provider status.',
   CARRIER_PROVIDER_NOT_SUPPORTED:

@@ -6,6 +6,10 @@ import type {
   PaymentSummary,
   PaymentTransaction,
   PaymentListParams,
+  MomoPaymentIntegration,
+  PaypalPaymentIntegration,
+  UpdateMomoPaymentIntegrationRequest,
+  UpdatePaypalPaymentIntegrationRequest,
 } from '../types/payment.types';
 
 export const paymentService = {
@@ -29,6 +33,18 @@ export const paymentService = {
     const response = await apiClient.get<unknown[]>(`/admin/payments/${id}/transactions`);
     return response.map((item) => normalizePaymentTransaction(item, id));
   },
+
+  getMomoIntegration: () =>
+    apiClient.get<MomoPaymentIntegration>('/admin/payments/integration/momo'),
+
+  updateMomoIntegration: (body: UpdateMomoPaymentIntegrationRequest) =>
+    apiClient.put<MomoPaymentIntegration>('/admin/payments/integration/momo', body),
+
+  getPaypalIntegration: () =>
+    apiClient.get<PaypalPaymentIntegration>('/admin/payments/integration/paypal'),
+
+  updatePaypalIntegration: (body: UpdatePaypalPaymentIntegrationRequest) =>
+    apiClient.put<PaypalPaymentIntegration>('/admin/payments/integration/paypal', body),
 
   completeCod: (orderId: EntityId) =>
     apiClient.post<Payment>(`/admin/payments/order/${orderId}/complete`),

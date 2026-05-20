@@ -57,3 +57,79 @@ export interface PaymentListParams extends PaginationParams {
   dateFrom?: string;
   dateTo?: string;
 }
+
+export interface MomoPaymentIntegration {
+  provider: 'MOMO' | string;
+  managedInDatabase: boolean;
+  enabled: boolean;
+  environment: string | null;
+  hasPartnerCode: boolean;
+  hasAccessKey: boolean;
+  hasSecretKey: boolean;
+  createUrl: string | null;
+  redirectUrl: string | null;
+  ipnUrl: string | null;
+  requestType: string | null;
+  lang: string | null;
+  connectTimeoutMs: number | null;
+  readTimeoutMs: number | null;
+}
+
+export interface UpdateMomoPaymentIntegrationRequest {
+  enabled?: boolean;
+  environment?: string;
+  partnerCode?: string;
+  accessKey?: string;
+  secretKey?: string;
+  createUrl?: string;
+  redirectUrl?: string;
+  ipnUrl?: string;
+  requestType?: string;
+  lang?: string;
+  connectTimeoutMs?: number | null;
+  readTimeoutMs?: number | null;
+}
+
+export interface PaypalPaymentIntegration {
+  provider: 'PAYPAL' | string;
+  managedInDatabase: boolean;
+  enabled: boolean;
+  environment: string | null;
+  hasClientId: boolean;
+  hasClientSecret: boolean;
+  baseUrl: string | null;
+  returnUrl: string | null;
+  cancelUrl: string | null;
+  webhookId: string | null;
+  currency: string | null;
+  brandName: string | null;
+  locale: string | null;
+  userAction: string | null;
+  paymentMethodPreference: string | null;
+  shippingPreference: string | null;
+  testConversionEnabled: boolean;
+  testConversionRateVndToUsd: number | null;
+  connectTimeoutMs: number | null;
+  readTimeoutMs: number | null;
+}
+
+export interface UpdatePaypalPaymentIntegrationRequest {
+  enabled?: boolean;
+  environment?: string;
+  clientId?: string;
+  clientSecret?: string;
+  baseUrl?: string;
+  returnUrl?: string;
+  cancelUrl?: string;
+  webhookId?: string;
+  currency?: string;
+  brandName?: string;
+  locale?: string;
+  userAction?: string;
+  paymentMethodPreference?: string;
+  shippingPreference?: string;
+  testConversionEnabled?: boolean;
+  testConversionRateVndToUsd?: number | null;
+  connectTimeoutMs?: number | null;
+  readTimeoutMs?: number | null;
+}

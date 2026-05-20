@@ -1,6 +1,9 @@
+import { breadcrumbGroupLabels } from './navigation';
+
 const SEGMENT_LABELS: Record<string, string> = {
   '': 'Dashboard',
   products: 'Products',
+  'product-attributes': 'Product Attributes',
   new: 'New',
   variants: 'Variants',
   categories: 'Categories',
@@ -11,18 +14,25 @@ const SEGMENT_LABELS: Record<string, string> = {
   reservations: 'Reservations',
   orders: 'Orders',
   payments: 'Payments',
+  integrations: 'Integrations',
+  'shipping-providers': 'Shipping Providers',
+  'payment-providers': 'Payment Providers',
   shipments: 'Shipments',
   invoices: 'Invoices',
   promotions: 'Promotions',
   vouchers: 'Vouchers',
   usages: 'Usages',
   reviews: 'Reviews',
+  customers: 'Customers',
+  users: 'Staff',
   'audit-log': 'Audit Log',
+  momo: 'MoMo',
+  paypal: 'PayPal',
 };
 
 export interface Crumb {
   label: string;
-  path: string;
+  path?: string;
   isCurrent: boolean;
 }
 
@@ -40,6 +50,11 @@ export function buildCrumbs(pathname: string, labels: Record<string, string> = {
 
   const segments = pathname.split('/').filter(Boolean);
   const crumbs: Crumb[] = [{ label: 'Dashboard', path: '/', isCurrent: false }];
+  const sectionLabel = breadcrumbGroupLabels[segments[0] ?? ''];
+
+  if (sectionLabel) {
+    crumbs.push({ label: sectionLabel, isCurrent: false });
+  }
 
   segments.forEach((segment, index) => {
     const path = '/' + segments.slice(0, index + 1).join('/');
