@@ -44,7 +44,7 @@ export function PaymentListPage() {
       <div className="space-y-6 p-6">
         <PageHeader
           title="Payments"
-          description="View and manage all payment records."
+          description="View and manage all payment records. Provider configuration is managed under Integrations > Payment Providers."
         />
 
         <PaymentTable

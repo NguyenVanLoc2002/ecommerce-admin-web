@@ -121,6 +121,8 @@ export const queryKeys = {
     list: (params: object) =>
       [...queryKeys.payments.lists(), cleanParams(params)] as const,
     detail: (id: EntityKey) => [...queryKeys.payments.all, 'detail', id] as const,
+    momoIntegration: () => [...queryKeys.payments.all, 'momoIntegration'] as const,
+    paypalIntegration: () => [...queryKeys.payments.all, 'paypalIntegration'] as const,
     transactions: (id: EntityKey) =>
       [...queryKeys.payments.all, 'transactions', id] as const,
   },

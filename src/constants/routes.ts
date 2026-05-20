@@ -30,6 +30,18 @@ export const routes = {
     list: '/carriers',
   },
 
+  integrations: {
+    root: '/integrations',
+    shippingProviders: {
+      list: '/integrations/shipping-providers',
+      detail: (id: EntityKey) => `/integrations/shipping-providers/${id}`,
+    },
+    paymentProviders: {
+      list: '/integrations/payment-providers',
+      detail: (providerCode: EntityKey) => `/integrations/payment-providers/${providerCode}`,
+    },
+  },
+
   warehouses: {
     list: '/warehouses',
   },
@@ -47,6 +59,7 @@ export const routes = {
 
   payments: {
     list: '/payments',
+    integrations: '/payments/integrations',
     detail: (id: EntityKey) => `/payments/${id}`,
   },
 
