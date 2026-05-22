@@ -10,15 +10,15 @@ export interface Brand extends SoftDeletableRecord {
   id: EntityId;
   name: string;
   slug: string;
-  description: string | null;
   logoUrl: string | null;
+  description: string | null;
+  sortOrder: number | null;
   status: EntityStatus;
-  productCount: number;
   createdAt: string;
-  updatedAt: string;
 }
 
 export interface BrandListParams extends PaginationParams, SoftDeleteFilterParams {
+  [key: string]: string | number | boolean | undefined;
   name?: string;
   status?: string;
 }
@@ -26,9 +26,14 @@ export interface BrandListParams extends PaginationParams, SoftDeleteFilterParam
 export interface CreateBrandRequest {
   name: string;
   slug: string;
-  description: string;
-  logoUrl: string | null;
-  status: EntityStatus;
+  logoUrl?: string | null;
+  description?: string;
 }
 
-export type UpdateBrandRequest = Partial<CreateBrandRequest>;
+export interface UpdateBrandRequest {
+  name?: string;
+  slug?: string;
+  logoUrl?: string | null;
+  description?: string;
+  status?: EntityStatus;
+}

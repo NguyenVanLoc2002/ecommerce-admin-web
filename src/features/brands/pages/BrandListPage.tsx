@@ -59,12 +59,17 @@ export function BrandListPage() {
       slug: values.slug,
       description: values.description,
       logoUrl: values.logoUrl,
-      status: values.status,
     };
 
     try {
       if (editingBrand) {
-        await updateBrand.mutateAsync({ id: editingBrand.id, body: payload });
+        await updateBrand.mutateAsync({
+          id: editingBrand.id,
+          body: {
+            ...payload,
+            ...(values.status ? { status: values.status } : {}),
+          },
+        });
         toast.success('Brand saved.');
       } else {
         await createBrand.mutateAsync(payload);

@@ -19,7 +19,7 @@ export const categoryService = {
     }),
 
   getById: (id: EntityId) =>
-    apiClient.get<Category>(`/categories/${id}`),
+    apiClient.get<Category>(`/admin/categories/${id}`),
 
   create: (body: CreateCategoryRequest) =>
     apiClient.post<Category>('/admin/categories', body),
