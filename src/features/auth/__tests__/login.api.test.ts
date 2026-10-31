@@ -3,16 +3,23 @@
  * These tests call the real backend at localhost:8080 - the server must be running.
  */
 
-import { beforeAll, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import type { ApiError, ApiResponse } from '@/shared/types/api.types';
 
 const BASE = 'http://localhost:8080/api/v1';
 
-type AuthResponseBody = {
+type TokenResponseBody = {
   accessToken?: string;
   tokenType?: string;
   expiresIn?: number;
   refreshToken?: string;
+};
+
+type LoginResponseBody = {
+  user: {
+    roles: string[];
+  };
+  tokens: TokenResponseBody;
 };
 
 async function post(
@@ -21,7 +28,7 @@ async function post(
   headers: Record<string, string> = {},
 ): Promise<{
   status: number;
-  body: ApiResponse<AuthResponseBody> | ApiError;
+  body: ApiResponse<unknown> | ApiError;
   cookie: string | null;
 }> {
   const res = await fetch(`${BASE}${path}`, {
@@ -35,28 +42,46 @@ async function post(
 
   return {
     status: res.status,
-    body: (await res.json()) as ApiResponse<AuthResponseBody> | ApiError,
+    body: (await res.json()) as ApiResponse<unknown> | ApiError,
     cookie: res.headers.get('set-cookie'),
   };
 }
 
+async function loginAndGetRefreshCookie(): Promise<string> {
+  const { status, cookie } = await post('/auth/login', {
+    email: 'hayzolady@gmail.com',
+    password: 'Ln123456',
+  });
+
+  expect(status).toBe(200);
+
+  const refreshCookie = cookie?.split(';')[0];
+  expect(refreshCookie).toBeTruthy();
+
+  if (!refreshCookie) {
+    throw new Error('Login response did not set a refresh-token cookie');
+  }
+
+  return refreshCookie;
+}
+
 describe('POST /auth/login', () => {
   describe('success', () => {
-    it('returns 200 with an access token body and no refresh token in JSON', async () => {
+    it('returns 200 with nested access-token metadata and no refresh token in JSON', async () => {
       const { status, body } = await post('/auth/login', {
         email: 'hayzolady@gmail.com',
         password: 'Ln123456',
       });
-      const successBody = body as ApiResponse<AuthResponseBody>;
+      const successBody = body as ApiResponse<LoginResponseBody>;
 
       expect(status).toBe(200);
       expect(successBody.success).toBe(true);
       expect(successBody.code).toBe('SUCCESS');
-      expect(typeof successBody.data.accessToken).toBe('string');
-      expect(successBody.data.accessToken?.length).toBeGreaterThan(0);
-      expect(successBody.data.tokenType).toBe('Bearer');
-      expect(typeof successBody.data.expiresIn).toBe('number');
-      expect(successBody.data.refreshToken).toBeUndefined();
+      expect(typeof successBody.data.tokens.accessToken).toBe('string');
+      expect(successBody.data.tokens.accessToken?.length).toBeGreaterThan(0);
+      expect(successBody.data.tokens.tokenType).toBe('Bearer');
+      expect(typeof successBody.data.tokens.expiresIn).toBe('number');
+      expect(successBody.data.tokens.refreshToken).toBeUndefined();
     });
   });
 
@@ -129,26 +154,15 @@ describe('POST /auth/login', () => {
 });
 
 describe('POST /auth/refresh-token', () => {
-  let refreshCookie: string | null = null;
-
-  beforeAll(async () => {
-    const { cookie } = await post('/auth/login', {
-      email: 'hayzolady@gmail.com',
-      password: 'Ln123456',
-    });
-
-    refreshCookie = cookie?.split(';')[0] ?? null;
-  });
-
   it('returns 200 with a fresh access token when the refresh cookie is present', async () => {
-    expect(refreshCookie).toBeTruthy();
+    const refreshCookie = await loginAndGetRefreshCookie();
 
     const { status, body } = await post(
       '/auth/refresh-token',
       undefined,
-      refreshCookie ? { Cookie: refreshCookie } : {},
+      { Cookie: refreshCookie },
     );
-    const successBody = body as ApiResponse<AuthResponseBody>;
+    const successBody = body as ApiResponse<TokenResponseBody>;
 
     expect(status).toBe(200);
     expect(successBody.success).toBe(true);
@@ -170,12 +184,12 @@ describe('POST /auth/refresh-token', () => {
   });
 
   it('does not require a JSON refreshToken body', async () => {
-    expect(refreshCookie).toBeTruthy();
+    const refreshCookie = await loginAndGetRefreshCookie();
 
     const { status } = await post(
       '/auth/refresh-token',
       undefined,
-      refreshCookie ? { Cookie: refreshCookie } : {},
+      { Cookie: refreshCookie },
     );
 
     expect(status).toBe(200);

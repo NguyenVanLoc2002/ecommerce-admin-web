@@ -18,15 +18,24 @@ describe('authService', () => {
 
   it('logs in with credentials so the backend can set the HttpOnly refresh cookie', async () => {
     postMock.mockResolvedValue({
+      user: { roles: ['ADMIN'] },
+      tokens: {
+        accessToken: 'access-token',
+        tokenType: 'Bearer',
+        expiresIn: 3600,
+      },
+    });
+
+    const session = await authService.login({
+      email: 'admin@example.com',
+      password: 'Password123',
+    });
+
+    expect(session).toEqual({
       accessToken: 'access-token',
       tokenType: 'Bearer',
       expiresIn: 3600,
       user: { roles: ['ADMIN'] },
-    });
-
-    await authService.login({
-      email: 'admin@example.com',
-      password: 'Password123',
     });
 
     expect(postMock).toHaveBeenCalledWith(
@@ -47,7 +56,14 @@ describe('authService', () => {
       user: { roles: ['ADMIN'] },
     });
 
-    await authService.refreshToken();
+    const session = await authService.refreshToken();
+
+    expect(session).toEqual({
+      accessToken: 'access-token',
+      tokenType: 'Bearer',
+      expiresIn: 3600,
+      user: { roles: ['ADMIN'] },
+    });
 
     expect(postMock).toHaveBeenCalledWith(
       '/auth/refresh-token',
