@@ -12,11 +12,28 @@ export interface OrderItem {
   productName: string;
   variantName: string;
   sku: string;
-  imageUrl?: string;
+  imageUrl?: string | null;
+  thumbnailUrl?: string | null;
+  productImageUrl?: string | null;
+  variantImageUrl?: string | null;
+  productPrimaryImageUrl?: string | null;
+  variantPrimaryImageUrl?: string | null;
+  productMedias?: OrderItemMedia[];
+  variantMedias?: OrderItemMedia[];
   unitPrice: number;
+  salePrice?: number | null;
   quantity: number;
   lineTotal: number;
   discountAmount: number;
+}
+
+export interface OrderItemMedia {
+  id?: EntityId;
+  mediaUrl: string;
+  mediaType?: string;
+  sortOrder?: number;
+  primary?: boolean;
+  variantId?: EntityId | null;
 }
 
 export interface Order {

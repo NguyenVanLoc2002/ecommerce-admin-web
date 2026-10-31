@@ -11,6 +11,7 @@ import { useBeforeUnload } from '@/shared/hooks/useBeforeUnload';
 import { slugify } from '@/shared/utils/slugify';
 import { productSchema, type ProductFormValues } from '../schemas/productSchema';
 import type { Product, BrandOption, CategoryOption } from '../types/product.types';
+import { ProductMediaSection } from './ProductMediaSection';
 
 const STATUS_OPTIONS = [
   { value: 'DRAFT', label: 'Draft' },
@@ -157,6 +158,14 @@ export function ProductForm({
               disabled={isSubmitting}
             />
           </section>
+
+          {isEditMode && (
+            <ProductMediaSection
+              media={product.media}
+              variants={product.variants}
+              disabled={isSubmitting}
+            />
+          )}
 
           {/* Status & Settings */}
           <section className="space-y-4">

@@ -13,7 +13,8 @@ import { AppError } from '@/shared/types/api.types';
 import { VariantStatus } from '@/shared/types/enums';
 import { routes } from '@/constants/routes';
 import { variantSchema, type VariantFormValues } from '../schemas/variantSchema';
-import type { ProductVariant, VariantAttributeDefinition } from '../types/product.types';
+import type { ProductMedia, ProductVariant, VariantAttributeDefinition } from '../types/product.types';
+import { VariantMediaEditor } from './VariantMediaEditor';
 import {
   buildVariantNamePreview,
   getSelectableVariantAttributes,
@@ -31,6 +32,7 @@ interface VariantFormProps {
   open: boolean;
   onClose: () => void;
   variant?: ProductVariant;
+  media?: ProductMedia[];
   attributes: VariantAttributeDefinition[];
   isAttributesLoading: boolean;
   isAttributesError: boolean;
@@ -56,6 +58,7 @@ export function VariantForm({
   open,
   onClose,
   variant,
+  media = [],
   attributes,
   isAttributesLoading,
   isAttributesError,
@@ -487,6 +490,8 @@ export function VariantForm({
                 disabled={isSubmitting}
               />
             </section>
+
+            {isEditMode && <VariantMediaEditor media={media} disabled={isSubmitting} />}
           </div>
         </form>
       </FormProvider>

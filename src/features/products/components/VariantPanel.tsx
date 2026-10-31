@@ -12,15 +12,16 @@ import { useCreateVariant } from '../hooks/useCreateVariant';
 import { useUpdateVariant } from '../hooks/useUpdateVariant';
 import { VariantTable } from './VariantTable';
 import { VariantForm } from './VariantForm';
-import type { ProductVariant } from '../types/product.types';
+import type { ProductMedia, ProductVariant } from '../types/product.types';
 import type { VariantFormValues } from '../schemas/variantSchema';
 import { buildVariantPayload } from '../utils/variantForm';
 
 interface VariantPanelProps {
   productId: string;
+  productMedia?: ProductMedia[];
 }
 
-export function VariantPanel({ productId }: VariantPanelProps) {
+export function VariantPanel({ productId, productMedia = [] }: VariantPanelProps) {
   const [formOpen, setFormOpen] = useState(false);
   const [editingVariant, setEditingVariant] = useState<ProductVariant | undefined>();
   const [deletedState, setDeletedState] = useState<SoftDeleteStateValue>(SoftDeleteState.ACTIVE);
@@ -94,6 +95,7 @@ export function VariantPanel({ productId }: VariantPanelProps) {
       <VariantTable
         productId={productId}
         variants={variants ?? []}
+        productMedia={productMedia}
         deletedState={deletedState}
         onEdit={openEditForm}
         onAddNew={openAddForm}
@@ -103,6 +105,7 @@ export function VariantPanel({ productId }: VariantPanelProps) {
         open={formOpen}
         onClose={handleClose}
         variant={editingVariant}
+        media={editingVariant ? productMedia.filter((item) => item.variantId === editingVariant.id) : []}
         attributes={variantAttributes ?? []}
         isAttributesLoading={isAttributesLoading}
         isAttributesError={isAttributesError}

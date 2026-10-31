@@ -948,7 +948,7 @@ Carrier catalog and per-store carrier configuration used by shipment creation.
   - `items`
   - `createdAt`
 - `OrderItemResponse`
-  - `id`, `variantId`, `productName`, `variantName`, `sku`
+  - `id`, `variantId`, `productName`, `variantName`, `sku`, `productImageUrl`
   - `unitPrice`, `salePrice`, `quantity`, `lineTotal`
 
 ### GET `/api/v1/admin/orders`
@@ -1333,6 +1333,10 @@ Carrier catalog and per-store carrier configuration used by shipment creation.
 - Shipment create flow uses:
   - `POST /v3/accounts/token`
   - `POST /v3/orders`
+- AhaMove token auth request body must use provider field names:
+  - `mobile`
+  - `api_key`
+- Do not send `apiKey` to AhaMove auth; `apiKey` is only the internal admin API field name used by this backend when saving carrier secrets.
 - Shipment tracking sync uses:
   - `GET /v3/orders/{order_id}`
   - `GET /v3/orders/{order_id}/shared-link`

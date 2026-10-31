@@ -85,7 +85,7 @@ export function ProductVariantsPage() {
         />
 
         <div className="mt-6">
-          <VariantPanel productId={productId} />
+          <VariantPanel productId={productId} productMedia={product?.media ?? []} />
         </div>
       </div>
     </AdminLayout>

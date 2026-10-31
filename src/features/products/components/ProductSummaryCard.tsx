@@ -3,6 +3,7 @@ import { CopyValueButton } from '@/shared/components/ui/CopyValueButton';
 import { StatusBadge } from '@/shared/components/ui/StatusBadge';
 import { formatDateTime } from '@/shared/utils/formatDate';
 import type { Product } from '../types/product.types';
+import { getProductPreviewMedia } from '../utils/productMedia';
 
 interface ProductSummaryCardProps {
   product: Product;
@@ -14,7 +15,7 @@ export function ProductSummaryCard({ product }: ProductSummaryCardProps) {
   const variantCount = product.variants.length || product.variantCount;
   const activeVariantCount = product.activeVariantCount
     || product.variants.filter((variant) => variant.status === 'ACTIVE').length;
-  const primaryMedia = product.media.find((media) => media.primary) ?? product.media[0];
+  const primaryMedia = getProductPreviewMedia(product.media);
 
   return (
     <aside className="space-y-4">
