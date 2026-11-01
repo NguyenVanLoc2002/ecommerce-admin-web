@@ -144,5 +144,9 @@ describe('ProductEditPage', () => {
     expect(markup).toContain('Variant: White / M');
     expect(markup).toContain('2 items');
     expect(markup).toContain('https://cdn.example.com/gallery-main.jpg');
+    expect(markup).toContain('actions are prepared in UI only until a ProductMedia write API is available.');
+    expect(markup).toContain('Set primary');
+    expect(markup).toContain('Edit URL');
+    expect(markup).toContain('Remove');
   });
 });
