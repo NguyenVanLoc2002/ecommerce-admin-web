@@ -2,17 +2,19 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { productService } from '../services/productService';
 import type { ProductListRequestParams } from '../utils/productListQuery';
 
-const { getMock, postMock } = vi.hoisted(() => ({
+const { getMock, postMock, patchMock, deleteMock } = vi.hoisted(() => ({
   getMock: vi.fn(),
   postMock: vi.fn(),
+  patchMock: vi.fn(),
+  deleteMock: vi.fn(),
 }));
 
 vi.mock('@/shared/lib/axios', () => ({
   apiClient: {
     get: getMock,
     post: postMock,
-    patch: vi.fn(),
-    delete: vi.fn(),
+    patch: patchMock,
+    delete: deleteMock,
   },
 }));
 
@@ -20,6 +22,8 @@ describe('productService', () => {
   beforeEach(() => {
     getMock.mockReset();
     postMock.mockReset();
+    patchMock.mockReset();
+    deleteMock.mockReset();
   });
 
   it('preserves backend pagination fields and does not client-filter product results', async () => {
@@ -93,5 +97,26 @@ describe('productService', () => {
 
     expect(postMock).toHaveBeenCalledWith('/admin/products/search/reindex');
     expect(response).toEqual({ totalProcessed: 128 });
+  });
+
+  it('uses the URL-based product media endpoints', async () => {
+    const body = {
+      mediaUrl: 'https://cdn.example.com/shirt.jpg',
+      mediaType: 'IMAGE' as const,
+      sortOrder: 1,
+      primary: true,
+      variantId: null,
+    };
+    postMock.mockResolvedValue({ id: 'media-1', ...body });
+    patchMock.mockResolvedValue({ id: 'media-1', ...body, sortOrder: 2 });
+    deleteMock.mockResolvedValue(undefined);
+
+    await productService.createMedia('product-1', body);
+    await productService.updateMedia('product-1', 'media-1', { sortOrder: 2 });
+    await productService.removeMedia('product-1', 'media-1');
+
+    expect(postMock).toHaveBeenCalledWith('/admin/products/product-1/media', body);
+    expect(patchMock).toHaveBeenCalledWith('/admin/products/product-1/media/media-1', { sortOrder: 2 });
+    expect(deleteMock).toHaveBeenCalledWith('/admin/products/product-1/media/media-1');
   });
 });

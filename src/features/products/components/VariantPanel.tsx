@@ -105,7 +105,6 @@ export function VariantPanel({ productId, productMedia = [] }: VariantPanelProps
         open={formOpen}
         onClose={handleClose}
         variant={editingVariant}
-        media={editingVariant ? productMedia.filter((item) => item.variantId === editingVariant.id) : []}
         attributes={variantAttributes ?? []}
         isAttributesLoading={isAttributesLoading}
         isAttributesError={isAttributesError}

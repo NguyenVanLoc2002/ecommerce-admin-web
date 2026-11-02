@@ -71,11 +71,23 @@ export interface ProductVariant extends SoftDeletableRecord {
 export interface ProductMedia {
   id: EntityId;
   mediaUrl: string;
-  mediaType: string;
+  mediaType: ProductMediaType;
   sortOrder: number;
   primary: boolean;
   variantId: EntityId | null;
 }
+
+export type ProductMediaType = 'IMAGE' | 'VIDEO';
+
+export interface CreateProductMediaRequest {
+  mediaUrl: string;
+  mediaType: ProductMediaType;
+  sortOrder: number;
+  primary: boolean;
+  variantId: EntityId | null;
+}
+
+export type UpdateProductMediaRequest = Partial<CreateProductMediaRequest>;
 
 export interface ProductListItemResponse extends SoftDeletableRecord {
   id: EntityId;

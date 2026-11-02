@@ -7,6 +7,8 @@ import type {
   ProductBrand,
   ProductCategory,
   ProductMedia,
+  CreateProductMediaRequest,
+  UpdateProductMediaRequest,
   CreateProductRequest,
   UpdateProductRequest,
   ReindexResult,
@@ -45,6 +47,15 @@ export const productService = {
 
   reindexSearch: () =>
     apiClient.post<ReindexResult>('/admin/products/search/reindex'),
+
+  createMedia: (productId: EntityId, body: CreateProductMediaRequest) =>
+    apiClient.post<ProductMedia>(`/admin/products/${productId}/media`, body),
+
+  updateMedia: (productId: EntityId, mediaId: EntityId, body: UpdateProductMediaRequest) =>
+    apiClient.patch<ProductMedia>(`/admin/products/${productId}/media/${mediaId}`, body),
+
+  removeMedia: (productId: EntityId, mediaId: EntityId) =>
+    apiClient.delete<void>(`/admin/products/${productId}/media/${mediaId}`),
 };
 
 function normalizeProductListItem(input: unknown): ProductListItem {
@@ -160,7 +171,7 @@ function normalizeMedia(input: unknown): ProductMedia {
   return {
     id: String(record.id ?? ''),
     mediaUrl: asString(record.mediaUrl),
-    mediaType: asString(record.mediaType),
+    mediaType: asString(record.mediaType) as ProductMedia['mediaType'],
     sortOrder: asNumber(record.sortOrder) ?? 0,
     primary: Boolean(record.primary),
     variantId: record.variantId == null ? null : String(record.variantId),
