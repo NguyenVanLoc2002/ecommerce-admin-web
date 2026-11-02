@@ -21,15 +21,12 @@ export function getVariantLabel(variants: ProductVariant[], variantId: EntityId 
 }
 
 export function getProductPreviewMedia(media: ProductMedia[]): ProductMedia | undefined {
-  const sortedProductMedia = sortMedia(media.filter((item) => item.variantId == null));
-  const sortedVariantMedia = sortMedia(media.filter((item) => item.variantId != null));
-  const primaryProductMedia = sortedProductMedia.find((item) => item.primary);
-  const primaryVariantMedia = sortedVariantMedia.find((item) => item.primary);
+  const sortedImages = sortMedia(media.filter((item) => item.mediaType === 'IMAGE'));
+  const primaryImage = sortedImages.find((item) => item.primary);
+  const sortedProductImages = sortedImages.filter((item) => item.variantId == null);
+  const sortedVariantImages = sortedImages.filter((item) => item.variantId != null);
 
-  return primaryProductMedia
-    ?? sortedProductMedia[0]
-    ?? primaryVariantMedia
-    ?? sortedVariantMedia[0];
+  return primaryImage ?? sortedProductImages[0] ?? sortedVariantImages[0];
 }
 
 export function getVariantMedia(media: ProductMedia[], variantId: EntityId): ProductMedia[] {

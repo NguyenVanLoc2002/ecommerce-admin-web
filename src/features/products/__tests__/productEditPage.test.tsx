@@ -27,6 +27,10 @@ vi.mock('../hooks/useCatalogOptions', () => ({
   useBrandOptions: () => ({ data: [] }),
 }));
 
+vi.mock('@/shared/hooks/useConfirmDialog', () => ({
+  useConfirmDialog: () => ({ confirm: vi.fn() }),
+}));
+
 function renderProductEdit(initialPath = '/products/123') {
   const queryClient = new QueryClient();
 
@@ -139,14 +143,15 @@ describe('ProductEditPage', () => {
 
     const markup = renderProductEdit();
 
-    expect(markup).toContain('Product Media');
+    expect(markup).toContain('Product media');
     expect(markup).toContain('Product gallery');
     expect(markup).toContain('Variant: White / M');
     expect(markup).toContain('2 items');
     expect(markup).toContain('https://cdn.example.com/gallery-main.jpg');
-    expect(markup).toContain('actions are prepared in UI only until a ProductMedia write API is available.');
+    expect(markup).toContain('Add URL-based gallery media or assign it to an active variant.');
+    expect(markup).toContain('Removing media only removes its catalog entry, not the remote asset.');
     expect(markup).toContain('Set primary');
-    expect(markup).toContain('Edit URL');
+    expect(markup).toContain('Edit');
     expect(markup).toContain('Remove');
   });
 });

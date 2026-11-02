@@ -161,6 +161,7 @@ export function ProductForm({
 
           {isEditMode && (
             <ProductMediaSection
+              productId={product.id}
               media={product.media}
               variants={product.variants}
               disabled={isSubmitting}
