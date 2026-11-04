@@ -54,11 +54,10 @@ export function mapPaypalIntegrationToFormValues(
     userAction: integration.userAction ?? '',
     paymentMethodPreference: integration.paymentMethodPreference ?? '',
     shippingPreference: integration.shippingPreference ?? '',
-    testConversionEnabled: integration.testConversionEnabled,
-    testConversionRateVndToUsd:
-      integration.testConversionRateVndToUsd == null
+    conversionRateVndToUsd:
+      integration.conversionRateVndToUsd == null
         ? ''
-        : String(integration.testConversionRateVndToUsd),
+        : String(integration.conversionRateVndToUsd),
     connectTimeoutMs:
       integration.connectTimeoutMs == null ? '' : String(integration.connectTimeoutMs),
     readTimeoutMs: integration.readTimeoutMs == null ? '' : String(integration.readTimeoutMs),
@@ -106,12 +105,11 @@ export function buildPaypalIntegrationPayload(
   assignIfDirty(payload, dirtyFields, 'userAction', values.userAction);
   assignIfDirty(payload, dirtyFields, 'paymentMethodPreference', values.paymentMethodPreference);
   assignIfDirty(payload, dirtyFields, 'shippingPreference', values.shippingPreference);
-  assignIfDirty(payload, dirtyFields, 'testConversionEnabled', values.testConversionEnabled);
   assignIfDirty(
     payload,
     dirtyFields,
-    'testConversionRateVndToUsd',
-    toNullableNumber(values.testConversionRateVndToUsd),
+    'conversionRateVndToUsd',
+    toNullableNumber(values.conversionRateVndToUsd),
   );
   assignIfDirty(payload, dirtyFields, 'connectTimeoutMs', toNullableNumber(values.connectTimeoutMs));
   assignIfDirty(payload, dirtyFields, 'readTimeoutMs', toNullableNumber(values.readTimeoutMs));

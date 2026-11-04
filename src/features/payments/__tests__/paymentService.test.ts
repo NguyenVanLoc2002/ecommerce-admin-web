@@ -53,15 +53,13 @@ describe('paymentService', () => {
     await paymentService.updatePaypalIntegration({
       environment: 'sandbox',
       clientSecret: 'new-secret',
-      testConversionEnabled: true,
-      testConversionRateVndToUsd: 26000,
+      conversionRateVndToUsd: 26000,
     });
 
     expect(putMock).toHaveBeenCalledWith('/admin/payments/integration/paypal', {
       environment: 'sandbox',
       clientSecret: 'new-secret',
-      testConversionEnabled: true,
-      testConversionRateVndToUsd: 26000,
+      conversionRateVndToUsd: 26000,
     });
   });
 });
