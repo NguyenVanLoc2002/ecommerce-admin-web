@@ -45,8 +45,7 @@ const DEFAULT_VALUES: PaypalPaymentIntegrationFormValues = {
   userAction: '',
   paymentMethodPreference: '',
   shippingPreference: '',
-  testConversionEnabled: false,
-  testConversionRateVndToUsd: '',
+  conversionRateVndToUsd: '',
   connectTimeoutMs: '',
   readTimeoutMs: '',
 };
@@ -78,7 +77,6 @@ export function PaypalIntegrationCard() {
   const rootError = errors.root?.server?.message;
   const clearClientId = form.watch('clearClientId');
   const clearClientSecret = form.watch('clearClientSecret');
-  const testConversionEnabled = form.watch('testConversionEnabled');
 
   const handleClearToggle = (
     secretField: 'clientId' | 'clientSecret',
@@ -132,7 +130,7 @@ export function PaypalIntegrationCard() {
     return (
       <IntegrationCard
         title="PayPal"
-        description="Runtime configuration for PayPal order creation, return handling, and sandbox helpers."
+        description="Runtime configuration for PayPal USD order creation, return handling, and conversion snapshots."
       >
         <ErrorCard
           message="Failed to load the PayPal integration configuration."
@@ -145,7 +143,7 @@ export function PaypalIntegrationCard() {
   return (
     <IntegrationCard
       title="PayPal"
-      description="Runtime configuration for PayPal order creation, return handling, and sandbox helpers."
+      description="Runtime configuration for PayPal USD order creation, return handling, and conversion snapshots."
       badges={
         <ProviderStateBadges
           enabled={integration.enabled}
@@ -347,38 +345,17 @@ export function PaypalIntegrationCard() {
           </IntegrationSection>
 
           <IntegrationSection
-            title="Advanced"
-            description="Sandbox conversion helpers and timeout overrides for PayPal runtime behavior."
+            title="Currency conversion"
+            description="Orders remain in VND. The configured VND-per-USD rate is snapshotted with each PayPal payment."
           >
             <div className="space-y-4 rounded-xl border border-gray-200 bg-gray-50 p-4">
-              <Controller
-                control={form.control}
-                name="testConversionEnabled"
-                render={({ field }) => (
-                  <div className="flex items-center justify-between gap-4">
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">Sandbox VND to USD conversion</p>
-                      <p className="text-xs text-gray-500">
-                        Use only for test-mode checkout flows that need a temporary conversion rate.
-                      </p>
-                    </div>
-                    <Toggle
-                      checked={field.value}
-                      onChange={field.onChange}
-                      disabled={updateIntegration.isPending}
-                      label={field.value ? 'Enabled' : 'Disabled'}
-                    />
-                  </div>
-                )}
-              />
-
               <div className="grid gap-4 md:grid-cols-3">
                 <FormField
-                  name="testConversionRateVndToUsd"
-                  label="Test Conversion Rate"
+                  name="conversionRateVndToUsd"
+                  label="VND per USD"
                   type="number"
                   placeholder="26000"
-                  hint={testConversionEnabled ? 'Required only if your backend expects a manual sandbox rate.' : 'Leave blank unless your sandbox flow needs an override.'}
+                  hint={`Source: ${integration.conversionRateSource}. Required when PayPal is enabled.`}
                   disabled={updateIntegration.isPending}
                 />
                 <FormField

@@ -90,8 +90,7 @@ describe('payment integration form helpers', () => {
       userAction: '',
       paymentMethodPreference: '',
       shippingPreference: '',
-      testConversionEnabled: true,
-      testConversionRateVndToUsd: '26000',
+      conversionRateVndToUsd: '26000',
       connectTimeoutMs: '',
       readTimeoutMs: '18000',
     });
@@ -100,8 +99,7 @@ describe('payment integration form helpers', () => {
       clientId: true,
       baseUrl: true,
       currency: true,
-      testConversionEnabled: true,
-      testConversionRateVndToUsd: true,
+      conversionRateVndToUsd: true,
       readTimeoutMs: true,
     });
 
@@ -109,8 +107,7 @@ describe('payment integration form helpers', () => {
       clientId: 'new-client-id',
       baseUrl: 'https://api-m.sandbox.paypal.com',
       currency: 'USD',
-      testConversionEnabled: true,
-      testConversionRateVndToUsd: 26000,
+      conversionRateVndToUsd: 26000,
       readTimeoutMs: 18000,
     });
   });
@@ -133,8 +130,7 @@ describe('payment integration form helpers', () => {
       userAction: '',
       paymentMethodPreference: '',
       shippingPreference: '',
-      testConversionEnabled: false,
-      testConversionRateVndToUsd: '',
+      conversionRateVndToUsd: '',
       connectTimeoutMs: '0',
       readTimeoutMs: '',
     });

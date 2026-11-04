@@ -107,8 +107,8 @@ export interface PaypalPaymentIntegration {
   userAction: string | null;
   paymentMethodPreference: string | null;
   shippingPreference: string | null;
-  testConversionEnabled: boolean;
-  testConversionRateVndToUsd: number | null;
+  conversionRateVndToUsd: number | null;
+  conversionRateSource: string;
   connectTimeoutMs: number | null;
   readTimeoutMs: number | null;
 }
@@ -128,8 +128,7 @@ export interface UpdatePaypalPaymentIntegrationRequest {
   userAction?: string;
   paymentMethodPreference?: string;
   shippingPreference?: string;
-  testConversionEnabled?: boolean;
-  testConversionRateVndToUsd?: number | null;
+  conversionRateVndToUsd?: number | null;
   connectTimeoutMs?: number | null;
   readTimeoutMs?: number | null;
 }

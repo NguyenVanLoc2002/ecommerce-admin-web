@@ -80,8 +80,7 @@ export const paypalPaymentIntegrationSchema = z.object({
   userAction: optionalText(100),
   paymentMethodPreference: optionalText(100),
   shippingPreference: optionalText(100),
-  testConversionEnabled: z.boolean(),
-  testConversionRateVndToUsd: optionalPositiveDecimal('Test conversion rate'),
+  conversionRateVndToUsd: optionalPositiveDecimal('Conversion rate'),
   connectTimeoutMs: optionalPositiveInteger('Connect timeout'),
   readTimeoutMs: optionalPositiveInteger('Read timeout'),
 });
