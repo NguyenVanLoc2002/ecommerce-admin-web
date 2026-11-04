@@ -36,12 +36,14 @@ Authorization: Bearer <accessToken>
 - Access tokens are sent in `Authorization: Bearer <accessToken>`.
 - Refresh tokens are transported primarily via an HttpOnly cookie on `/api/v1/auth/**`.
 - CORS allows credentials for configured frontend origins so refresh/logout can use cookies.
-- `POST /api/v1/auth/register` and `POST /api/v1/auth/login` return:
+- `POST /api/v1/auth/register` and `POST /api/v1/auth/login` return
+  `ApiResponse<AuthResponse>`. Its `data` contains the authenticated `user` and
+  nested `tokens` with:
   - `accessToken`
   - `tokenType`
   - `expiresIn`
 - `POST /api/v1/auth/register` and `POST /api/v1/auth/login` also set a refresh-token cookie.
-- `POST /api/v1/auth/refresh-token` also returns:
+- `POST /api/v1/auth/refresh-token` returns `ApiResponse<TokenResponse>` with:
   - `accessToken`
   - `tokenType`
   - `expiresIn`

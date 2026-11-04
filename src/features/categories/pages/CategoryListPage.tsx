@@ -34,8 +34,15 @@ export function CategoryListPage() {
 
   const debouncedName = useDebounce(filters.name ?? '', 300);
   const queryParams: CategoryListParams = { ...filters, name: debouncedName || undefined };
+  const parentCategoryQueryParams: CategoryListParams = {
+    page: 0,
+    size: 200,
+    sort: 'name,asc',
+    deletedState: SoftDeleteState.ACTIVE,
+  };
 
   const { data, isLoading, isError, refetch } = useCategories(queryParams);
+  const { data: parentCategoryData } = useCategories(parentCategoryQueryParams);
   const createCategory = useCreateCategory();
   const updateCategory = useUpdateCategory();
 
@@ -56,12 +63,27 @@ export function CategoryListPage() {
   };
 
   const handleSubmit = async (values: CategoryFormValues) => {
+    const payload = {
+      parentId: values.parentId,
+      name: values.name,
+      slug: values.slug,
+      description: values.description,
+      imageUrl: values.imageUrl,
+      sortOrder: values.sortOrder,
+    };
+
     try {
       if (editingCategory) {
-        await updateCategory.mutateAsync({ id: editingCategory.id, body: values });
+        await updateCategory.mutateAsync({
+          id: editingCategory.id,
+          body: {
+            ...payload,
+            ...(values.status ? { status: values.status } : {}),
+          },
+        });
         toast.success('Category saved.');
       } else {
-        await createCategory.mutateAsync(values);
+        await createCategory.mutateAsync(payload);
         toast.success('Category created.');
       }
       closeForm();
@@ -106,6 +128,7 @@ export function CategoryListPage() {
         open={formOpen}
         onClose={closeForm}
         category={editingCategory}
+        categories={parentCategoryData?.items ?? []}
         isSubmitting={isSubmitting}
         onSubmit={(values) => void handleSubmit(values)}
       />

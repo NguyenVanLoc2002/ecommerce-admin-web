@@ -82,7 +82,13 @@ export function BrandForm({ open, onClose, brand, isSubmitting, onSubmit }: Bran
       }
     >
       <FormProvider {...form}>
-        <form id="brand-form" onSubmit={form.handleSubmit(onSubmit)} noValidate>
+        <form
+          id="brand-form"
+          onSubmit={(event) => {
+            void form.handleSubmit(onSubmit)(event);
+          }}
+          noValidate
+        >
           <div className="space-y-4">
             <FormField
               name="name"
@@ -114,13 +120,15 @@ export function BrandForm({ open, onClose, brand, isSubmitting, onSubmit }: Bran
               hint="Direct link to the brand logo image."
               disabled={isSubmitting}
             />
-            <FormSelect
-              name="status"
-              label="Status"
-              required
-              options={STATUS_OPTIONS}
-              disabled={isSubmitting}
-            />
+            {isEditMode && (
+              <FormSelect
+                name="status"
+                label="Status"
+                required
+                options={STATUS_OPTIONS}
+                disabled={isSubmitting}
+              />
+            )}
           </div>
         </form>
       </FormProvider>

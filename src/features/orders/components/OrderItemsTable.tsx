@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { Package } from 'lucide-react';
 import { formatMoney } from '@/shared/utils/formatMoney';
 import { cn } from '@/shared/utils/cn';
 import type { OrderItem } from '../types/order.types';
+import { getOrderItemImage } from '../utils/orderItemImage';
 
 interface OrderItemsTableProps {
   items: OrderItem[];
@@ -31,20 +33,7 @@ export function OrderItemsTable({
       <div className="divide-y divide-gray-100">
         {items.map((item) => (
           <div key={item.id} className="flex items-start gap-3 px-4 py-3">
-            {/* Thumbnail */}
-            <div className="h-12 w-12 shrink-0 overflow-hidden rounded-md border border-gray-100 bg-gray-50">
-              {item.imageUrl ? (
-                <img
-                  src={item.imageUrl}
-                  alt={item.variantName}
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center">
-                  <Package className="h-5 w-5 text-gray-300" />
-                </div>
-              )}
-            </div>
+            <OrderItemThumbnail item={item} />
 
             {/* Info */}
             <div className="min-w-0 flex-1">
@@ -87,6 +76,28 @@ export function OrderItemsTable({
           <PriceLine label="Total" value={total} labelClass="font-semibold text-gray-900 text-sm" valueClass="font-bold text-gray-900 text-lg" />
         </div>
       </div>
+    </div>
+  );
+}
+
+function OrderItemThumbnail({ item }: { item: OrderItem }) {
+  const [failed, setFailed] = useState(false);
+  const imageUrl = failed ? null : getOrderItemImage(item);
+
+  return (
+    <div className="h-12 w-12 shrink-0 overflow-hidden rounded-md border border-gray-200 bg-gray-50">
+      {imageUrl ? (
+        <img
+          src={imageUrl}
+          alt={item.variantName || item.productName}
+          className="h-full w-full object-cover"
+          onError={() => setFailed(true)}
+        />
+      ) : (
+        <div className="flex h-full w-full items-center justify-center">
+          <Package className="h-5 w-5 text-gray-300" />
+        </div>
+      )}
     </div>
   );
 }

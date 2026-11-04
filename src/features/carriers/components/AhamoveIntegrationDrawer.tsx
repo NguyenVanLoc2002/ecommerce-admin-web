@@ -33,6 +33,12 @@ import type {
   TestAhamoveConnectionRequest,
   UpdateAhamoveIntegrationRequest,
 } from '../types/carrier.types';
+import {
+  formatMissingQuoteFields,
+  getAhamoveConnectionResultPresentation,
+  getAhamoveQuoteHealthPresentation,
+  normalizeMissingQuoteFields,
+} from '../utils/ahamoveQuoteHealth';
 import { CarrierConnectionBadge } from './CarrierConnectionBadge';
 
 interface AhamoveIntegrationDrawerProps {
@@ -192,20 +198,21 @@ function ResultPanel({
 }: {
   result: AhamoveConnectionTestResponse;
 }) {
-  const isSuccess = result.success && result.status === 'CONNECTED';
+  const presentation = getAhamoveConnectionResultPresentation(result);
+  const missingQuoteFields = normalizeMissingQuoteFields(result.missingQuoteFields);
+  const panelClassName = {
+    success: 'border-success-200 bg-success-50',
+    warning: 'border-warning-200 bg-warning-50',
+    danger: 'border-danger-200 bg-danger-50',
+    info: 'border-info-200 bg-info-50',
+    default: 'border-gray-200 bg-gray-50',
+  }[presentation.variant];
 
   return (
-    <div
-      className={[
-        'rounded-xl border px-4 py-3',
-        isSuccess
-          ? 'border-success-200 bg-success-50'
-          : 'border-danger-200 bg-danger-50',
-      ].join(' ')}
-    >
+    <div className={['rounded-xl border px-4 py-3', panelClassName].join(' ')}>
       <div className="flex flex-wrap items-center gap-2">
-        <Badge variant={isSuccess ? 'success' : 'danger'} dot>
-          {isSuccess ? 'Connection succeeded' : 'Connection failed'}
+        <Badge variant={presentation.variant} dot>
+          {presentation.title}
         </Badge>
         <Badge variant="default">{result.status}</Badge>
       </div>
@@ -219,8 +226,58 @@ function ResultPanel({
           <p className="text-xs font-medium uppercase tracking-[0.08em] text-gray-500">Resolved phone</p>
           <p className="mt-1 text-sm text-gray-800">{result.resolvedPhone ?? 'Not resolved'}</p>
         </div>
+        <div>
+          <p className="text-xs font-medium uppercase tracking-[0.08em] text-gray-500">Quote readiness</p>
+          <p className="mt-1 text-sm text-gray-800">
+            {result.quoteReady === true
+              ? 'Ready'
+              : result.quoteReady === false
+                ? 'Not ready'
+                : 'Not reported'}
+          </p>
+        </div>
+        <div>
+          <p className="text-xs font-medium uppercase tracking-[0.08em] text-gray-500">Quote verification</p>
+          <p className="mt-1 text-sm text-gray-800">
+            {result.quoteVerified === true
+              ? 'Verified by live quote test'
+              : result.quoteReady === true
+                ? 'No quote verification in this response'
+                : 'Not verified'}
+          </p>
+        </div>
       </div>
+      {missingQuoteFields.length ? (
+        <div className="mt-3 rounded-xl border border-warning-200 bg-white/70 px-4 py-3">
+          <p className="text-xs font-medium uppercase tracking-[0.08em] text-warning-800">
+            Missing quote fields
+          </p>
+          <p className="mt-1 text-sm text-warning-900">{missingQuoteFields.join(', ')}</p>
+        </div>
+      ) : null}
     </div>
+  );
+}
+
+function QuoteHealthIndicator({
+  quoteReady,
+  quoteVerified,
+  missingQuoteFields,
+}: {
+  quoteReady: boolean | null | undefined;
+  quoteVerified: boolean | null | undefined;
+  missingQuoteFields: string[] | null | undefined;
+}) {
+  const presentation = getAhamoveQuoteHealthPresentation({
+    quoteReady,
+    quoteVerified,
+    missingQuoteFields,
+  });
+
+  return (
+    <Badge variant={presentation.variant} dot>
+      {presentation.label}
+    </Badge>
   );
 }
 
@@ -302,6 +359,12 @@ export function AhamoveIntegrationDrawer({
   const rootError = errors.root?.server?.message;
   const integration = integrationQuery.data;
   const rawWebhookToken = tokenResponse?.token ?? null;
+  const quoteHealth = getAhamoveQuoteHealthPresentation({
+    quoteReady: integration?.quoteReady,
+    quoteVerified: integration?.quoteVerified,
+    missingQuoteFields: integration?.missingQuoteFields,
+  });
+  const missingQuoteFields = normalizeMissingQuoteFields(integration?.missingQuoteFields);
 
   const handleSave = form.handleSubmit(async (values) => {
     if (!carrier) {
@@ -317,6 +380,7 @@ export function AhamoveIntegrationDrawer({
       });
       form.reset(mapIntegrationToFormValues(savedIntegration));
       initializedCarrierIdRef.current = carrier.id;
+      setTestResult(null);
       toast.success('AhaMove configuration saved.');
     } catch (error) {
       if (error instanceof AppError) {
@@ -368,6 +432,9 @@ export function AhamoveIntegrationDrawer({
         message,
         resolvedBaseUrl: null,
         resolvedPhone: null,
+        quoteReady: null,
+        quoteVerified: null,
+        missingQuoteFields: null,
       });
     }
   };
@@ -456,6 +523,11 @@ export function AhamoveIntegrationDrawer({
                     Config {integration?.enabled ? 'enabled' : 'disabled'}
                   </Badge>
                   <CarrierConnectionBadge status={integration?.connectionStatus ?? carrier.connectionStatus} />
+                  <QuoteHealthIndicator
+                    quoteReady={integration?.quoteReady}
+                    quoteVerified={integration?.quoteVerified}
+                    missingQuoteFields={integration?.missingQuoteFields}
+                  />
                 </div>
                 <div className="mt-4 grid gap-4 md:grid-cols-2">
                   <div>
@@ -657,6 +729,22 @@ export function AhamoveIntegrationDrawer({
                     label="Resolved error"
                     value={integration?.lastHealthCheckError ?? carrier.lastHealthCheckError ?? 'No recent error'}
                   />
+                </div>
+
+                <div className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <QuoteHealthIndicator
+                      quoteReady={integration?.quoteReady}
+                      quoteVerified={integration?.quoteVerified}
+                      missingQuoteFields={integration?.missingQuoteFields}
+                    />
+                  </div>
+                  <p className="mt-2 text-sm text-gray-700">{quoteHealth.helper}</p>
+                  {missingQuoteFields.length ? (
+                    <p className="mt-2 text-sm text-warning-800">
+                      Missing quote fields: {formatMissingQuoteFields(missingQuoteFields)}
+                    </p>
+                  ) : null}
                 </div>
 
                 <div className="flex flex-wrap items-center gap-3">

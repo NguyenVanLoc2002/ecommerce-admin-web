@@ -112,7 +112,7 @@ export function CarrierListPage() {
             {
               label: 'Connected',
               value: String(connectedCount),
-              hint: 'Connected uses the latest saved provider health status returned by the backend.',
+              hint: 'Connected means the latest backend connection check passed, not that quote defaults are fully configured.',
             },
             {
               label: 'Webhook ready',

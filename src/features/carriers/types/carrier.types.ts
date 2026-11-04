@@ -82,6 +82,9 @@ export interface AhamoveIntegration {
   lastHealthCheckAt: string | null;
   lastHealthCheckError: string | null;
   maskedWebhookToken: string | null;
+  quoteReady: boolean | null;
+  quoteVerified: boolean | null;
+  missingQuoteFields: string[] | null;
 }
 
 export interface UpdateAhamoveIntegrationRequest {
@@ -110,10 +113,13 @@ export interface TestAhamoveConnectionRequest {
 
 export interface AhamoveConnectionTestResponse {
   success: boolean;
-  status: 'NOT_CONFIGURED' | 'CONNECTED' | 'FAILED' | string;
+  status: string;
   message: string;
   resolvedBaseUrl: string | null;
   resolvedPhone: string | null;
+  quoteReady: boolean | null;
+  quoteVerified: boolean | null;
+  missingQuoteFields: string[] | null;
 }
 
 export interface AhamoveWebhookTokenResponse {

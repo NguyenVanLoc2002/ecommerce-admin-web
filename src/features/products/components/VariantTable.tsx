@@ -7,13 +7,15 @@ import { formatMoney } from '@/shared/utils/formatMoney';
 import { resolveSoftDeleteState } from '@/shared/utils/softDelete';
 import type { ColumnDef } from '@/shared/components/table/types';
 import { SoftDeleteState, type SoftDeleteState as SoftDeleteStateValue } from '@/shared/types/api.types';
-import type { VariantStatus } from '@/shared/types/enums';
-import type { ProductVariant } from '../types/product.types';
+import type { ProductMedia, ProductVariant } from '../types/product.types';
 import { VariantRowActions } from './VariantRowActions';
+import { VariantMediaPreview } from './VariantMediaPreview';
+import { getVariantMedia } from '../utils/productMedia';
 
 interface VariantTableProps {
   productId: string;
   variants: ProductVariant[];
+  productMedia?: ProductMedia[];
   deletedState: SoftDeleteStateValue;
   onEdit: (variant: ProductVariant) => void;
   onAddNew: () => void;
@@ -51,6 +53,7 @@ function SkuCell({ sku }: { sku: string }) {
 export function VariantTable({
   productId,
   variants,
+  productMedia = [],
   deletedState,
   onEdit,
   onAddNew,
@@ -94,6 +97,13 @@ export function VariantTable({
         ),
       },
       {
+        id: 'media',
+        header: 'Media',
+        cell: ({ row }) => (
+          <VariantMediaPreview media={getVariantMedia(productMedia, row.original.id)} />
+        ),
+      },
+      {
         id: 'recordStatus',
         header: 'Record Status',
         cell: ({ row }) => (
@@ -107,7 +117,7 @@ export function VariantTable({
         id: 'status',
         header: 'Status',
         cell: ({ row }) => (
-          <StatusBadge type="variant" status={row.original.status as VariantStatus} />
+          <StatusBadge type="variant" status={row.original.status} />
         ),
       },
       {
@@ -123,7 +133,7 @@ export function VariantTable({
         ),
       },
     ],
-    [deletedState, productId, onEdit],
+    [deletedState, productId, productMedia, onEdit],
   );
 
   return (

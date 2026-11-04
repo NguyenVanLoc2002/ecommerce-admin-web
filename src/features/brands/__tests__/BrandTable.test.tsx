@@ -9,7 +9,7 @@ vi.mock('@/features/brands/components/BrandRowActions', () => ({
 }));
 
 describe('BrandTable', () => {
-  it('renders record status badges for active and deleted rows', () => {
+  it('renders the contract-aligned columns without a products column', () => {
     const markup = renderToStaticMarkup(
       <BrandTable
         data={{
@@ -20,10 +20,9 @@ describe('BrandTable', () => {
               slug: 'alpha',
               description: null,
               logoUrl: null,
+              sortOrder: 1,
               status: 'ACTIVE',
-              productCount: 4,
               createdAt: '2026-05-01T00:00:00Z',
-              updatedAt: '2026-05-01T00:00:00Z',
               isDeleted: false,
             },
             {
@@ -32,10 +31,9 @@ describe('BrandTable', () => {
               slug: 'beta',
               description: null,
               logoUrl: null,
+              sortOrder: null,
               status: 'INACTIVE',
-              productCount: 0,
               createdAt: '2026-05-01T00:00:00Z',
-              updatedAt: '2026-05-01T00:00:00Z',
               isDeleted: true,
             },
           ],
@@ -58,8 +56,11 @@ describe('BrandTable', () => {
       />,
     );
 
-    expect(markup).toContain('Record Status');
+    expect(markup).toContain('Brand');
+    expect(markup).toContain('Sort Order');
     expect(markup).toContain('Deleted');
     expect(markup).toContain('Active');
+    expect(markup).not.toContain('Products');
+    expect(markup).not.toContain('Record Status');
   });
 });

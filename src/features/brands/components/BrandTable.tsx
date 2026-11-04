@@ -15,7 +15,6 @@ import { cn } from '@/shared/utils/cn';
 import { resolveSoftDeleteState } from '@/shared/utils/softDelete';
 import type { ColumnDef, SortState } from '@/shared/components/table/types';
 import { SoftDeleteState, type PaginatedResponse } from '@/shared/types/api.types';
-import type { EntityStatus } from '@/shared/types/enums';
 import type { Brand, BrandListParams } from '../types/brand.types';
 import { BrandRowActions } from './BrandRowActions';
 
@@ -46,7 +45,7 @@ function brandInitials(name: string): string {
   const trimmed = name.trim();
   if (!trimmed) return '?';
   const parts = trimmed.split(/\s+/).slice(0, 2);
-  return parts.map((p) => p[0]?.toUpperCase() ?? '').join('') || trimmed[0]!.toUpperCase();
+  return parts.map((p) => p[0]?.toUpperCase() ?? '').join('') || trimmed.charAt(0).toUpperCase();
 }
 
 function BrandAvatar({ name, logoUrl }: { name: string; logoUrl: string | null }) {
@@ -58,7 +57,7 @@ function BrandAvatar({ name, logoUrl }: { name: string; logoUrl: string | null }
       <img
         src={logoUrl}
         alt={name}
-        className="h-9 w-9 shrink-0 rounded-md border border-gray-100 bg-white object-contain p-0.5"
+        className="h-8 w-8 shrink-0 rounded-md border border-gray-200 bg-white object-contain p-0.5"
         onError={() => setFailed(true)}
       />
     );
@@ -68,7 +67,7 @@ function BrandAvatar({ name, logoUrl }: { name: string; logoUrl: string | null }
     <div
       aria-hidden
       className={cn(
-        'flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-xs font-bold ring-1 ring-inset',
+        'flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-xs font-bold ring-1 ring-inset',
         AVATAR_PALETTE[paletteIndex(name)],
       )}
     >
@@ -119,36 +118,37 @@ export function BrandTable({
         ),
       },
       {
-        id: 'recordStatus',
-        header: 'Record Status',
-        cell: ({ row }) => (
-          <StatusBadge
-            type="soft-delete"
-            status={resolveSoftDeleteState(row.original, filters.deletedState)}
-          />
-        ),
-      },
-      {
         id: 'status',
         header: 'Status',
-        cell: ({ row }) => (
-          <StatusBadge type="entity" status={row.original.status as EntityStatus} />
-        ),
+        cell: ({ row }) => {
+          const isDeleted = resolveSoftDeleteState(row.original, filters.deletedState);
+          return (
+            <div className="flex flex-col items-start gap-1">
+              <StatusBadge type="entity" status={row.original.status} />
+              {isDeleted === true && <StatusBadge type="soft-delete" status={true} />}
+            </div>
+          );
+        },
       },
       {
-        id: 'productCount',
-        header: 'Products',
+        id: 'sortOrder',
+        header: 'Sort Order',
+        enableSorting: true,
         headerClassName: 'text-right',
         className: 'text-right',
         cell: ({ row }) => (
-          <span className="text-sm font-semibold tabular-nums text-gray-700">
-            {row.original.productCount}
-          </span>
+          row.original.sortOrder == null ? (
+            <span className="text-sm text-gray-400">Not set</span>
+          ) : (
+            <span className="text-sm font-semibold tabular-nums text-gray-700">
+              {row.original.sortOrder}
+            </span>
+          )
         ),
       },
       {
         id: 'createdAt',
-        header: 'Created',
+        header: 'Created At',
         enableSorting: true,
         cell: ({ row }) => (
           <span className="whitespace-nowrap text-xs text-gray-500">{formatDate(row.original.createdAt)}</span>
@@ -156,8 +156,8 @@ export function BrandTable({
       },
       {
         id: 'actions',
-        header: '',
-        className: 'w-12',
+        header: 'Actions',
+        className: 'w-16',
         cell: ({ row }) => (
           <BrandRowActions brand={row.original} onEdit={onEdit} />
         ),
@@ -206,17 +206,13 @@ export function BrandTable({
         emptyState={
           <EmptyState
             icon={<Briefcase className="h-10 w-10" />}
-            title={
-              filters.deletedState === SoftDeleteState.DELETED
-                ? 'No deleted brands'
-                : filters.deletedState === SoftDeleteState.ALL
-                  ? 'No brands yet'
-                  : 'No active brands'
-            }
+            title="No brands found"
             message={
               filters.deletedState === SoftDeleteState.DELETED
                 ? 'Deleted brands will appear here.'
-                : 'Add brands to associate them with your products.'
+                : filters.deletedState === SoftDeleteState.ALL
+                  ? 'Adjust your filters or add a new brand.'
+                  : 'Add brands to associate them with your products.'
             }
             action={{ label: 'Add Brand', onClick: onCreateNew }}
           />
