@@ -52,8 +52,8 @@ Authorization: Bearer <accessToken>
 - Refresh rotates the refresh token on every success and returns only a new access token in the JSON body.
 - `POST /api/v1/auth/logout` is public/idempotent at the filter-chain level so it can still clear the cookie when the access token is missing or expired.
 - `POST /api/v1/auth/logout` blacklists the presented access token when valid, revokes the refresh session when a refresh cookie is present, and clears the refresh cookie.
-- No password-change or password-reset API is implemented in the current source tree.
-- `AuthService.revokeAllRefreshSessions(principalType, principalId)` exists as the reusable integration point for a future password-change flow.
+- `POST /api/v1/account/password/change` is an authenticated password-change endpoint. It requires a Bearer access token, verifies the current password, applies the password policy, and revokes all active refresh sessions after a successful change.
+- Public password recovery is implemented through `POST /api/v1/auth/password/forgot`, `POST /api/v1/auth/password/forgot/verify`, and `POST /api/v1/auth/password/reset`.
 - The same `/api/v1/auth/login` flow authenticates `CUSTOMER`, `STAFF`, `ADMIN`, and `SUPER_ADMIN` accounts.
 
 ### 2.3 Role hierarchy
@@ -158,7 +158,7 @@ Idempotency-Key: <client-generated-unique-string>
 ### 2.8 Current refresh-token limitations
 
 - A temporary deprecated fallback still allows sending `refreshToken` in the JSON body to `/api/v1/auth/refresh-token`.
-- No password-change endpoint exists yet, so session-family revocation is not yet wired into an account-credential change flow.
+- `POST /api/v1/account/password/change` revokes all refresh sessions after a successful authenticated password change.
 - `SecurityConfig` remains stateless and CSRF is disabled; cookie-based refresh relies on restricted CORS origins, `SameSite`, and the narrow `/api/v1/auth` cookie path rather than a dedicated CSRF token.
 
 ---
@@ -506,18 +506,7 @@ Examples:
 
 ### 8.3 Direction parameter
 
-`direction` is **not** a global query parameter. It is explicitly exposed only by:
-
-- `GET /api/v1/admin/reviews`
-
-That endpoint uses:
-
-- `page`
-- `size`
-- `sort`
-- `direction`
-
-All other pageable routes use Spring `sort=field,direction`.
+`direction` is **not** a global query parameter. Pageable admin endpoints use Spring's combined `sort=field,direction` convention.
 
 ### 8.4 No universal controller clamp
 
