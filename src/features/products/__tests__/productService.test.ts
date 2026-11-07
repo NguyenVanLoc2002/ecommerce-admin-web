@@ -99,6 +99,31 @@ describe('productService', () => {
     expect(response).toEqual({ totalProcessed: 128 });
   });
 
+  it('uses the documented product CRUD endpoints', async () => {
+    const createBody = {
+      name: 'Verification product',
+      slug: 'verification-product',
+      brandId: 'brand-1',
+      categoryIds: ['category-1'],
+      shortDescription: 'Created for catalog verification.',
+      description: 'Created for catalog verification.',
+      status: 'DRAFT' as const,
+      featured: false,
+    };
+    const updateBody = {
+      name: 'Updated verification product',
+      featured: true,
+    };
+
+    await productService.create(createBody);
+    await productService.update('product-1', updateBody);
+    await productService.remove('product-1');
+
+    expect(postMock).toHaveBeenCalledWith('/admin/products', createBody);
+    expect(patchMock).toHaveBeenCalledWith('/admin/products/product-1', updateBody);
+    expect(deleteMock).toHaveBeenCalledWith('/admin/products/product-1');
+  });
+
   it('uses the URL-based product media endpoints', async () => {
     const body = {
       mediaUrl: 'https://cdn.example.com/shirt.jpg',
