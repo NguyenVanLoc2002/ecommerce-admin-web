@@ -552,6 +552,7 @@ Carrier catalog and per-store carrier configuration used by shipment creation.
   - `enabled`: optional boolean
   - `phone`: optional, max 50, provider account phone used to mint AhaMove bearer tokens
   - `brandName`: optional, max 200
+  - `pickupWarehouseId`: optional UUID of the active warehouse that owns pickup details; preferred for new integrations
   - `pickupAddress`: optional, max 500
   - `pickupShortAddress`: optional, max 255
   - `pickupName`: optional, max 200
@@ -565,6 +566,7 @@ Carrier catalog and per-store carrier configuration used by shipment creation.
   - `enabled`, `baseUrl`
   - `hasApiKey`, `hasSecretKey`, `hasWebhookSecret`
   - `phone`, `brandName`
+  - `pickupWarehouseId`
   - `pickupAddress`, `pickupShortAddress`, `pickupName`, `pickupPhone`
   - `pickupLat`, `pickupLng`
   - `defaultServiceCode`, `defaultPaymentMethod`
@@ -866,13 +868,15 @@ Carrier catalog and per-store carrier configuration used by shipment creation.
 
 - `WarehouseResponse`
   - `id`, `name`, `code`, `location`, `status`, `createdAt`
+  - pickup profile: `pickupAddress`, `pickupShortAddress`, `pickupContactName`, `pickupContactPhone`, `pickupLat`, `pickupLng`
 - `CreateWarehouseRequest`
   - `name`: required, max 100
   - `code`: required, max 50, pattern `^[A-Za-z0-9_-]+$`
   - `location`: optional, max 255
+  - pickup profile fields are optional unless the warehouse is selected for a carrier integration
 - `UpdateWarehouseRequest`
   - partial update version of:
-  - `name`, `location`, `status`
+  - `name`, `location`, `status`, and pickup profile fields
 
 ### GET `/api/v1/admin/warehouses`
 

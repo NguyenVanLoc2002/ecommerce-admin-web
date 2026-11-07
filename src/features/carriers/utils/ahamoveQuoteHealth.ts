@@ -27,7 +27,11 @@ export function formatMissingQuoteFields(fields: string[] | null | undefined) {
     return null;
   }
 
-  return normalizedFields.join(', ');
+  return normalizedFields.map(formatMissingQuoteField).join(', ');
+}
+
+function formatMissingQuoteField(field: string) {
+  return field === 'pickupWarehouse' ? 'managed pickup warehouse' : field;
 }
 
 export function getAhamoveQuoteHealthPresentation({

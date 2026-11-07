@@ -10,6 +10,8 @@ import { Modal } from '@/shared/components/ui/Modal';
 import { Spinner } from '@/shared/components/ui/Spinner';
 import { Toggle } from '@/shared/components/ui/Toggle';
 import { FormField } from '@/shared/components/form/FormField';
+import { FormSelect } from '@/shared/components/form/FormSelect';
+import { useActiveWarehouseOptions } from '@/shared/hooks/useActiveWarehouseOptions';
 import { IntegrationErrorAlert } from '@/shared/components/integrations/IntegrationErrorAlert';
 import { cleanParams } from '@/shared/utils/cleanParams';
 import { formatDateTime, formatDateTimeSeconds } from '@/shared/utils/formatDate';
@@ -56,6 +58,7 @@ const DEFAULT_FORM_VALUES: AhamoveIntegrationFormValues = {
   enabled: false,
   phone: null,
   brandName: null,
+  pickupWarehouseId: null,
   pickupAddress: null,
   pickupShortAddress: null,
   pickupName: null,
@@ -75,6 +78,7 @@ function mapIntegrationToFormValues(integration: AhamoveIntegration): AhamoveInt
     enabled: integration.enabled,
     phone: integration.phone ?? null,
     brandName: integration.brandName ?? null,
+    pickupWarehouseId: integration.pickupWarehouseId ?? null,
     pickupAddress: integration.pickupAddress ?? null,
     pickupShortAddress: integration.pickupShortAddress ?? null,
     pickupName: integration.pickupName ?? null,
@@ -95,6 +99,7 @@ function buildSavePayload(values: AhamoveIntegrationFormValues): UpdateAhamoveIn
     enabled: values.enabled,
     phone: values.phone,
     brandName: values.brandName,
+    pickupWarehouseId: values.pickupWarehouseId ?? undefined,
     pickupAddress: values.pickupAddress,
     pickupShortAddress: values.pickupShortAddress,
     pickupName: values.pickupName,
@@ -319,6 +324,7 @@ export function AhamoveIntegrationDrawer({
     open && carrier?.providerType === 'AHAMOVE' && showSetupInstructions,
   );
   const updateAhamoveIntegration = useUpdateAhamoveIntegration();
+  const warehouseOptionsQuery = useActiveWarehouseOptions();
   const testAhamoveConnection = useTestAhamoveConnection();
   const generateWebhookToken = useGenerateAhamoveWebhookToken();
 
@@ -365,6 +371,10 @@ export function AhamoveIntegrationDrawer({
     missingQuoteFields: integration?.missingQuoteFields,
   });
   const missingQuoteFields = normalizeMissingQuoteFields(integration?.missingQuoteFields);
+  const pickupWarehouseOptions = (warehouseOptionsQuery.data ?? []).map((warehouse) => ({
+    value: warehouse.id,
+    label: `${warehouse.name} (${warehouse.code})`,
+  }));
 
   const handleSave = form.handleSubmit(async (values) => {
     if (!carrier) {
@@ -625,10 +635,41 @@ export function AhamoveIntegrationDrawer({
               </Section>
 
               <Section
-                title="Pickup defaults"
-                description="These values are used to mint tokens and create shipment requests without requiring raw JSON."
+                title="Managed pickup warehouse"
+                description="Select the active warehouse that owns the pickup profile used for AhaMove quotes and shipments."
                 accent={<ShieldCheck className="mt-1 h-4 w-4 text-gray-400" />}
               >
+                {warehouseOptionsQuery.isError ? (
+                  <IntegrationErrorAlert
+                    title="Unable to load active warehouses."
+                    message="Retry before selecting the managed pickup source."
+                    onRetry={() => void warehouseOptionsQuery.refetch()}
+                  />
+                ) : (
+                  <FormSelect
+                    name="pickupWarehouseId"
+                    label="Pickup warehouse"
+                    placeholder={warehouseOptionsQuery.isLoading ? 'Loading warehouses...' : 'Select an active warehouse'}
+                    options={pickupWarehouseOptions}
+                    disabled={isBusy || warehouseOptionsQuery.isLoading}
+                    hint="The warehouse must have address, contact name, contact phone, latitude, and longitude."
+                  />
+                )}
+                {missingQuoteFields.includes('pickupWarehouse') ? (
+                  <div className="rounded-xl border border-warning-200 bg-warning-50 px-4 py-3 text-sm text-warning-900">
+                    The selected managed pickup warehouse is inactive or its pickup profile is incomplete. Update the warehouse before requesting quotes.
+                  </div>
+                ) : null}
+              </Section>
+
+              <Section
+                title="Legacy pickup migration fallback"
+                description="Use these carrier-level fields only while migrating an existing integration. New AhaMove setups should select a managed pickup warehouse above."
+                accent={<CircleAlert className="mt-1 h-4 w-4 text-warning-600" />}
+              >
+                <div className="rounded-xl border border-warning-200 bg-warning-50 px-4 py-3 text-sm text-warning-900">
+                  These values remain for backward compatibility and are ignored when a managed pickup warehouse is selected.
+                </div>
                 <div className="grid gap-4 md:grid-cols-2">
                   <FormField
                     name="phone"

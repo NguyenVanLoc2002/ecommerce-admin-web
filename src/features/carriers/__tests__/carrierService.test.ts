@@ -74,6 +74,7 @@ describe('carrierService', () => {
       enabled: true,
       baseUrl: 'https://partner-apistg.ahamove.com',
       phone: '84338710667',
+      pickupWarehouseId: 'warehouse-1',
       pickupAddress: '123 Nguyen Hue',
       defaultServiceCode: 'BIKE',
     });
@@ -82,6 +83,7 @@ describe('carrierService', () => {
       enabled: true,
       baseUrl: 'https://partner-apistg.ahamove.com',
       phone: '84338710667',
+      pickupWarehouseId: 'warehouse-1',
       pickupAddress: '123 Nguyen Hue',
       defaultServiceCode: 'BIKE',
     });

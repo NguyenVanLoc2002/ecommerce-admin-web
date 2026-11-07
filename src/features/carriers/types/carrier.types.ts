@@ -70,6 +70,7 @@ export interface AhamoveIntegration {
   hasWebhookSecret: boolean;
   phone: string | null;
   brandName: string | null;
+  pickupWarehouseId: EntityId | null;
   pickupAddress: string | null;
   pickupShortAddress: string | null;
   pickupName: string | null;
@@ -95,6 +96,7 @@ export interface UpdateAhamoveIntegrationRequest {
   enabled?: boolean;
   phone?: string;
   brandName?: string;
+  pickupWarehouseId?: EntityId;
   pickupAddress?: string;
   pickupShortAddress?: string;
   pickupName?: string;

@@ -67,4 +67,8 @@ describe('ahamoveQuoteHealth', () => {
       'pickupAddress, defaultServiceCode',
     );
   });
+
+  it('identifies an invalid managed pickup warehouse clearly', () => {
+    expect(formatMissingQuoteFields(['pickupWarehouse'])).toBe('managed pickup warehouse');
+  });
 });
