@@ -49,7 +49,6 @@ Role summary by module:
   - payments
   - shipments
   - invoices
-  - `/api/v1/admin/reviews`
   - admin customer reads (`GET` under `/api/v1/admin/customers`)
 
 ---
@@ -101,6 +100,15 @@ Role summary by module:
   - `valueId`, `value`, `displayValue`
 - `MediaResponse`
   - `id`, `mediaUrl`, `mediaType`, `sortOrder`, `primary`, `variantId`
+- `CreateProductMediaRequest`
+  - `mediaUrl`: required HTTP/HTTPS URL, max 500
+  - `mediaType`: optional, defaults to `IMAGE`
+  - `sortOrder`: optional, defaults to `0`, must be `>= 0`
+  - `primary`: optional boolean
+  - `variantId`: optional UUID; omit for product-level media
+- `UpdateProductMediaRequest`
+  - partial update of `mediaUrl`, `mediaType`, `sortOrder`, `primary`, and `variantId`
+  - supplied `mediaUrl` must be an HTTP/HTTPS URL with max length 500; supplied `sortOrder` must be `>= 0`
 - `CreateVariantRequest`
   - `sku`: optional, max 100. Server generates one when blank or `autoGenerateSku=true`.
   - `autoGenerateSku`: optional boolean
@@ -191,6 +199,33 @@ Role summary by module:
 
 - Access: `ADMIN`, `SUPER_ADMIN`
 - Description: soft-delete product
+- Response:
+  - `ApiResponse<Void>`
+
+### POST `/api/v1/admin/products/{productId}/media`
+
+- Access: `ADMIN`, `SUPER_ADMIN`
+- Description: add URL-based media to a product or one of its variants
+- Request body:
+  - `CreateProductMediaRequest`
+- Current HTTP status:
+  - `200 OK`
+- Response:
+  - `ApiResponse<MediaResponse>`
+
+### PATCH `/api/v1/admin/products/{productId}/media/{mediaId}`
+
+- Access: `ADMIN`, `SUPER_ADMIN`
+- Description: partially update product media metadata. Setting `variantId` to `null` detaches the media from its variant.
+- Request body:
+  - `UpdateProductMediaRequest`
+- Response:
+  - `ApiResponse<MediaResponse>`
+
+### DELETE `/api/v1/admin/products/{productId}/media/{mediaId}`
+
+- Access: `ADMIN`, `SUPER_ADMIN`
+- Description: remove media metadata only; the remote asset is not deleted.
 - Response:
   - `ApiResponse<Void>`
 
@@ -1051,6 +1086,15 @@ Carrier catalog and per-store carrier configuration used by shipment creation.
   - `method`, `provider`, `providerTxnId`
   - `referenceType`, `referenceId`, `note`
   - `createdAt`
+- `RefundRequest`
+  - `amount`: required, `>= 0.01`
+  - `reason`, `note`: optional, max 500 each
+- `RefundResponse`
+  - `id`, `paymentId`, `refundCode`, `amount`, `reason`, `status`
+  - `providerRefundId`, `refundedAt`, `requestedBy`, `note`, `createdAt`
+- `WebhookLogResponse`
+  - `id`, `paymentId`, `provider`, `orderCode`, `providerTxnId`
+  - `signatureValid`, `status`, `processedAt`, `errorMessage`, `createdAt`
 - `MomoPaymentConfigRequest`
   - partial update request for MoMo integration settings
   - `enabled`: optional boolean
@@ -1080,8 +1124,7 @@ Carrier catalog and per-store carrier configuration used by shipment creation.
     - these fields are write-only and are never returned by the API
   - `baseUrl`, `returnUrl`, `cancelUrl`, `webhookId`, `currency`: optional strings
   - `brandName`, `locale`, `userAction`, `paymentMethodPreference`, `shippingPreference`: optional strings
-  - `testConversionEnabled`: optional boolean
-  - `testConversionRateVndToUsd`: optional decimal, must be `> 0` when provided
+  - `conversionRateVndToUsd`: optional decimal, must be `> 0` when provided
   - `connectTimeoutMs`, `readTimeoutMs`: optional integers, must be `> 0` when provided
 - `PaypalPaymentConfigResponse`
   - `provider`
@@ -1092,7 +1135,7 @@ Carrier catalog and per-store carrier configuration used by shipment creation.
     - raw secret values are never returned
   - `baseUrl`, `returnUrl`, `cancelUrl`, `webhookId`, `currency`
   - `brandName`, `locale`, `userAction`, `paymentMethodPreference`, `shippingPreference`
-  - `testConversionEnabled`, `testConversionRateVndToUsd`
+  - `conversionRateVndToUsd`, `conversionRateSource` (`ADMIN_CONFIG` or `ENVIRONMENT_FALLBACK`)
   - `connectTimeoutMs`, `readTimeoutMs`
 
 ### GET `/api/v1/admin/payments`
@@ -1143,6 +1186,40 @@ Carrier catalog and per-store carrier configuration used by shipment creation.
 - Description: list transaction trail for a payment
 - Response:
   - `ApiResponse<List<TransactionResponse>>`
+
+### POST `/api/v1/admin/payments/{id}/refund`
+
+- Access: `ADMIN`, `SUPER_ADMIN`
+- Description: initiate a full or partial refund for a payment; creates a `PENDING` refund record.
+- Request body:
+  - `RefundRequest`
+- Current HTTP status:
+  - `200 OK`
+- Response:
+  - `ApiResponse<RefundResponse>`
+
+### GET `/api/v1/admin/payments/{id}/refunds`
+
+- Access: `STAFF`, `ADMIN`, `SUPER_ADMIN`
+- Description: list refunds for a payment.
+- Response:
+  - `ApiResponse<List<RefundResponse>>`
+
+### POST `/api/v1/admin/payments/refunds/{refundCode}/complete`
+
+- Access: `ADMIN`, `SUPER_ADMIN`
+- Description: mark a pending refund as completed after funds are confirmed transferred. Repeating the operation for an already-completed refund is idempotent.
+- Request params:
+  - `providerRefundId`: optional string
+- Response:
+  - `ApiResponse<RefundResponse>`
+
+### GET `/api/v1/admin/payments/{id}/webhook-logs`
+
+- Access: `STAFF`, `ADMIN`, `SUPER_ADMIN`
+- Description: list webhook processing logs for a payment.
+- Response:
+  - `ApiResponse<List<WebhookLogResponse>>`
 
 ### GET `/api/v1/admin/payments/integration/momo`
 
@@ -1195,8 +1272,8 @@ Carrier catalog and per-store carrier configuration used by shipment creation.
   - disabled provider can still be saved with incomplete data
 - Response:
   - `ApiResponse<PaypalPaymentConfigResponse>`
-- UI note:
-  - `testConversionEnabled` and `testConversionRateVndToUsd` are sandbox/testing aids for VND-to-USD conversion and should be presented as advanced settings
+- Conversion note:
+  - `conversionRateVndToUsd` is the effective number of VND per USD used for PayPal conversion. `conversionRateSource` identifies whether it came from admin configuration or the environment fallback.
 
 - Customer-flow compatibility note:
   - these endpoints change only the admin configuration surface and the runtime config source
@@ -1786,75 +1863,14 @@ The following are enforced by `AdminUserService` and return `403 FORBIDDEN`:
 
 ---
 
-## 14. Review
+## 14. Review (excluded legacy routes)
 
-This file only documents the current admin-prefixed review API.
-
-Excluded from this file:
+There is no admin-prefixed review API in the current backend. Review moderation remains on legacy protected routes under `/api/v1/reviews/**` and is intentionally excluded from this contract:
 
 - `GET /api/v1/reviews/pending`
 - `GET /api/v1/reviews/{id}`
 - `PATCH /api/v1/reviews/{id}/moderate`
 - `DELETE /api/v1/reviews/{id}`
-
-Those legacy moderation endpoints exist in code but are not under `/api/v1/admin/**`.
-
-### DTOs
-
-- `ReviewFilter`
-  - `status`
-  - `productId`
-  - `customerId`
-  - `minRating`
-  - `maxRating`
-  - `isDeleted`, `includeDeleted`
-- `ReviewResponse`
-  - `id`
-  - `customerId`, `customerName`
-  - `productId`, `productName`
-  - `variantId`, `variantName`, `sku`
-  - `orderItemId`
-  - `rating`, `comment`
-  - `status`, `adminNote`, `moderatedAt`, `moderatedBy`
-  - `createdAt`, `updatedAt`
-- `UpdateReviewStatusRequest`
-  - `status`: required
-  - `adminNote`: optional, max 500
-
-### GET `/api/v1/admin/reviews`
-
-- Access: `STAFF`, `ADMIN`, `SUPER_ADMIN`
-- Description: list reviews across all statuses
-- Soft-delete behavior:
-  - soft-deleted reviews are excluded by default
-- Filters:
-  - `status`, `productId`, `customerId`, `minRating`, `maxRating`, `isDeleted`, `includeDeleted`
-- Pagination and sorting:
-  - `page`
-  - `size`
-  - `sort`
-  - `direction`
-  - defaults: `page=0`, `size=20`, `sort=createdAt`, `direction=desc`
-- Response:
-  - `ApiResponse<PagedResponse<ReviewResponse>>`
-
-### GET `/api/v1/admin/reviews/{id}`
-
-- Access: `STAFF`, `ADMIN`, `SUPER_ADMIN`
-- Description: get review by ID
-- Soft-delete behavior:
-  - a soft-deleted review returns `REVIEW_NOT_FOUND`
-- Response:
-  - `ApiResponse<ReviewResponse>`
-
-### PATCH `/api/v1/admin/reviews/{id}/status`
-
-- Access: `STAFF`, `ADMIN`, `SUPER_ADMIN`
-- Description: approve or reject review
-- Request body:
-  - `UpdateReviewStatusRequest`
-- Response:
-  - `ApiResponse<ReviewResponse>`
 
 ---
 
