@@ -54,6 +54,7 @@ export const ahamoveIntegrationSchema = z
     enabled: z.boolean(),
     phone: optionalText(50),
     brandName: optionalText(200),
+    pickupWarehouseId: z.string().uuid('Select a valid pickup warehouse').nullish().transform((value) => value ?? null),
     pickupAddress: optionalText(500),
     pickupShortAddress: optionalText(255),
     pickupName: optionalText(200),

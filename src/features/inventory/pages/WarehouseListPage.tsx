@@ -18,6 +18,23 @@ const DEFAULT_FILTERS: WarehouseListParams = {
   deletedState: SoftDeleteState.ACTIVE,
 };
 
+function toOptionalNumber(value: string) {
+  return value === '' ? undefined : Number(value);
+}
+
+function toWarehousePayload(values: WarehouseFormValues) {
+  return {
+    name: values.name,
+    location: values.location || undefined,
+    pickupAddress: values.pickupAddress || undefined,
+    pickupShortAddress: values.pickupShortAddress || undefined,
+    pickupContactName: values.pickupContactName || undefined,
+    pickupContactPhone: values.pickupContactPhone || undefined,
+    pickupLat: toOptionalNumber(values.pickupLat),
+    pickupLng: toOptionalNumber(values.pickupLng),
+  };
+}
+
 export function WarehouseListPage() {
   const canWrite = usePermission('warehouses', 'write');
   const [filters, setFilters] = useTableFilters<WarehouseListParams>(DEFAULT_FILTERS);
@@ -45,14 +62,13 @@ export function WarehouseListPage() {
       if (editingWarehouse) {
         await updateWarehouse.mutateAsync({
           id: editingWarehouse.id,
-          body: { name: values.name, location: values.location || undefined, status: values.status },
+          body: { ...toWarehousePayload(values), status: values.status },
         });
         toast.success('Warehouse saved.');
       } else {
         await createWarehouse.mutateAsync({
-          name: values.name,
+          ...toWarehousePayload(values),
           code: values.code,
-          location: values.location || undefined,
         });
         toast.success('Warehouse created.');
       }

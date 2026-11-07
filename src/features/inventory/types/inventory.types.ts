@@ -13,6 +13,12 @@ export interface Warehouse extends SoftDeletableRecord {
   name: string;
   code: string;
   location: string | null;
+  pickupAddress: string | null;
+  pickupShortAddress: string | null;
+  pickupContactName: string | null;
+  pickupContactPhone: string | null;
+  pickupLat: number | null;
+  pickupLng: number | null;
   status: EntityStatus;
   createdAt: string;
   updatedAt: string;
@@ -26,11 +32,23 @@ export interface CreateWarehouseRequest {
   name: string;
   code: string;
   location?: string;
+  pickupAddress?: string;
+  pickupShortAddress?: string;
+  pickupContactName?: string;
+  pickupContactPhone?: string;
+  pickupLat?: number;
+  pickupLng?: number;
 }
 
 export interface UpdateWarehouseRequest {
   name?: string;
   location?: string;
+  pickupAddress?: string;
+  pickupShortAddress?: string;
+  pickupContactName?: string;
+  pickupContactPhone?: string;
+  pickupLat?: number;
+  pickupLng?: number;
   status?: EntityStatus;
 }
 

@@ -40,6 +40,12 @@ function normalizeWarehouse(input: unknown): Warehouse {
     name: asString(record.name),
     code: asString(record.code),
     location: asNullableString(record.location),
+    pickupAddress: asNullableString(record.pickupAddress),
+    pickupShortAddress: asNullableString(record.pickupShortAddress),
+    pickupContactName: asNullableString(record.pickupContactName),
+    pickupContactPhone: asNullableString(record.pickupContactPhone),
+    pickupLat: asNullableNumber(record.pickupLat),
+    pickupLng: asNullableNumber(record.pickupLng),
     status: asString(record.status) as Warehouse['status'],
     createdAt: asString(record.createdAt),
     updatedAt: asString(record.updatedAt ?? record.createdAt),
@@ -60,6 +66,15 @@ function asString(value: unknown): string {
 
 function asNullableString(value: unknown): string | null {
   return value == null || value === '' ? null : String(value);
+}
+
+function asNullableNumber(value: unknown): number | null {
+  if (value == null || value === '') {
+    return null;
+  }
+
+  const numericValue = Number(value);
+  return Number.isFinite(numericValue) ? numericValue : null;
 }
 
 function asBoolean(value: unknown): boolean | undefined {

@@ -12,6 +12,7 @@ import { EmptyState } from '@/shared/components/feedback/EmptyState';
 import { formatDate } from '@/shared/utils/formatDate';
 import type { ColumnDef } from '@/shared/components/table/types';
 import { SoftDeleteState } from '@/shared/types/api.types';
+import type { EntityStatus } from '@/shared/types/enums';
 import type { Warehouse, WarehouseListParams } from '../types/inventory.types';
 import { WarehouseRowActions } from './WarehouseRowActions';
 
@@ -110,7 +111,7 @@ export function WarehouseTable({
             <Select
               options={STATUS_FILTER_OPTIONS}
               value={filters.status ?? ''}
-              onChange={(e) => onFiltersChange({ status: e.target.value || undefined })}
+              onChange={(e) => onFiltersChange({ status: (e.target.value || undefined) as EntityStatus | undefined })}
               className="h-9 w-36 text-sm"
             />
             <SoftDeleteFilter
