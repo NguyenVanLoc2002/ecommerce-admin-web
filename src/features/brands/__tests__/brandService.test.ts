@@ -2,19 +2,28 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { SoftDeleteState } from '@/shared/types/api.types';
 import { brandService } from '../services/brandService';
 
-const { getMock } = vi.hoisted(() => ({
+const { getMock, postMock, patchMock, deleteMock } = vi.hoisted(() => ({
   getMock: vi.fn(),
+  postMock: vi.fn(),
+  patchMock: vi.fn(),
+  deleteMock: vi.fn(),
 }));
 
 vi.mock('@/shared/lib/axios', () => ({
   apiClient: {
     get: getMock,
+    post: postMock,
+    patch: patchMock,
+    delete: deleteMock,
   },
 }));
 
 describe('brandService.getList', () => {
   beforeEach(() => {
     getMock.mockReset();
+    postMock.mockReset();
+    patchMock.mockReset();
+    deleteMock.mockReset();
     getMock.mockResolvedValue({ items: [], page: 0, size: 20, totalItems: 0, totalPages: 0 });
   });
 
@@ -69,5 +78,26 @@ describe('brandService.getList', () => {
         includeDeleted: true,
       },
     });
+  });
+
+  it('uses the documented brand CRUD endpoints', async () => {
+    const createBody = {
+      name: 'Verification brand',
+      slug: 'verification-brand',
+      description: 'Created for catalog verification.',
+      logoUrl: null,
+    };
+    const updateBody = {
+      name: 'Updated verification brand',
+      status: 'INACTIVE' as const,
+    };
+
+    await brandService.create(createBody);
+    await brandService.update('brand-1', updateBody);
+    await brandService.remove('brand-1');
+
+    expect(postMock).toHaveBeenCalledWith('/admin/brands', createBody);
+    expect(patchMock).toHaveBeenCalledWith('/admin/brands/brand-1', updateBody);
+    expect(deleteMock).toHaveBeenCalledWith('/admin/brands/brand-1');
   });
 });
