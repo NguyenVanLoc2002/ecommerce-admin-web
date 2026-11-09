@@ -59,12 +59,6 @@ const DEFAULT_FORM_VALUES: AhamoveIntegrationFormValues = {
   phone: null,
   brandName: null,
   pickupWarehouseId: null,
-  pickupAddress: null,
-  pickupShortAddress: null,
-  pickupName: null,
-  pickupPhone: null,
-  pickupLat: null,
-  pickupLng: null,
   defaultServiceCode: null,
   defaultPaymentMethod: null,
 };
@@ -79,12 +73,6 @@ function mapIntegrationToFormValues(integration: AhamoveIntegration): AhamoveInt
     phone: integration.phone ?? null,
     brandName: integration.brandName ?? null,
     pickupWarehouseId: integration.pickupWarehouseId ?? null,
-    pickupAddress: integration.pickupAddress ?? null,
-    pickupShortAddress: integration.pickupShortAddress ?? null,
-    pickupName: integration.pickupName ?? null,
-    pickupPhone: integration.pickupPhone ?? null,
-    pickupLat: integration.pickupLat == null ? null : String(integration.pickupLat),
-    pickupLng: integration.pickupLng == null ? null : String(integration.pickupLng),
     defaultServiceCode: integration.defaultServiceCode ?? null,
     defaultPaymentMethod: integration.defaultPaymentMethod ?? null,
   };
@@ -100,14 +88,8 @@ function buildSavePayload(values: AhamoveIntegrationFormValues): UpdateAhamoveIn
     phone: values.phone,
     brandName: values.brandName,
     pickupWarehouseId: values.pickupWarehouseId ?? undefined,
-    pickupAddress: values.pickupAddress,
-    pickupShortAddress: values.pickupShortAddress,
-    pickupName: values.pickupName,
-    pickupPhone: values.pickupPhone,
-    pickupLat: values.pickupLat == null ? undefined : Number(values.pickupLat),
-    pickupLng: values.pickupLng == null ? undefined : Number(values.pickupLng),
-    defaultServiceCode: values.defaultServiceCode,
-    defaultPaymentMethod: values.defaultPaymentMethod,
+    defaultServiceCode: values.defaultServiceCode ?? undefined,
+    defaultPaymentMethod: values.defaultPaymentMethod ?? undefined,
   }) as UpdateAhamoveIntegrationRequest;
 }
 
@@ -663,13 +645,10 @@ export function AhamoveIntegrationDrawer({
               </Section>
 
               <Section
-                title="Legacy pickup migration fallback"
-                description="Use these carrier-level fields only while migrating an existing integration. New AhaMove setups should select a managed pickup warehouse above."
+                title="AhaMove account"
+                description="Account details used for AhaMove authentication and connection checks."
                 accent={<CircleAlert className="mt-1 h-4 w-4 text-warning-600" />}
               >
-                <div className="rounded-xl border border-warning-200 bg-warning-50 px-4 py-3 text-sm text-warning-900">
-                  These values remain for backward compatibility and are ignored when a managed pickup warehouse is selected.
-                </div>
                 <div className="grid gap-4 md:grid-cols-2">
                   <FormField
                     name="phone"
@@ -685,59 +664,20 @@ export function AhamoveIntegrationDrawer({
                     disabled={isBusy}
                   />
                 </div>
+              </Section>
 
-                <div className="grid gap-4 md:grid-cols-2">
-                  <FormField
-                    name="pickupAddress"
-                    label="Pickup address"
-                    placeholder="Full pickup address"
-                    disabled={isBusy}
-                  />
-                  <FormField
-                    name="pickupShortAddress"
-                    label="Pickup short address"
-                    placeholder="District or short landmark"
-                    disabled={isBusy}
-                  />
-                </div>
-
-                <div className="grid gap-4 md:grid-cols-2">
-                  <FormField
-                    name="pickupName"
-                    label="Pickup contact name"
-                    placeholder="Warehouse contact"
-                    disabled={isBusy}
-                  />
-                  <FormField
-                    name="pickupPhone"
-                    label="Pickup contact phone"
-                    placeholder="Contact phone"
-                    disabled={isBusy}
-                  />
-                </div>
-
-                <div className="grid gap-4 md:grid-cols-2">
-                  <FormField
-                    name="pickupLat"
-                    label="Pickup latitude"
-                    placeholder="10.77689"
-                    disabled={isBusy}
-                  />
-                  <FormField
-                    name="pickupLng"
-                    label="Pickup longitude"
-                    placeholder="106.70081"
-                    disabled={isBusy}
-                  />
-                </div>
-
+              <Section
+                title="Shipment defaults"
+                description="Defaults sent with AhaMove shipment and quote requests."
+                accent={<CircleAlert className="mt-1 h-4 w-4 text-warning-600" />}
+              >
                 <div className="grid gap-4 md:grid-cols-2">
                   <FormField
                     name="defaultServiceCode"
                     label="Default service code"
                     placeholder="BIKE"
                     disabled={isBusy}
-                    hint="Use the exact service code expected by the backend runtime."
+                    hint="Required when AhaMove shipments are enabled."
                   />
                   <FormField
                     name="defaultPaymentMethod"
@@ -898,25 +838,6 @@ export function AhamoveIntegrationDrawer({
                   </div>
                 )}
               </Section>
-
-              {carrier.configJson && (
-                <details className="rounded-2xl border border-gray-200 bg-gray-50">
-                  <summary className="cursor-pointer list-none px-5 py-4 text-sm font-semibold text-gray-900">
-                    Advanced debug data
-                  </summary>
-                  <div className="border-t border-gray-200 px-5 py-4">
-                    <div className="mb-3 flex items-start gap-2 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-600">
-                      <CircleAlert className="mt-0.5 h-4 w-4 shrink-0 text-gray-400" />
-                      <p>
-                        `configJson` is legacy compatibility data mirrored by the backend. It is read-only here and not required for normal AhaMove onboarding.
-                      </p>
-                    </div>
-                    <pre className="max-h-72 overflow-auto rounded-xl bg-slate-950 px-4 py-4 text-xs text-slate-100">
-                      {carrier.configJson}
-                    </pre>
-                  </div>
-                </details>
-              )}
             </div>
           </FormProvider>
         )}

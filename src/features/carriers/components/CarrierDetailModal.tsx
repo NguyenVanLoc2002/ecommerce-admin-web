@@ -131,21 +131,6 @@ export function CarrierDetailModal({
             </p>
           </div>
         </div>
-
-        <details className="rounded-lg border border-gray-200 p-4">
-          <summary className="cursor-pointer text-sm font-semibold text-gray-900">
-            Advanced debug data
-          </summary>
-          {carrier.configJson ? (
-            <pre className="mt-3 max-h-56 overflow-auto rounded-md bg-gray-950 px-4 py-3 text-xs text-gray-100">
-              {carrier.configJson}
-            </pre>
-          ) : (
-            <p className="mt-3 text-sm text-gray-500">
-              No legacy config JSON stored for this carrier.
-            </p>
-          )}
-        </details>
       </div>
     </Modal>
   );

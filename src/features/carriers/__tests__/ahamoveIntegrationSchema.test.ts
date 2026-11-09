@@ -12,12 +12,6 @@ describe('ahamoveIntegrationSchema', () => {
       phone: ' 84338710667 ',
       brandName: null,
       pickupWarehouseId: '018f58a9-f458-7e7f-9c74-0073f99b6ed5',
-      pickupAddress: null,
-      pickupShortAddress: null,
-      pickupName: null,
-      pickupPhone: null,
-      pickupLat: null,
-      pickupLng: null,
       defaultServiceCode: ' BIKE ',
       defaultPaymentMethod: null,
     });
@@ -31,14 +25,28 @@ describe('ahamoveIntegrationSchema', () => {
       phone: '84338710667',
       brandName: null,
       pickupWarehouseId: '018f58a9-f458-7e7f-9c74-0073f99b6ed5',
-      pickupAddress: null,
-      pickupShortAddress: null,
-      pickupName: null,
-      pickupPhone: null,
-      pickupLat: null,
-      pickupLng: null,
       defaultServiceCode: 'BIKE',
       defaultPaymentMethod: null,
     });
+  });
+
+  it('requires a shipment service default before enabling AhaMove', () => {
+    const result = ahamoveIntegrationSchema.safeParse({
+      apiKey: null,
+      secretKey: null,
+      webhookSecret: null,
+      baseUrl: 'https://partner-apistg.ahamove.com',
+      enabled: true,
+      phone: '84338710667',
+      brandName: null,
+      pickupWarehouseId: '018f58a9-f458-7e7f-9c74-0073f99b6ed5',
+      defaultServiceCode: null,
+      defaultPaymentMethod: null,
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.error?.flatten().fieldErrors.defaultServiceCode).toContain(
+      'Default service code is required when config is enabled',
+    );
   });
 });

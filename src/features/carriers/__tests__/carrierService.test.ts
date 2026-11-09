@@ -69,14 +69,26 @@ describe('carrierService', () => {
     expect(getMock).toHaveBeenCalledWith('/admin/carriers/carrier-1/integration/ahamove');
   });
 
+  it('saves generic carrier configuration without legacy raw configuration data', async () => {
+    await carrierService.updateConfig('carrier-1', {
+      baseUrl: 'https://api.ghn.vn',
+      enabled: true,
+    });
+
+    expect(putMock).toHaveBeenCalledWith('/admin/carriers/carrier-1/config', {
+      baseUrl: 'https://api.ghn.vn',
+      enabled: true,
+    });
+  });
+
   it('saves the typed AhaMove integration payload', async () => {
     await carrierService.updateAhamoveIntegration('carrier-1', {
       enabled: true,
       baseUrl: 'https://partner-apistg.ahamove.com',
       phone: '84338710667',
       pickupWarehouseId: 'warehouse-1',
-      pickupAddress: '123 Nguyen Hue',
       defaultServiceCode: 'BIKE',
+      defaultPaymentMethod: 'CASH',
     });
 
     expect(putMock).toHaveBeenCalledWith('/admin/carriers/carrier-1/integration/ahamove', {
@@ -84,8 +96,8 @@ describe('carrierService', () => {
       baseUrl: 'https://partner-apistg.ahamove.com',
       phone: '84338710667',
       pickupWarehouseId: 'warehouse-1',
-      pickupAddress: '123 Nguyen Hue',
       defaultServiceCode: 'BIKE',
+      defaultPaymentMethod: 'CASH',
     });
   });
 

@@ -15,14 +15,8 @@ const integration: AhamoveIntegration = {
   phone: '84338710667',
   brandName: 'Locen Studio',
   pickupWarehouseId: 'warehouse-1',
-  pickupAddress: null,
-  pickupShortAddress: null,
-  pickupName: null,
-  pickupPhone: null,
-  pickupLat: null,
-  pickupLng: null,
-  defaultServiceCode: 'BIKE',
-  defaultPaymentMethod: 'CASH',
+  defaultServiceCode: null,
+  defaultPaymentMethod: null,
   connectionStatus: null,
   lastHealthCheckAt: null,
   lastHealthCheckError: null,
@@ -69,7 +63,6 @@ const carrier: Carrier = {
   hasApiKey: true,
   hasSecretKey: true,
   hasWebhookSecret: false,
-  configJson: null,
   connectionStatus: null,
   lastHealthCheckAt: null,
   lastHealthCheckError: null,
@@ -78,14 +71,20 @@ const carrier: Carrier = {
 };
 
 describe('AhamoveIntegrationDrawer', () => {
-  it('renders a managed warehouse selector before the labelled legacy migration fallback', () => {
+  it('uses the managed warehouse without rendering legacy pickup fallback fields', () => {
     const markup = renderToStaticMarkup(
       <AhamoveIntegrationDrawer open onClose={vi.fn()} carrier={carrier} inline />,
     );
 
     expect(markup).toContain('Managed pickup warehouse');
     expect(markup).toContain('Main warehouse (MAIN-01)');
-    expect(markup).toContain('Legacy pickup migration fallback');
+    expect(markup).toContain('AhaMove account');
+    expect(markup).toContain('Shipment defaults');
+    expect(markup).toContain('Default service code');
     expect(markup).toContain('selected managed pickup warehouse is inactive or its pickup profile is incomplete');
+    expect(markup).not.toContain('Legacy pickup migration fallback');
+    expect(markup).not.toContain('Pickup address');
+    expect(markup).not.toContain('Advanced debug data');
+    expect(markup).not.toContain('configJson');
   });
 });

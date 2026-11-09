@@ -24,7 +24,6 @@ export interface Carrier {
   hasApiKey: boolean;
   hasSecretKey: boolean;
   hasWebhookSecret: boolean;
-  configJson: string | null;
   connectionStatus: string | null;
   lastHealthCheckAt: string | null;
   lastHealthCheckError: string | null;
@@ -56,7 +55,6 @@ export interface UpdateCarrierConfigRequest {
   webhookSecret?: string | null;
   baseUrl?: string | null;
   enabled?: boolean;
-  configJson?: string | null;
 }
 
 export interface AhamoveIntegration {
@@ -71,12 +69,6 @@ export interface AhamoveIntegration {
   phone: string | null;
   brandName: string | null;
   pickupWarehouseId: EntityId | null;
-  pickupAddress: string | null;
-  pickupShortAddress: string | null;
-  pickupName: string | null;
-  pickupPhone: string | null;
-  pickupLat: number | null;
-  pickupLng: number | null;
   defaultServiceCode: string | null;
   defaultPaymentMethod: string | null;
   connectionStatus: string | null;
@@ -97,12 +89,6 @@ export interface UpdateAhamoveIntegrationRequest {
   phone?: string;
   brandName?: string;
   pickupWarehouseId?: EntityId;
-  pickupAddress?: string;
-  pickupShortAddress?: string;
-  pickupName?: string;
-  pickupPhone?: string;
-  pickupLat?: number;
-  pickupLng?: number;
   defaultServiceCode?: string;
   defaultPaymentMethod?: string;
 }

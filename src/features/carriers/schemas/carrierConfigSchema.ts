@@ -18,22 +18,6 @@ export const carrierConfigSchema = z.object({
   webhookSecret: optionalSecret,
   baseUrl: optionalText(500),
   enabled: z.boolean(),
-  configJson: z
-    .string()
-    .nullish()
-    .transform((value) => value?.trim() || null)
-    .refine((value) => {
-      if (!value) {
-        return true;
-      }
-
-      try {
-        JSON.parse(value);
-        return true;
-      } catch {
-        return false;
-      }
-    }, 'Config JSON must be valid JSON'),
 });
 
 export type CarrierConfigFormValues = z.infer<typeof carrierConfigSchema>;
