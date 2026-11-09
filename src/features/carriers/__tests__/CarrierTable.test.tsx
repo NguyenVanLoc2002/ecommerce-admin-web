@@ -26,7 +26,6 @@ describe('CarrierTable', () => {
               hasApiKey: true,
               hasSecretKey: true,
               hasWebhookSecret: false,
-              configJson: null,
               connectionStatus: 'FAILED',
               lastHealthCheckAt: '2026-05-16T09:30:00Z',
               lastHealthCheckError: 'Provider rejected the API key',

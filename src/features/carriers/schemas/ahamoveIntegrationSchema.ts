@@ -30,21 +30,6 @@ const optionalUrl = z
     }
   }, 'Base URL must be a valid URL');
 
-const optionalCoordinate = (label: string, min: number, max: number) =>
-  z
-    .string()
-    .nullish()
-    .transform((value) => value?.trim() || null)
-    .refine((value) => value === null || !Number.isNaN(Number(value)), `${label} must be a number`)
-    .refine((value) => {
-      if (value === null) {
-        return true;
-      }
-
-      const numericValue = Number(value);
-      return numericValue >= min && numericValue <= max;
-    }, `${label} must be between ${min} and ${max}`);
-
 export const ahamoveIntegrationSchema = z
   .object({
     apiKey: optionalSecret,
@@ -55,12 +40,6 @@ export const ahamoveIntegrationSchema = z
     phone: optionalText(50),
     brandName: optionalText(200),
     pickupWarehouseId: z.string().uuid('Select a valid pickup warehouse').nullish().transform((value) => value ?? null),
-    pickupAddress: optionalText(500),
-    pickupShortAddress: optionalText(255),
-    pickupName: optionalText(200),
-    pickupPhone: optionalText(50),
-    pickupLat: optionalCoordinate('Pickup latitude', -90, 90),
-    pickupLng: optionalCoordinate('Pickup longitude', -180, 180),
     defaultServiceCode: optionalText(100),
     defaultPaymentMethod: optionalText(50),
   })
@@ -70,6 +49,14 @@ export const ahamoveIntegrationSchema = z
         code: z.ZodIssueCode.custom,
         path: ['baseUrl'],
         message: 'Base URL is required when config is enabled',
+      });
+    }
+
+    if (value.enabled && !value.defaultServiceCode) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['defaultServiceCode'],
+        message: 'Default service code is required when config is enabled',
       });
     }
   });

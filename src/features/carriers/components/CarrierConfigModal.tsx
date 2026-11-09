@@ -50,7 +50,6 @@ export function CarrierConfigModal({
       webhookSecret: null,
       baseUrl: null,
       enabled: false,
-      configJson: null,
     },
   });
 
@@ -72,7 +71,6 @@ export function CarrierConfigModal({
       webhookSecret: null,
       baseUrl: carrier?.baseUrl ?? null,
       enabled: carrier?.configEnabled ?? false,
-      configJson: carrier?.configJson ?? null,
     });
   }, [carrier, clearErrors, form, open]);
 
@@ -105,7 +103,7 @@ export function CarrierConfigModal({
       open={open}
       onClose={onClose}
       title={carrier ? `Configure ${carrier.name}` : 'Configure Carrier'}
-      description="Legacy configuration fallback for providers that do not yet have a structured setup drawer."
+      description="Configure supported provider credentials and runtime settings."
       size="xl"
       inline={inline}
       closeOnBackdropClick={false}
@@ -121,7 +119,7 @@ export function CarrierConfigModal({
       }
     >
       <FormProvider {...form}>
-        <form id="carrier-config-form" onSubmit={handleSubmit} noValidate>
+        <form id="carrier-config-form" onSubmit={(event) => void handleSubmit(event)} noValidate>
           <div className="space-y-5">
             {rootError && (
               <div className="rounded-md border border-danger-200 bg-danger-50 px-4 py-3 text-sm text-danger-700">
@@ -143,6 +141,11 @@ export function CarrierConfigModal({
             <div className="rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm text-gray-600">
               Carrier catalog status and config enabled are separate controls. A carrier can stay
               active in the catalog while its provider config remains disabled.
+            </div>
+
+            <div className="rounded-lg border border-warning-200 bg-warning-50 px-4 py-3 text-sm text-warning-900">
+              Raw legacy configuration is no longer shown or editable. Use the supported provider
+              settings in this form instead.
             </div>
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -199,15 +202,6 @@ export function CarrierConfigModal({
               )}
             />
 
-            <FormField
-              name="configJson"
-              label="Config JSON"
-              multiline
-              rows={8}
-              placeholder='{"shopId":"...", "region":"HCM"}'
-              hint="Optional provider-specific JSON config. Must be valid JSON."
-              disabled={isSubmitting}
-            />
           </div>
         </form>
       </FormProvider>

@@ -562,7 +562,6 @@ Carrier catalog and per-store carrier configuration used by shipment creation.
   - `logoUrl`, `description`
   - `configEnabled`, `baseUrl`
   - `hasApiKey`, `hasSecretKey`, `hasWebhookSecret`
-  - `configJson`: legacy compatibility field; admin UI should treat this as read-only debug data for provider-specific config that has not been migrated yet
   - `connectionStatus`, `lastHealthCheckAt`, `lastHealthCheckError`
   - `createdAt`, `updatedAt`
 - `CreateCarrierRequest`
@@ -578,23 +577,15 @@ Carrier catalog and per-store carrier configuration used by shipment creation.
   - `apiKey`, `secretKey`, `webhookSecret`: optional plain-text inputs; server encrypts before persistence
   - `baseUrl`: optional, max 500
   - `enabled`: optional boolean
-  - `configJson`: optional JSON string, must be valid JSON when provided
-  - legacy compatibility only for `AHAMOVE`
-  - the backend now mirrors typed AhaMove fields into this JSON for backward compatibility with existing provider code
+  - raw legacy configuration is not accepted or returned by normal admin operations
 - `UpdateAhamoveIntegrationRequest`
   - `apiKey`, `secretKey`, `webhookSecret`: optional plain-text secret inputs; encrypted before persistence
   - `baseUrl`: optional, max 500
   - `enabled`: optional boolean
   - `phone`: optional, max 50, provider account phone used to mint AhaMove bearer tokens
   - `brandName`: optional, max 200
-  - `pickupWarehouseId`: optional UUID of the active warehouse that owns pickup details; preferred for new integrations
-  - `pickupAddress`: optional, max 500
-  - `pickupShortAddress`: optional, max 255
-  - `pickupName`: optional, max 200
-  - `pickupPhone`: optional, max 50
-  - `pickupLat`: optional decimal, range `[-90, 90]`
-  - `pickupLng`: optional decimal, range `[-180, 180]`
-  - `defaultServiceCode`: optional, max 100, staging default usually `BIKE`
+  - `pickupWarehouseId`: optional UUID of the active warehouse that owns pickup details; the Admin UI uses it for pickup configuration
+  - `defaultServiceCode`: optional, max 100; required when AhaMove is enabled, typically `BIKE` in staging
   - `defaultPaymentMethod`: optional, max 50, typically `CASH`
 - `AhamoveIntegrationResponse`
   - `carrierId`, `carrierCode`, `carrierName`
@@ -602,8 +593,6 @@ Carrier catalog and per-store carrier configuration used by shipment creation.
   - `hasApiKey`, `hasSecretKey`, `hasWebhookSecret`
   - `phone`, `brandName`
   - `pickupWarehouseId`
-  - `pickupAddress`, `pickupShortAddress`, `pickupName`, `pickupPhone`
-  - `pickupLat`, `pickupLng`
   - `defaultServiceCode`, `defaultPaymentMethod`
   - `connectionStatus`, `lastHealthCheckAt`, `lastHealthCheckError`
   - `maskedWebhookToken`
@@ -680,8 +669,6 @@ Carrier catalog and per-store carrier configuration used by shipment creation.
   - secrets are encrypted before persistence
   - responses never return raw `apiKey`, `secretKey`, or `webhookSecret`
   - responses expose only boolean flags: `hasApiKey`, `hasSecretKey`, `hasWebhookSecret`
-- Validation:
-  - `configJson` must be valid JSON when present
 - Response:
   - `ApiResponse<CarrierResponse>`
 
@@ -695,11 +682,11 @@ Carrier catalog and per-store carrier configuration used by shipment creation.
 ### PUT `/api/v1/admin/carriers/{id}/integration/ahamove`
 
 - Access: `STAFF`, `ADMIN`, `SUPER_ADMIN`
-- Description: save structured AhaMove integration settings without forcing admin users to hand-write `configJson`
+- Description: save structured AhaMove integration settings without forcing admin users to hand-write raw configuration JSON
 - Behavior:
   - secrets are encrypted before persistence
-  - typed pickup/service/account fields are persisted in dedicated columns
-  - the backend also mirrors typed AhaMove values into legacy `configJson` for provider backward compatibility
+  - account fields, shipment defaults, and managed pickup-warehouse selection are persisted in dedicated columns
+  - normal admin responses never expose raw legacy configuration data
   - when `enabled=true`, the backend validates that the effective config is complete enough for runtime use
 - AhaMove staging notes:
   - base URL default: `https://partner-apistg.ahamove.com`
@@ -1435,7 +1422,7 @@ Carrier catalog and per-store carrier configuration used by shipment creation.
   - `CANCELLED`, path failure -> `FAILED`
   - `IN_RETURN`, `RETURNED` -> `RETURNED`
 - Known integration limitation:
-  - the current order domain does not persist a dedicated pickup/store address, so AhaMove pickup data must be provided in carrier `configJson`
+  - AhaMove resolves pickup data from the selected managed warehouse, or typed carrier pickup fields during the compatibility window
 
 ---
 
