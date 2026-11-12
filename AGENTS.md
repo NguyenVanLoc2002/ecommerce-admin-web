@@ -1,5 +1,15 @@
 # Admin Web Agent Notes
 
+## Shared workflow and quality gate
+
+Follow `../GIT_CONVENTIONS.md` for new Git work. Before coding, read the GitHub Issue and acceptance criteria, then run `git status --short --branch` and preserve unrelated WIP. Do not run `git reset --hard`, `git clean`, rebase, force-push, commit, push, merge, or change Git author identity unless explicitly requested. Do not access production resources, log secrets, or conceal failed checks.
+
+Keep the existing feature-based structure and the flow `page/component -> custom hook -> service -> shared Axios client`. Components render and handle UI events; services are typed async API functions and do not depend on React or stores. Keep server state in TanStack Query, form state in React Hook Form plus Zod, URL-owned filters in search params, and small client/UI state in the established Zustand stores. Do not invent or silently change API contracts.
+
+For every changed async screen or mutation, cover loading, error, empty where applicable, and success/pending states; map server validation errors to the form and invalidate/refetch affected queries after successful mutations. Maintain strict TypeScript and avoid `any`.
+
+Before proposing completion, run the applicable commands: `npm run lint`, `npm run typecheck`, `npm run test` for behavior covered by the Vitest suite, and `npm run build`. Report failures or skipped checks with their reason.
+
 Use `docs/api/api-common.md` and `docs/api/admin-api-contract.md` as the only admin API auth contract source of truth.
 
 ## Auth contract
