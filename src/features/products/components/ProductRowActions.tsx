@@ -72,7 +72,7 @@ export function ProductRowActions({ product }: ProductRowActionsProps) {
           className="flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
           onClick={() => {
             setMenuOpen(false);
-            navigate(routes.products.edit(product.id));
+            navigate(routes.products.detail(product.id));
           }}
         >
           <Eye className="h-4 w-4 text-gray-400" />

@@ -11,3 +11,13 @@ body,
 body {
   overflow: hidden;
 }
+
+/* Keep the navigation scrollable without reserving space for a visible scrollbar. */
+.sidebar-navigation {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.sidebar-navigation::-webkit-scrollbar {
+  display: none;
+}

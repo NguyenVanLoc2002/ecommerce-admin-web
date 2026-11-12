@@ -14,13 +14,16 @@ import { formatEnumLabel } from '@/shared/utils/formatEnumLabel';
 import type { ColumnDef } from '@/shared/components/table/types';
 import type { PaginatedResponse } from '@/shared/types/api.types';
 import type { StockMovement, StockMovementParams, Warehouse } from '../types/inventory.types';
+import type { StockMovementType } from '@/shared/types/enums';
 
-const MOVEMENT_TYPE_OPTIONS = [
+const MOVEMENT_TYPES = ['IMPORT', 'EXPORT', 'ADJUSTMENT', 'RETURN'] as const satisfies readonly StockMovementType[];
+
+const MOVEMENT_TYPE_OPTIONS: Array<{ value: StockMovementType | ''; label: string }> = [
   { value: '', label: 'All types' },
-  { value: 'IMPORT', label: 'Import' },
-  { value: 'EXPORT', label: 'Export' },
-  { value: 'ADJUSTMENT', label: 'Adjustment' },
-  { value: 'RETURN', label: 'Return' },
+  { value: MOVEMENT_TYPES[0], label: 'Import' },
+  { value: MOVEMENT_TYPES[1], label: 'Export' },
+  { value: MOVEMENT_TYPES[2], label: 'Adjustment' },
+  { value: MOVEMENT_TYPES[3], label: 'Return' },
 ];
 
 const movementTypeVariantMap = {
@@ -173,7 +176,7 @@ export function StockMovementsTable({
             <Select
               options={MOVEMENT_TYPE_OPTIONS}
               value={filters.movementType ?? ''}
-              onChange={(event) => onFiltersChange({ movementType: event.target.value || undefined })}
+              onChange={(event) => onFiltersChange({ movementType: toMovementType(event.target.value) })}
               className="h-9 w-36 text-sm"
             />
           </>
@@ -206,4 +209,8 @@ export function StockMovementsTable({
 
 function resolveMovementTypeVariant(movementType: string) {
   return movementTypeVariantMap[movementType as keyof typeof movementTypeVariantMap] ?? 'default';
+}
+
+function toMovementType(value: string): StockMovementType | undefined {
+  return MOVEMENT_TYPES.find((type) => type === value);
 }

@@ -93,7 +93,7 @@ export function ProductTable({
             <div className="min-w-0">
               <button
                 type="button"
-                onClick={() => navigate(routes.products.edit(row.original.id))}
+                onClick={() => navigate(routes.products.detail(row.original.id))}
                 className="truncate text-left text-sm font-semibold text-gray-900 hover:text-primary-700 hover:underline"
               >
                 {row.original.name}

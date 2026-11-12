@@ -24,7 +24,7 @@ export function ProductVariantsPage() {
     isError && error instanceof AppError && error.code === 'PRODUCT_NOT_FOUND';
 
   useBreadcrumbLabel(
-    routes.products.edit(productId),
+    routes.products.detail(productId),
     isNotFound ? 'Not found' : (product?.name ?? 'Loading...'),
   );
 
@@ -75,7 +75,7 @@ export function ProductVariantsPage() {
               <Button
                 variant="secondary"
                 size="sm"
-                onClick={() => navigate(routes.products.edit(productId))}
+                onClick={() => navigate(routes.products.detail(productId))}
                 leftIcon={<ArrowLeft className="h-4 w-4" />}
               >
                 Back to product

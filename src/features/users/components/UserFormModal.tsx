@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Controller, FormProvider, useForm } from 'react-hook-form';
+import { Controller, FormProvider, useForm, useFormContext } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Modal } from '@/shared/components/ui/Modal';
 import { Button } from '@/shared/components/ui/Button';
@@ -223,117 +223,67 @@ export function UserFormModal({ open, onClose, user }: UserFormModalProps) {
         </>
       }
     >
-      <FormProvider {...form}>
-        <div className="space-y-4">
-          {!isEditMode && (
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <FormField
-                name="email"
-                label="Email"
-                required
-                placeholder="name@company.com"
-                autoComplete="email"
-                disabled={isSubmitting}
-              />
-              <FormField
-                name="password"
-                label="Password"
-                type="password"
-                required
-                placeholder="Create a secure password"
-                hint="8-64 characters, with uppercase, lowercase, and a digit."
-                autoComplete="new-password"
-                disabled={isSubmitting}
-              />
-            </div>
-          )}
-
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <FormField
-              name="firstName"
-              label="First name"
-              required
-              placeholder="First name"
-              autoComplete="given-name"
-              disabled={isSubmitting}
-            />
-            <FormField
-              name="lastName"
-              label="Last name"
-              placeholder="Last name"
-              autoComplete="family-name"
-              disabled={isSubmitting}
-            />
-          </div>
-
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <FormField
-              name="phoneNumber"
-              label="Phone number"
-              placeholder="0912345678 or +84912345678"
-              autoComplete="tel"
-              disabled={isSubmitting}
-            />
-            {isEditMode && (
-              <FormSelect
-                name="status"
-                label="Status"
-                required
-                options={STATUS_OPTIONS}
-                disabled={isSubmitting}
-              />
-            )}
-          </div>
-
-          <Controller
-            control={form.control}
-            name="roles"
-            render={({ field, fieldState }) => {
-              const selected = new Set(field.value ?? []);
-
-              const toggleRole = (role: AssignableAdminUserRole, checked: boolean) => {
-                const next = new Set(selected);
-                if (checked) {
-                  next.add(role);
-                } else {
-                  next.delete(role);
-                }
-                field.onChange(Array.from(next));
-              };
-
-              return (
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-sm font-medium text-gray-700">
-                    Roles
-                    <span className="ml-0.5 text-danger-500">*</span>
-                  </label>
-                  <div className="grid grid-cols-1 gap-2 rounded-lg border border-gray-200 bg-gray-50 p-3 md:grid-cols-3">
-                    {ROLE_OPTIONS.map((role) => (
-                      <Checkbox
-                        key={role.value}
-                        checked={selected.has(role.value as AssignableAdminUserRole)}
-                        onChange={(checked) =>
-                          toggleRole(role.value as AssignableAdminUserRole, checked)
-                        }
-                        disabled={isSubmitting}
-                        label={role.label}
-                      />
-                    ))}
-                  </div>
-                  {!fieldState.error && (
-                    <p className="text-xs text-gray-500">
-                      Select one or more roles for this account.
-                    </p>
-                  )}
-                  {fieldState.error && (
-                    <p className="text-xs text-danger-600">{fieldState.error.message}</p>
-                  )}
-                </div>
-              );
-            }}
-          />
-        </div>
-      </FormProvider>
+      {isEditMode ? (
+        <FormProvider {...updateForm}>
+          <UserFormFields isEditMode isSubmitting={isSubmitting} />
+        </FormProvider>
+      ) : (
+        <FormProvider {...createForm}>
+          <UserFormFields isEditMode={false} isSubmitting={isSubmitting} />
+        </FormProvider>
+      )}
     </Modal>
+  );
+}
+
+function UserFormFields({ isEditMode, isSubmitting }: { isEditMode: boolean; isSubmitting: boolean }) {
+  const { control } = useFormContext<CreateUserFormValues | UpdateUserFormValues>();
+
+  return (
+    <div className="space-y-4">
+      {!isEditMode && (
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <FormField name="email" label="Email" required placeholder="name@company.com" autoComplete="email" disabled={isSubmitting} />
+          <FormField name="password" label="Password" type="password" required placeholder="Create a secure password" hint="8-64 characters, with uppercase, lowercase, and a digit." autoComplete="new-password" disabled={isSubmitting} />
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <FormField name="firstName" label="First name" required placeholder="First name" autoComplete="given-name" disabled={isSubmitting} />
+        <FormField name="lastName" label="Last name" placeholder="Last name" autoComplete="family-name" disabled={isSubmitting} />
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <FormField name="phoneNumber" label="Phone number" placeholder="0912345678 or +84912345678" autoComplete="tel" disabled={isSubmitting} />
+        {isEditMode && <FormSelect name="status" label="Status" required options={STATUS_OPTIONS} disabled={isSubmitting} />}
+      </div>
+
+      <Controller
+        control={control}
+        name="roles"
+        render={({ field, fieldState }) => {
+          const selected = new Set(field.value ?? []);
+          const toggleRole = (role: AssignableAdminUserRole, checked: boolean) => {
+            const next = new Set(selected);
+            if (checked) next.add(role);
+            else next.delete(role);
+            field.onChange(Array.from(next));
+          };
+
+          return (
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-medium text-gray-700">Roles<span className="ml-0.5 text-danger-500">*</span></label>
+              <div className="grid grid-cols-1 gap-2 rounded-lg border border-gray-200 bg-gray-50 p-3 md:grid-cols-3">
+                {ROLE_OPTIONS.map((role) => (
+                  <Checkbox key={role.value} checked={selected.has(role.value as AssignableAdminUserRole)} onChange={(checked) => toggleRole(role.value as AssignableAdminUserRole, checked)} disabled={isSubmitting} label={role.label} />
+                ))}
+              </div>
+              {!fieldState.error && <p className="text-xs text-gray-500">Select one or more roles for this account.</p>}
+              {fieldState.error && <p className="text-xs text-danger-600">{fieldState.error.message}</p>}
+            </div>
+          );
+        }}
+      />
+    </div>
   );
 }

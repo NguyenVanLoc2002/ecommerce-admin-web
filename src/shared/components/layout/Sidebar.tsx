@@ -191,7 +191,10 @@ export function Sidebar() {
           </button>
         </div>
 
-        <nav className="min-h-0 flex-1 space-y-4 overflow-y-auto px-3 py-4" aria-label="Main navigation">
+        <nav
+          className="sidebar-navigation min-h-0 flex-1 space-y-4 overflow-y-auto px-3 py-4"
+          aria-label="Main navigation"
+        >
           <SidebarNavItemLink item={dashboardNavItem} pathname={pathname} />
 
           {visibleGroups.map((group) => (

@@ -25,6 +25,7 @@ export const queryKeys = {
     list: (params: object) =>
       [...queryKeys.products.lists(), cleanParams(params)] as const,
     detail: (id: EntityKey) => [...queryKeys.products.all, 'detail', id] as const,
+    inventory: (id: EntityKey) => [...queryKeys.products.all, 'inventory', id] as const,
   },
 
   variants: {
