@@ -2,40 +2,42 @@ import { useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { cleanParams } from '@/shared/utils/cleanParams';
 
-export type TableFilters = Record<string, string | number | boolean | undefined>;
+export type TableFilters = object;
 
 type AnyFilters = Record<string, unknown>;
+type FilterKey<T extends TableFilters> = Extract<keyof T, string>;
 
 interface UseTableFiltersOptions<T extends TableFilters> {
   namespace?: string;
-  booleanKeys?: Array<keyof T>;
-  numberKeys?: Array<keyof T>;
+  booleanKeys?: Array<FilterKey<T>>;
+  numberKeys?: Array<FilterKey<T>>;
 }
 
-function fromSearchParams<T extends AnyFilters>(
+function fromSearchParams<T extends TableFilters>(
   params: URLSearchParams,
   defaults: T,
   options?: UseTableFiltersOptions<T>,
 ): T {
-  const result: AnyFilters = { ...defaults };
-  const keys = Object.keys(defaults);
+  const result = { ...defaults } as T;
+  const resultValues = result as AnyFilters;
+  const keys = Object.keys(defaults) as Array<FilterKey<T>>;
 
   for (const key of keys) {
     const raw = params.get(toParamKey(key, options?.namespace));
     if (raw === null) continue;
 
-    const defaultVal = defaults[key];
+    const defaultVal = (defaults as AnyFilters)[key];
     if (typeof defaultVal === 'number' || isNumberKey(key, options?.numberKeys)) {
       const parsed = Number(raw);
-      result[key] = isNaN(parsed) ? defaultVal : parsed;
+      resultValues[key] = isNaN(parsed) ? defaultVal : parsed;
     } else if (typeof defaultVal === 'boolean' || isBooleanKey(key, options?.booleanKeys)) {
-      result[key] = raw === 'true';
+      resultValues[key] = raw === 'true';
     } else {
-      result[key] = raw;
+      resultValues[key] = raw;
     }
   }
 
-  return result as T;
+  return result;
 }
 
 export function useTableFilters<T extends TableFilters>(
@@ -60,7 +62,7 @@ export function useTableFilters<T extends TableFilters>(
       const nextSearchParams = new URLSearchParams(searchParams);
       const managedKeys = new Set([
         ...Object.keys(defaults),
-        ...Object.keys(filters as AnyFilters),
+        ...Object.keys(filters),
         ...Object.keys(updates as AnyFilters),
       ]);
 
@@ -82,7 +84,7 @@ export function useTableFilters<T extends TableFilters>(
     const nextSearchParams = new URLSearchParams(searchParams);
     const managedKeys = new Set([
       ...Object.keys(defaults),
-      ...Object.keys(filters as AnyFilters),
+      ...Object.keys(filters),
     ]);
 
     for (const key of managedKeys) {
@@ -106,14 +108,14 @@ function toParamKey(key: string, namespace?: string): string {
 
 function isBooleanKey<T extends TableFilters>(
   key: string,
-  booleanKeys?: Array<keyof T>,
+  booleanKeys?: Array<FilterKey<T>>,
 ): boolean {
-  return booleanKeys?.includes(key as keyof T) ?? false;
+  return booleanKeys?.includes(key as FilterKey<T>) ?? false;
 }
 
 function isNumberKey<T extends TableFilters>(
   key: string,
-  numberKeys?: Array<keyof T>,
+  numberKeys?: Array<FilterKey<T>>,
 ): boolean {
-  return numberKeys?.includes(key as keyof T) ?? false;
+  return numberKeys?.includes(key as FilterKey<T>) ?? false;
 }
