@@ -22,7 +22,7 @@ function buildEntityHref(entityType: string, entityId: string): string | null {
     case 'ORDER':
       return routes.orders.detail(entityId);
     case 'PRODUCT':
-      return routes.products.edit(entityId);
+      return routes.products.detail(entityId);
     case 'VOUCHER':
       return routes.vouchers.edit(entityId);
     case 'PAYMENT':

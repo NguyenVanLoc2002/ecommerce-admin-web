@@ -10,7 +10,8 @@ export const routes = {
   products: {
     list: '/products',
     create: '/products/new',
-    edit: (id: EntityKey) => `/products/${id}`,
+    detail: (id: EntityKey) => `/products/${id}`,
+    edit: (id: EntityKey) => `/products/${id}/edit`,
     variants: (id: EntityKey) => `/products/${id}/variants`,
   },
 

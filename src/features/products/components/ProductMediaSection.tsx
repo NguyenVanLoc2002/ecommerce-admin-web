@@ -148,7 +148,7 @@ export function ProductMediaSection({ productId, media, variants, disabled }: Pr
   };
 
   return (
-    <section className="space-y-4 border-t border-gray-200 pt-8">
+    <section className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-500">Product media</h2>

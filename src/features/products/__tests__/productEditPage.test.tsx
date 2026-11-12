@@ -31,14 +31,14 @@ vi.mock('@/shared/hooks/useConfirmDialog', () => ({
   useConfirmDialog: () => ({ confirm: vi.fn() }),
 }));
 
-function renderProductEdit(initialPath = '/products/123') {
+function renderProductEdit(initialPath = '/products/123/edit') {
   const queryClient = new QueryClient();
 
   return renderToStaticMarkup(
     <QueryClientProvider client={queryClient}>
       <MemoryRouter initialEntries={[initialPath]}>
         <Routes>
-          <Route path="/products/:id" element={<ProductEditPage />} />
+          <Route path="/products/:id/edit" element={<ProductEditPage />} />
         </Routes>
       </MemoryRouter>
     </QueryClientProvider>,
@@ -146,10 +146,15 @@ describe('ProductEditPage', () => {
     expect(markup).toContain('Product media');
     expect(markup).toContain('Product gallery');
     expect(markup).toContain('Variant: White / M');
-    expect(markup).toContain('2 items');
+    expect(markup).toContain('Draft preview');
+    expect(markup).toContain('Values here update before you save.');
+    expect(markup).not.toContain('Current catalog state');
+    expect(markup).toContain('Saved independently');
     expect(markup).toContain('https://cdn.example.com/gallery-main.jpg');
     expect(markup).toContain('Add URL-based gallery media or assign it to an active variant.');
-    expect(markup).toContain('Removing media only removes its catalog entry, not the remote asset.');
+    expect(markup).toContain(
+      'Removing media only removes its catalog entry, not the remote asset.',
+    );
     expect(markup).toContain('Set primary');
     expect(markup).toContain('Edit');
     expect(markup).toContain('Remove');

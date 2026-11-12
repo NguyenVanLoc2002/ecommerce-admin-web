@@ -9,9 +9,9 @@ import { FormMultiSelect } from '@/shared/components/form/FormMultiSelect';
 import { Button } from '@/shared/components/ui/Button';
 import { useBeforeUnload } from '@/shared/hooks/useBeforeUnload';
 import { slugify } from '@/shared/utils/slugify';
+import { AppError } from '@/shared/types/api.types';
 import { productSchema, type ProductFormValues } from '../schemas/productSchema';
 import type { Product, BrandOption, CategoryOption } from '../types/product.types';
-import { ProductMediaSection } from './ProductMediaSection';
 
 const STATUS_OPTIONS = [
   { value: 'DRAFT', label: 'Draft' },
@@ -24,9 +24,11 @@ interface ProductFormProps {
   brands: BrandOption[];
   categories: CategoryOption[];
   isSubmitting: boolean;
-  onSubmit: (values: ProductFormValues) => void;
+  onSubmit: (values: ProductFormValues) => Promise<void>;
   onCancel: () => void;
   showNoVariantsWarning?: boolean;
+  onDirtyChange?: (isDirty: boolean) => void;
+  aside?: React.ReactNode;
 }
 
 export function ProductForm({
@@ -37,6 +39,8 @@ export function ProductForm({
   onSubmit,
   onCancel,
   showNoVariantsWarning,
+  onDirtyChange,
+  aside,
 }: ProductFormProps) {
   const isEditMode = product !== undefined;
 
@@ -59,6 +63,14 @@ export function ProductForm({
   const isDirty = form.formState.isDirty;
   useBeforeUnload(isDirty);
 
+  useEffect(() => {
+    onDirtyChange?.(isDirty);
+  }, [isDirty, onDirtyChange]);
+
+  useEffect(() => {
+    return () => onDirtyChange?.(false);
+  }, [onDirtyChange]);
+
   // Auto-generate slug from name in create mode only
   const nameValue = form.watch('name');
   useEffect(() => {
@@ -80,9 +92,22 @@ export function ProductForm({
     [categories],
   );
 
+  const handleSubmit = async (values: ProductFormValues) => {
+    try {
+      await onSubmit(values);
+      form.reset(values);
+    } catch (error) {
+      if (error instanceof AppError && error.fieldErrors?.length) {
+        error.fieldErrors.forEach(({ field, message }) => {
+          form.setError(field as keyof ProductFormValues, { message });
+        });
+      }
+    }
+  };
+
   const handleSaveAndPublish = () => {
-    form.setValue('status', 'PUBLISHED');
-    void form.handleSubmit(onSubmit)();
+    form.setValue('status', 'PUBLISHED', { shouldDirty: true, shouldValidate: true });
+    void form.handleSubmit(handleSubmit)();
   };
 
   const watchedStatus = form.watch('status');
@@ -91,8 +116,13 @@ export function ProductForm({
 
   return (
     <FormProvider {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} noValidate>
-        <div className="space-y-8">
+      <form
+        id="product-edit-form"
+        onSubmit={(event) => void form.handleSubmit(handleSubmit)(event)}
+        noValidate
+      >
+        <div className={aside ? 'grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_20rem]' : ''}>
+          <div className="space-y-8">
           {showPublishWarning && watchedStatus === 'PUBLISHED' && (
             <div className="flex items-start gap-3 rounded-lg border border-warning-300 bg-warning-50 px-4 py-3">
               <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning-600" aria-hidden />
@@ -159,15 +189,6 @@ export function ProductForm({
             />
           </section>
 
-          {isEditMode && (
-            <ProductMediaSection
-              productId={product.id}
-              media={product.media}
-              variants={product.variants}
-              disabled={isSubmitting}
-            />
-          )}
-
           {/* Status & Settings */}
           <section className="space-y-4">
             <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-500">
@@ -194,30 +215,22 @@ export function ProductForm({
             </div>
           </section>
 
-          {/* Actions */}
-          <div className="flex items-center gap-3 border-t pt-4">
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={onCancel}
-              disabled={isSubmitting}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" isLoading={isSubmitting}>
-              {isSubmitting ? 'Saving…' : isEditMode ? 'Save changes' : 'Create product'}
-            </Button>
-            {!isEditMode && (
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={handleSaveAndPublish}
-                disabled={isSubmitting}
-              >
+          {!isEditMode && (
+            <div className="flex flex-wrap items-center gap-3 border-t border-gray-200 pt-6">
+              <Button type="button" variant="secondary" onClick={onCancel} disabled={isSubmitting}>
+                Cancel
+              </Button>
+              <Button type="submit" isLoading={isSubmitting}>
+                {isSubmitting ? 'Saving…' : 'Create product'}
+              </Button>
+              <Button type="button" variant="secondary" onClick={handleSaveAndPublish} disabled={isSubmitting}>
                 Save & Publish
               </Button>
-            )}
+            </div>
+          )}
+
           </div>
+          {aside}
         </div>
       </form>
     </FormProvider>
