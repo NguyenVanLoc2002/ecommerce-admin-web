@@ -6,7 +6,7 @@ import { LoginPage } from '@/features/auth/pages/LoginPage';
 import { DashboardPage } from '@/features/dashboard';
 import { ProductListPage, ProductDetailPage, ProductEditPage, ProductVariantsPage } from '@/features/products';
 import { ProductAttributeEditPage, ProductAttributeListPage } from '@/features/product-attributes';
-import { CategoryListPage } from '@/features/categories';
+import { CategoryEditPage, CategoryListPage } from '@/features/categories';
 import { BrandListPage } from '@/features/brands';
 import { CarrierListPage, ShippingProviderDetailPage } from '@/features/carriers';
 import { WarehouseListPage, StockPage, ReservationListPage } from '@/features/inventory';
@@ -97,6 +97,8 @@ export function Router() {
           <Route path={routes.products.variants(':id')} element={<ProductVariantsPage />} />
 
           <Route path={routes.categories.list} element={<CategoryListPage />} />
+          <Route path={routes.categories.create} element={<CategoryEditPage />} />
+          <Route path={routes.categories.edit(':id')} element={<CategoryEditPage />} />
           <Route path={routes.brands.list} element={<BrandListPage />} />
           <Route
             path={routes.carriers.list}
