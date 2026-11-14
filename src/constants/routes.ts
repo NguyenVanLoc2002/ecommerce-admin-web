@@ -23,6 +23,8 @@ export const routes = {
 
   categories: {
     list: '/categories',
+    create: '/categories/new',
+    edit: (id: EntityKey) => `/categories/${id}/edit`,
   },
 
   brands: {

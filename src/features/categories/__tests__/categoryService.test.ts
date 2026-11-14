@@ -60,10 +60,12 @@ describe('categoryService', () => {
     };
 
     await categoryService.create(createBody);
+    await categoryService.getById('category-1');
     await categoryService.update('category-1', updateBody);
     await categoryService.remove('category-1');
 
     expect(postMock).toHaveBeenCalledWith('/admin/categories', createBody);
+    expect(getMock).toHaveBeenCalledWith('/admin/categories/category-1');
     expect(patchMock).toHaveBeenCalledWith('/admin/categories/category-1', updateBody);
     expect(deleteMock).toHaveBeenCalledWith('/admin/categories/category-1');
   });

@@ -52,6 +52,7 @@ export const queryKeys = {
     lists: () => [...queryKeys.categories.all, 'list'] as const,
     list: (params: object) =>
       [...queryKeys.categories.lists(), cleanParams(params)] as const,
+    detail: (id: string) => [...queryKeys.categories.all, 'detail', id] as const,
   },
 
   brands: {
