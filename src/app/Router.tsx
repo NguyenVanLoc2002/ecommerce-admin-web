@@ -5,7 +5,7 @@ import { routes } from '@/constants/routes';
 import { LoginPage } from '@/features/auth/pages/LoginPage';
 import { DashboardPage } from '@/features/dashboard';
 import { ProductListPage, ProductDetailPage, ProductEditPage, ProductVariantsPage } from '@/features/products';
-import { ProductAttributeListPage } from '@/features/product-attributes';
+import { ProductAttributeEditPage, ProductAttributeListPage } from '@/features/product-attributes';
 import { CategoryListPage } from '@/features/categories';
 import { BrandListPage } from '@/features/brands';
 import { CarrierListPage, ShippingProviderDetailPage } from '@/features/carriers';
@@ -141,6 +141,8 @@ export function Router() {
 
           <Route element={<RoleGuard required={['ADMIN', 'SUPER_ADMIN']} />}>
             <Route path={routes.productAttributes.list} element={<ProductAttributeListPage />} />
+            <Route path={routes.productAttributes.create} element={<ProductAttributeEditPage />} />
+            <Route path={routes.productAttributes.edit(':id')} element={<ProductAttributeEditPage />} />
             <Route path={routes.promotions.list} element={<PromotionListPage />} />
             <Route path={routes.promotions.create} element={<PromotionEditPage />} />
             <Route path={routes.promotions.edit(':id')} element={<PromotionEditPage />} />

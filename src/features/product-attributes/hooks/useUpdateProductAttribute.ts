@@ -9,8 +9,9 @@ export function useUpdateProductAttribute() {
   return useMutation({
     mutationFn: ({ id, body }: { id: string; body: UpdateProductAttributeRequest }) =>
       productAttributeService.update(id, body),
-    onSuccess: () => {
+    onSuccess: (_attribute, { id }) => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.productAttributes.lists() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.productAttributes.detail(id) });
       void queryClient.invalidateQueries({ queryKey: queryKeys.productAttributes.variantOptions() });
       void queryClient.invalidateQueries({ queryKey: queryKeys.variants.all });
     },

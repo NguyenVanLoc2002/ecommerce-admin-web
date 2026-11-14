@@ -2,12 +2,12 @@ import { useEffect } from 'react';
 import { useFieldArray, useForm, FormProvider, type Path } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Plus, Trash2 } from 'lucide-react';
-import { Modal } from '@/shared/components/ui/Modal';
 import { Button } from '@/shared/components/ui/Button';
 import { FormField } from '@/shared/components/form/FormField';
 import { FormSelect } from '@/shared/components/form/FormSelect';
 import { AppError } from '@/shared/types/api.types';
 import { Input } from '@/shared/components/ui/Input';
+import { useBeforeUnload } from '@/shared/hooks/useBeforeUnload';
 import { productAttributeSchema, type ProductAttributeFormValues } from '../schemas/productAttributeSchema';
 import { ProductAttributeType, type ProductAttribute } from '../types/productAttribute.types';
 
@@ -17,11 +17,10 @@ const TYPE_OPTIONS = [
 ];
 
 interface ProductAttributeFormProps {
-  open: boolean;
-  onClose: () => void;
   attribute?: ProductAttribute;
   isSubmitting: boolean;
   onSubmit: (values: ProductAttributeFormValues) => Promise<void>;
+  onDirtyChange?: (isDirty: boolean) => void;
 }
 
 function normalizeFieldPath(field: string): string {
@@ -29,28 +28,29 @@ function normalizeFieldPath(field: string): string {
 }
 
 export function ProductAttributeForm({
-  open,
-  onClose,
   attribute,
   isSubmitting,
   onSubmit,
+  onDirtyChange,
 }: ProductAttributeFormProps) {
-  const isEditMode = attribute !== undefined;
-
   const form = useForm<ProductAttributeFormValues>({
     resolver: zodResolver(productAttributeSchema),
     defaultValues: {
-      name: '',
-      code: '',
-      type: ProductAttributeType.VARIANT,
-      values: [],
+      name: attribute?.name ?? '',
+      code: attribute?.code ?? '',
+      type: attribute?.type ?? ProductAttributeType.VARIANT,
+      values: attribute?.values.map((value) => ({
+        id: value.id,
+        value: value.value,
+        displayValue: value.displayValue ?? '',
+      })) ?? [],
     },
   });
 
   const {
     control,
     register,
-    formState: { errors },
+    formState: { errors, isDirty },
     setError,
     clearErrors,
   } = form;
@@ -61,10 +61,6 @@ export function ProductAttributeForm({
   });
 
   useEffect(() => {
-    if (!open) {
-      return;
-    }
-
     clearErrors();
 
     if (attribute) {
@@ -87,7 +83,15 @@ export function ProductAttributeForm({
       type: ProductAttributeType.VARIANT,
       values: [],
     });
-  }, [attribute, clearErrors, form, open]);
+  }, [attribute, clearErrors, form]);
+
+  useBeforeUnload(isDirty);
+
+  useEffect(() => {
+    onDirtyChange?.(isDirty);
+  }, [isDirty, onDirtyChange]);
+
+  useEffect(() => () => onDirtyChange?.(false), [onDirtyChange]);
 
   const rootError = errors.root?.server?.message;
 
@@ -96,6 +100,7 @@ export function ProductAttributeForm({
 
     try {
       await onSubmit(values);
+      form.reset(values);
     } catch (error) {
       if (error instanceof AppError) {
         if (error.code === 'PRODUCT_ATTRIBUTE_CODE_ALREADY_EXISTS') {
@@ -119,34 +124,23 @@ export function ProductAttributeForm({
   });
 
   return (
-    <Modal
-      open={open}
-      onClose={onClose}
-      title={isEditMode ? 'Edit Product Attribute' : 'New Product Attribute'}
-      description="Manage reusable attribute definitions and the allowed values under each one."
-      size="xl"
-      closeOnBackdropClick={false}
-      footer={
-        <>
-          <Button variant="secondary" onClick={onClose} disabled={isSubmitting}>
-            Cancel
-          </Button>
-          <Button type="submit" form="product-attribute-form" isLoading={isSubmitting}>
-            {isSubmitting ? 'Saving…' : isEditMode ? 'Save changes' : 'Create attribute'}
-          </Button>
-        </>
-      }
-    >
-      <FormProvider {...form}>
-        <form id="product-attribute-form" onSubmit={handleSubmit} noValidate>
-          <div className="max-h-[70vh] space-y-6 overflow-y-auto pr-1">
+    <FormProvider {...form}>
+      <form id="product-attribute-form" onSubmit={(event) => void handleSubmit(event)} noValidate>
+        <div className="space-y-6">
             {rootError && (
               <div className="rounded-md border border-danger-200 bg-danger-50 px-4 py-3 text-sm text-danger-700">
                 {rootError}
               </div>
             )}
 
-            <div className="grid grid-cols-2 gap-4">
+          <section className="rounded-xl border border-gray-200 bg-white p-6">
+            <div className="mb-6 border-b border-gray-100 pb-5">
+              <h2 className="text-base font-semibold text-gray-900">Attribute definition</h2>
+              <p className="mt-1 text-sm text-gray-500">
+                Set the reusable attribute name, system code, and where it can be used.
+              </p>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
               <FormField
                 name="name"
                 label="Name"
@@ -164,110 +158,110 @@ export function ProductAttributeForm({
               />
             </div>
 
-            <FormSelect
-              name="type"
-              label="Type"
-              required
-              options={TYPE_OPTIONS}
-              disabled={isSubmitting}
-            />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <FormSelect
+                name="type"
+                label="Type"
+                required
+                options={TYPE_OPTIONS}
+                disabled={isSubmitting}
+              />
+              <p className="self-end pb-1 text-xs leading-5 text-gray-500">
+                Variant attributes create selectable product options. Descriptive attributes provide product details.
+              </p>
+            </div>
+          </section>
 
-            <div className="border-t border-gray-200 pt-6">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-900">Values</h3>
-                  <p className="mt-1 text-xs text-gray-500">
-                    Add the reusable values that admins can select for this attribute.
-                  </p>
-                </div>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => append({ value: '', displayValue: '' })}
-                  disabled={isSubmitting}
-                  leftIcon={<Plus className="h-4 w-4" />}
-                >
-                  Add value
-                </Button>
+          <section className="rounded-xl border border-gray-200 bg-white">
+            <div className="flex flex-col gap-4 border-b border-gray-100 px-6 py-5 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <h2 className="text-base font-semibold text-gray-900">Values ({fields.length})</h2>
+                <p className="mt-1 text-sm text-gray-500">
+                  Add the options admins can select for this attribute.
+                </p>
               </div>
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={() => append({ value: '', displayValue: '' }, { shouldFocus: true })}
+                disabled={isSubmitting}
+                leftIcon={<Plus className="h-4 w-4" />}
+              >
+                Add value
+              </Button>
+            </div>
 
-              <div className="mt-4 space-y-3">
-                {fields.length === 0 ? (
-                  <div className="rounded-lg border border-dashed border-gray-300 px-4 py-6 text-sm text-gray-500">
-                    No values yet. Add options like White, Black, Navy, or XL.
-                  </div>
-                ) : (
-                  fields.map((field, index) => {
+            {fields.length === 0 ? (
+              <div className="px-6 py-10 text-center text-sm text-gray-500">
+                No values yet. Add options such as White, Black, Navy, or XL.
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="min-w-[42rem] w-full border-collapse text-left">
+                  <thead className="bg-gray-50 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                    <tr>
+                      <th scope="col" className="w-12 px-6 py-3">#</th>
+                      <th scope="col" className="px-3 py-3">Value <span className="text-danger-500">*</span></th>
+                      <th scope="col" className="px-3 py-3">Display label</th>
+                      <th scope="col" className="w-16 px-3 py-3"><span className="sr-only">Actions</span></th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {fields.map((field, index) => {
                     const valueError = errors.values?.[index]?.value?.message;
                     const displayValueError = errors.values?.[index]?.displayValue?.message;
 
                     return (
-                      <div
-                        key={field.id}
-                        className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] gap-3 rounded-lg border border-gray-200 p-4"
-                      >
-                        <div className="space-y-1.5">
-                          <label
-                            htmlFor={`values.${index}.value`}
-                            className="text-sm font-medium text-gray-700"
-                          >
-                            Value
-                            <span className="ml-0.5 text-danger-500">*</span>
-                          </label>
+                        <tr key={field.id} className="align-top">
+                          <td className="px-6 py-4 text-sm tabular-nums text-gray-500">{index + 1}</td>
+                          <td className="px-3 py-3">
                           <Input
-                            id={`values.${index}.value`}
+                            aria-label={`Value ${index + 1}`}
                             placeholder="e.g. WHITE"
                             disabled={isSubmitting}
                             error={Boolean(valueError)}
                             {...register(`values.${index}.value`)}
                           />
                           {valueError && (
-                            <p className="text-xs text-danger-600">{valueError}</p>
+                            <p className="mt-1.5 text-xs text-danger-600">{valueError}</p>
                           )}
-                        </div>
-
-                        <div className="space-y-1.5">
-                          <label
-                            htmlFor={`values.${index}.displayValue`}
-                            className="text-sm font-medium text-gray-700"
-                          >
-                            Display value
-                          </label>
+                          </td>
+                          <td className="px-3 py-3">
                           <Input
-                            id={`values.${index}.displayValue`}
+                            aria-label={`Display label ${index + 1}`}
                             placeholder="e.g. White"
                             disabled={isSubmitting}
                             error={Boolean(displayValueError)}
                             {...register(`values.${index}.displayValue`)}
                           />
                           {displayValueError && (
-                            <p className="text-xs text-danger-600">{displayValueError}</p>
+                            <p className="mt-1.5 text-xs text-danger-600">{displayValueError}</p>
                           )}
-                        </div>
-
-                        <div className="flex items-start pt-7">
+                          </td>
+                          <td className="px-3 py-3">
                           <Button
                             type="button"
                             variant="ghost"
                             size="icon-sm"
                             onClick={() => remove(index)}
                             disabled={isSubmitting}
-                            aria-label="Remove value"
+                            aria-label={`Remove value ${index + 1}`}
                             className="text-gray-400 hover:text-danger-600"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
-                        </div>
-                      </div>
+                          </td>
+                        </tr>
                     );
-                  })
-                )}
+                    })}
+                  </tbody>
+                </table>
               </div>
-            </div>
-          </div>
-        </form>
-      </FormProvider>
-    </Modal>
+            )}
+          </section>
+        </div>
+      </form>
+    </FormProvider>
   );
 }
