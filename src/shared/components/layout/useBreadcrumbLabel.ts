@@ -3,9 +3,11 @@ import { BreadcrumbContext } from './breadcrumbContext';
 
 export function useBreadcrumbLabel(path: string | undefined, label: string | undefined) {
   const context = useContext(BreadcrumbContext);
+  const setLabel = context?.setLabel;
+  const clearLabel = context?.clearLabel;
 
   useEffect(() => {
-    if (!context) {
+    if (!setLabel || !clearLabel) {
       return undefined;
     }
 
@@ -16,12 +18,12 @@ export function useBreadcrumbLabel(path: string | undefined, label: string | und
       return undefined;
     }
 
-    context.setLabel(normalizedPath, normalizedLabel);
+    setLabel(normalizedPath, normalizedLabel);
 
     return () => {
-      context.clearLabel(normalizedPath);
+      clearLabel(normalizedPath);
     };
-  }, [context, label, path]);
+  }, [clearLabel, label, path, setLabel]);
 }
 
 export function useBreadcrumbLabels() {
