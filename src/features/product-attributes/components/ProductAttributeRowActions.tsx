@@ -86,7 +86,7 @@ export function ProductAttributeRowActions({
           }}
         >
           <Pencil className="h-4 w-4 text-gray-400" />
-          View / Edit
+          Edit
         </button>
         <div className="my-1 border-t border-gray-100" />
         <button

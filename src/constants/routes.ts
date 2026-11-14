@@ -17,6 +17,8 @@ export const routes = {
 
   productAttributes: {
     list: '/product-attributes',
+    create: '/product-attributes/new',
+    edit: (id: EntityKey) => `/product-attributes/${id}/edit`,
   },
 
   categories: {
