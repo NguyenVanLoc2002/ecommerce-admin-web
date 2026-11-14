@@ -75,16 +75,36 @@ export interface ProductMedia {
   sortOrder: number;
   primary: boolean;
   variantId: EntityId | null;
+  storageKey?: string | null;
 }
 
 export type ProductMediaType = 'IMAGE' | 'VIDEO';
 
 export interface CreateProductMediaRequest {
-  mediaUrl: string;
+  mediaUrl?: string;
+  storageKey?: string;
   mediaType: ProductMediaType;
   sortOrder: number;
   primary: boolean;
   variantId: EntityId | null;
+}
+
+export interface CatalogUploadRequest {
+  purpose: 'CATALOG_IMAGE';
+  originalFilename: string;
+  contentType: string;
+  sizeBytes: number;
+}
+
+export interface PresignedCatalogUpload {
+  storageKey: string;
+  uploadUrl: string;
+  requiredContentType: string;
+}
+
+export interface VerifiedCatalogAsset {
+  storageKey: string;
+  mediaUrl: string;
 }
 
 export type UpdateProductMediaRequest = Partial<CreateProductMediaRequest>;
