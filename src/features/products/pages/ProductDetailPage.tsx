@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { AlertTriangle, CheckCircle2, ChevronRight, Film, ImageOff, Layers, Pencil, Tag } from 'lucide-react';
+import { AlertTriangle, ChevronRight, Film, ImageOff, Layers, Pencil } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { routes } from '@/constants/routes';
 import { ErrorCard } from '@/shared/components/feedback/ErrorCard';
@@ -140,6 +140,7 @@ export function ProductDetailPage() {
   const activeVariantCount =
     product.activeVariantCount ?? variants.filter((variant) => variant.status === 'ACTIVE').length;
   const hasPrimaryMedia = media.some((item) => item.primary);
+  const hasAvailablePrimaryPreview = Boolean(primaryMedia?.mediaUrl) && !hasPrimaryImageError;
   const activeVariantIds = new Set(
     variants.filter((variant) => variant.status === 'ACTIVE').map((variant) => variant.id),
   );
@@ -153,45 +154,49 @@ export function ProductDetailPage() {
   const activeVariantsInStock = [...activeVariantIds].filter(
     (variantId) => (availableByVariant.get(variantId) ?? 0) > 0,
   ).length;
-  const readinessItems = [
+  const readinessIssues = [
     {
-      label: activeVariantCount > 0 ? 'Active variants available' : 'No active variants',
-      ready: activeVariantCount > 0,
-      actionLabel: 'Manage variants',
+      label: 'No active variants',
+      show: activeVariantCount === 0,
       onAction: () => navigate(routes.products.variants(product.id)),
     },
     {
-      label: hasPrimaryMedia ? 'Primary media selected' : 'No primary media selected',
-      ready: hasPrimaryMedia,
-      actionLabel: 'Manage media',
+      label: hasPrimaryMedia && !hasAvailablePrimaryPreview
+        ? 'Primary preview unavailable'
+        : 'No primary media selected',
+      show: !hasPrimaryMedia || !hasAvailablePrimaryPreview,
       onAction: () => navigate(routes.products.edit(product.id)),
     },
     {
-      label: product.minPrice != null || product.maxPrice != null ? 'Price available' : 'No price available',
-      ready: product.minPrice != null || product.maxPrice != null,
-      actionLabel: 'Manage variants',
+      label: 'Price range unavailable',
+      show: product.minPrice == null && product.maxPrice == null,
       onAction: () => navigate(routes.products.variants(product.id)),
     },
+    {
+      label: 'No brand assigned',
+      show: !product.brand,
+      onAction: () => navigate(routes.products.edit(product.id)),
+    },
+    {
+      label: 'No categories assigned',
+      show: product.categories.length === 0,
+      onAction: () => navigate(routes.products.edit(product.id)),
+    },
+    {
+      label: 'No active variants in stock',
+      show: !isInventoryLoading && !isInventoryError && activeVariantCount > 0 && activeVariantsInStock === 0,
+      onAction: () =>
+        navigate(`${routes.inventory.stock}?stock.productId=${encodeURIComponent(product.id)}`),
+    },
   ];
-  const readinessWarningCount = readinessItems.filter((item) => !item.ready).length;
-  const inventoryCheck = isInventoryLoading
-    ? { label: 'Checking inventory', variant: 'default' as const, dot: false }
-    : isInventoryError
-      ? { label: 'Inventory could not be verified', variant: 'info' as const, dot: true }
-      : activeVariantsInStock > 0
-        ? {
-            label: `${activeVariantsInStock} active variant${activeVariantsInStock === 1 ? '' : 's'} in stock`,
-            variant: 'success' as const,
-            dot: true,
-          }
-        : { label: 'No active variants in stock', variant: 'warning' as const, dot: true };
+  const activeReadinessIssues = readinessIssues.filter((item) => item.show);
 
   return (
     <AdminLayout>
       <div className="mx-auto w-full max-w-6xl space-y-6 p-6">
         <PageHeader
           title={product.name}
-          description="Catalog summary, sellability checks, and product configuration."
+          description="Product setup and sellability."
           actions={
             <>
               <Button
@@ -247,7 +252,7 @@ export function ProductDetailPage() {
                 </p>
               )}
 
-              <dl className="mt-6 grid gap-4 border-t border-gray-100 pt-5 sm:grid-cols-3">
+              <dl className="mt-5 grid gap-4 border-t border-gray-100 pt-4 sm:grid-cols-2 lg:grid-cols-4">
                 <div>
                   <dt className="text-xs font-medium uppercase tracking-wide text-gray-400">
                     Price range
@@ -272,44 +277,68 @@ export function ProductDetailPage() {
                     {media.length} item{media.length === 1 ? '' : 's'}
                   </dd>
                 </div>
+                <div>
+                  <dt className="text-xs font-medium uppercase tracking-wide text-gray-400">
+                    Sellable stock
+                  </dt>
+                  <dd className="mt-1 text-sm font-semibold text-gray-900">
+                    {isInventoryLoading
+                      ? 'Checking...'
+                      : isInventoryError
+                        ? 'Unavailable'
+                        : `${activeVariantsInStock} of ${activeVariantCount} variants`}
+                  </dd>
+                </div>
               </dl>
+
+              <div className="mt-5 flex flex-col gap-3 border-t border-gray-100 pt-4 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
+                    Brand & categories
+                  </p>
+                  <p className="mt-1 text-sm font-medium text-gray-800">
+                    {product.brand?.name || 'No brand assigned'}
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {product.categories.length > 0 ? (
+                      product.categories.map((category) => (
+                        <Badge key={category.id} variant="default">
+                          {category.name}
+                        </Badge>
+                      ))
+                    ) : (
+                      <span className="text-sm text-gray-500">No categories assigned</span>
+                    )}
+                  </div>
+                </div>
+                <div className="flex shrink-0 items-center gap-2 text-sm text-gray-500">
+                  <span>Internal ID</span>
+                  <CopyValueButton value={product.id} label="Copy ID" />
+                </div>
+              </div>
             </div>
           </div>
         </section>
 
-        <section
-          className={
-            readinessWarningCount > 0
-              ? 'rounded-xl border border-warning-200 bg-warning-50 p-5'
-              : 'rounded-xl border border-success-200 bg-success-50 p-5'
-          }
-          aria-labelledby="catalog-readiness-heading"
-        >
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <div className="flex items-center gap-2">
-                {readinessWarningCount > 0 ? (
-                  <AlertTriangle className="h-4 w-4 text-warning-700" aria-hidden />
-                ) : (
-                  <CheckCircle2 className="h-4 w-4 text-success-700" aria-hidden />
-                )}
-                <h2 id="catalog-readiness-heading" className="text-sm font-semibold text-gray-900">
-                  Sellability readiness
-                </h2>
+        {activeReadinessIssues.length > 0 && (
+          <section
+            className="rounded-xl border border-warning-200 bg-warning-50 p-4"
+            aria-labelledby="catalog-readiness-heading"
+          >
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-start gap-2">
+                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning-700" aria-hidden />
+                <div>
+                  <h2 id="catalog-readiness-heading" className="text-sm font-semibold text-gray-900">
+                    Needs attention
+                  </h2>
+                  <p className="mt-1 text-sm text-gray-600">
+                    Resolve these items before relying on this product as sellable.
+                  </p>
+                </div>
               </div>
-              <p className="mt-1 text-sm text-gray-600">
-                {readinessWarningCount > 0
-                  ? `${readinessWarningCount} item${readinessWarningCount === 1 ? '' : 's'} need attention before this product is ready to sell.`
-                  : 'The catalog information required to sell this product is in place.'}
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {readinessItems.map((item) => (
-                item.ready ? (
-                  <Badge key={item.label} variant="success" dot>
-                    {item.label}
-                  </Badge>
-                ) : (
+              <div className="flex flex-wrap gap-2">
+                {activeReadinessIssues.map((item) => (
                   <Button
                     key={item.label}
                     variant="secondary"
@@ -317,16 +346,13 @@ export function ProductDetailPage() {
                     onClick={item.onAction}
                     rightIcon={<ChevronRight className="h-4 w-4" aria-hidden />}
                   >
-                    {item.actionLabel}
+                    {item.label}
                   </Button>
-                )
-              ))}
-              <Badge variant={inventoryCheck.variant} dot={inventoryCheck.dot}>
-                {inventoryCheck.label}
-              </Badge>
+                ))}
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+        )}
 
         <ProductInventorySummary
           variants={variants}
@@ -339,16 +365,15 @@ export function ProductDetailPage() {
           }
         />
 
-        <div className="grid items-start gap-6 2xl:grid-cols-[minmax(0,1fr)_18rem]">
-          <div className="space-y-6">
-            <section className="rounded-xl border border-gray-200 bg-white p-6">
-              <h2 className="text-sm font-semibold text-gray-900">Description</h2>
-              <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-gray-600">
-                {product.description || 'No full description has been added.'}
-              </p>
-            </section>
+        <div className="space-y-5">
+          <section className="rounded-xl border border-gray-200 bg-white p-5">
+            <h2 className="text-sm font-semibold text-gray-900">Description</h2>
+            <p className="mt-3 max-w-3xl whitespace-pre-wrap text-sm leading-6 text-gray-600">
+              {product.description || 'No full description has been added.'}
+            </p>
+          </section>
 
-            <section className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+          <section className="overflow-hidden rounded-xl border border-gray-200 bg-white">
               <div className="flex items-center justify-between gap-4 border-b border-gray-100 px-6 py-4">
                 <div>
                   <h2 className="text-sm font-semibold text-gray-900">Variants</h2>
@@ -403,9 +428,9 @@ export function ProductDetailPage() {
                   ))}
                 </div>
               )}
-            </section>
+          </section>
 
-            <section className="rounded-xl border border-gray-200 bg-white p-6">
+          <section className="rounded-xl border border-gray-200 bg-white p-5">
               <div className="flex items-center justify-between gap-4">
                 <div>
                   <h2 className="text-sm font-semibold text-gray-900">Media</h2>
@@ -453,55 +478,17 @@ export function ProductDetailPage() {
                 )}
                 </>
               )}
-            </section>
-          </div>
-
-          <aside className="rounded-xl border border-gray-200 bg-white p-5">
-            <h2 className="text-sm font-semibold text-gray-900">Catalog placement</h2>
-            <dl className="mt-4 space-y-4 text-sm">
-              <div>
-                <dt className="text-xs font-medium uppercase tracking-wide text-gray-400">Brand</dt>
-                <dd className="mt-1 font-medium text-gray-800">
-                  {product.brand?.name || 'No brand assigned'}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-xs font-medium uppercase tracking-wide text-gray-400">
-                  Categories
-                </dt>
-                <dd className="mt-2 flex flex-wrap gap-2">
-                  {product.categories.length > 0 ? (
-                    product.categories.map((category) => (
-                      <Badge key={category.id} variant="default">
-                        {category.name}
-                      </Badge>
-                    ))
-                  ) : (
-                    <span className="text-gray-500">No categories assigned</span>
-                  )}
-                </dd>
-              </div>
-              <div className="border-t border-gray-100 pt-4">
-                <dt className="text-xs font-medium uppercase tracking-wide text-gray-400">
-                  Created
-                </dt>
-                <dd className="mt-1 text-gray-700">{formatDateTime(product.createdAt)}</dd>
-              </div>
-              <div>
-                <dt className="text-xs font-medium uppercase tracking-wide text-gray-400">
-                  Last updated
-                </dt>
-                <dd className="mt-1 text-gray-700">{formatDateTime(product.updatedAt)}</dd>
-              </div>
-            </dl>
-            <div className="mt-5 flex items-center justify-between border-t border-gray-100 pt-4">
-              <div className="flex items-center gap-2 text-sm text-gray-500">
-                <Tag className="h-4 w-4" aria-hidden />
-                Internal ID
-              </div>
-              <CopyValueButton value={product.id} label="Copy ID" />
+          </section>
+          <dl className="flex flex-wrap gap-x-6 gap-y-1 text-xs text-gray-500">
+            <div className="flex gap-1">
+              <dt>Created</dt>
+              <dd className="text-gray-700">{formatDateTime(product.createdAt)}</dd>
             </div>
-          </aside>
+            <div className="flex gap-1">
+              <dt>Last updated</dt>
+              <dd className="text-gray-700">{formatDateTime(product.updatedAt)}</dd>
+            </div>
+          </dl>
         </div>
       </div>
     </AdminLayout>
