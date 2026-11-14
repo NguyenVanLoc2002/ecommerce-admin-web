@@ -175,6 +175,7 @@ function normalizeMedia(input: unknown): ProductMedia {
     sortOrder: asNumber(record.sortOrder) ?? 0,
     primary: Boolean(record.primary),
     variantId: record.variantId == null ? null : String(record.variantId),
+    storageKey: asNullableString(record.storageKey),
   };
 }
 

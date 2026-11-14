@@ -101,14 +101,22 @@ Role summary by module:
 - `MediaResponse`
   - `id`, `mediaUrl`, `mediaType`, `sortOrder`, `primary`, `variantId`
 - `CreateProductMediaRequest`
-  - `mediaUrl`: required HTTP/HTTPS URL, max 500
+  - provide exactly one of `mediaUrl` (HTTP/HTTPS URL, max 500) or a verified `storageKey`
   - `mediaType`: optional, defaults to `IMAGE`
   - `sortOrder`: optional, defaults to `0`, must be `>= 0`
   - `primary`: optional boolean
   - `variantId`: optional UUID; omit for product-level media
 - `UpdateProductMediaRequest`
-  - partial update of `mediaUrl`, `mediaType`, `sortOrder`, `primary`, and `variantId`
+  - partial update of `mediaUrl`, `storageKey`, `mediaType`, `sortOrder`, `primary`, and `variantId`
   - supplied `mediaUrl` must be an HTTP/HTTPS URL with max length 500; supplied `sortOrder` must be `>= 0`
+  - when changing the asset, provide exactly one of `mediaUrl` or `storageKey`; `storageKey` must identify a verified catalog image upload
+
+### Catalog image upload
+
+- `POST /api/v1/admin/catalog-uploads` accepts `{ purpose: "CATALOG_IMAGE", originalFilename, contentType, sizeBytes }` for JPEG, PNG, or WebP images up to 10 MiB.
+- Response contains `storageKey`, short-lived `uploadUrl`, `expiresAt`, and `requiredContentType`. PUT the file directly to `uploadUrl` with that exact `Content-Type`; do not send the Admin bearer token to the storage host.
+- `POST /api/v1/admin/catalog-uploads/complete` accepts `{ storageKey }` and returns the verified asset including `storageKey` and public `mediaUrl`.
+- Attach a managed image to ProductMedia by sending its verified `storageKey`, never the presigned URL. External image/video URLs remain supported.
 - `CreateVariantRequest`
   - `sku`: optional, max 100. Server generates one when blank or `autoGenerateSku=true`.
   - `autoGenerateSku`: optional boolean
