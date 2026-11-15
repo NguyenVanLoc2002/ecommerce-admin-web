@@ -13,6 +13,7 @@ export interface Category extends SoftDeletableRecord {
   slug: string;
   description: string | null;
   imageUrl: string | null;
+  imageStorageKey?: string | null;
   status: EntityStatus;
   sortOrder: number | null;
   createdAt: string;
@@ -32,6 +33,7 @@ export interface CreateCategoryRequest {
   slug: string;
   description?: string;
   imageUrl?: string | null;
+  imageStorageKey?: string | null;
   sortOrder?: number | null;
 }
 
@@ -41,6 +43,7 @@ export interface UpdateCategoryRequest {
   slug?: string;
   description?: string;
   imageUrl?: string | null;
+  imageStorageKey?: string | null;
   status?: EntityStatus;
   sortOrder?: number | null;
 }

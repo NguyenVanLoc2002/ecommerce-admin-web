@@ -59,6 +59,7 @@ export const updateCustomerSchema = z.object({
   gender: z.enum(CUSTOMER_GENDER_VALUES).optional(),
   birthDate: optionalIsoDate,
   avatarUrl: optionalUrl,
+  avatarStorageKey: optionalTrimmedString(500),
 });
 
 export const updateCustomerStatusSchema = z.object({

@@ -2,14 +2,18 @@
 @tailwind components;
 @tailwind utilities;
 
-html,
-body,
-#root {
-  height: 100%;
+html {
+  min-height: 100%;
 }
 
 body {
-  overflow: hidden;
+  min-height: 100vh;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+#root {
+  min-height: 100vh;
 }
 
 /* Keep the navigation scrollable without reserving space for a visible scrollbar. */

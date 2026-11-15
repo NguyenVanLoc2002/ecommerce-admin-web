@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Modal } from '@/shared/components/ui/Modal';
@@ -9,6 +9,7 @@ import { toast } from '@/shared/stores/uiStore';
 import type { AppError } from '@/shared/types/api.types';
 import { formatEnumLabel } from '@/shared/utils/formatEnumLabel';
 import { useUpdateCustomer } from '../hooks/useUpdateCustomer';
+import { ImageUploadField } from '@/shared/media/ImageUploadField';
 import {
   CUSTOMER_GENDER_VALUES,
   updateCustomerSchema,
@@ -31,6 +32,7 @@ interface CustomerFormModalProps {
 }
 
 export function CustomerFormModal({ open, onClose, customer }: CustomerFormModalProps) {
+  const [isUploading, setIsUploading] = useState(false);
   const updateCustomer = useUpdateCustomer(customer?.id);
 
   const form = useForm<UpdateCustomerFormValues>({
@@ -42,6 +44,7 @@ export function CustomerFormModal({ open, onClose, customer }: CustomerFormModal
       gender: undefined,
       birthDate: undefined,
       avatarUrl: undefined,
+      avatarStorageKey: undefined,
     },
   });
 
@@ -59,6 +62,7 @@ export function CustomerFormModal({ open, onClose, customer }: CustomerFormModal
       gender: customer.gender ?? undefined,
       birthDate: customer.birthDate ?? undefined,
       avatarUrl: customer.avatarUrl ?? undefined,
+      avatarStorageKey: customer.avatarStorageKey ?? undefined,
     });
   }, [customer, form, open]);
 
@@ -105,7 +109,8 @@ export function CustomerFormModal({ open, onClose, customer }: CustomerFormModal
       phoneNumber: values.phoneNumber,
       gender: values.gender,
       birthDate: values.birthDate,
-      avatarUrl: values.avatarUrl,
+      avatarUrl: values.avatarStorageKey ? undefined : values.avatarUrl,
+      avatarStorageKey: values.avatarStorageKey,
     };
 
     try {
@@ -138,14 +143,14 @@ export function CustomerFormModal({ open, onClose, customer }: CustomerFormModal
       closeOnBackdropClick={!isSubmitting}
       footer={
         <>
-          <Button variant="secondary" size="sm" onClick={handleClose} disabled={isSubmitting}>
+          <Button variant="secondary" size="sm" onClick={handleClose} disabled={isSubmitting || isUploading}>
             Cancel
           </Button>
           <Button
             size="sm"
             isLoading={isSubmitting}
             onClick={() => void handleSubmit()}
-            disabled={!customer}
+            disabled={!customer || isUploading}
           >
             Save changes
           </Button>
@@ -195,13 +200,10 @@ export function CustomerFormModal({ open, onClose, customer }: CustomerFormModal
               type="date"
               disabled={isSubmitting}
             />
-            <FormField
-              name="avatarUrl"
-              label="Avatar URL"
-              placeholder="https://…"
-              hint="Leave blank to clear the avatar."
-              disabled={isSubmitting}
-            />
+            <ImageUploadField purpose="CUSTOMER_AVATAR" label="Customer avatar" url={form.watch('avatarUrl')} storageKey={form.watch('avatarStorageKey')} disabled={isSubmitting} onUploadingChange={setIsUploading} onChange={(asset) => {
+              form.setValue('avatarStorageKey', asset?.storageKey || undefined, { shouldDirty: true });
+              form.setValue('avatarUrl', asset ? (asset.storageKey ? undefined : asset.mediaUrl) : '', { shouldDirty: true });
+            }} />
           </div>
         </div>
       </FormProvider>

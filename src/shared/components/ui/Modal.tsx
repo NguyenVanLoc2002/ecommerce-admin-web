@@ -47,6 +47,7 @@ export function Modal({
   inline = false,
 }: ModalProps) {
   const panelRef = useRef<HTMLDivElement>(null);
+  const previouslyFocusedRef = useRef<HTMLElement | null>(null);
   const uid = useId();
   const titleId = `${uid}-title`;
   const descId = `${uid}-desc`;
@@ -65,8 +66,13 @@ export function Modal({
   }, [inline, open, onClose]);
 
   useEffect(() => {
-    if (open) panelRef.current?.focus();
-  }, [open]);
+    if (!open || inline) return;
+    previouslyFocusedRef.current = document.activeElement instanceof HTMLElement
+      ? document.activeElement
+      : null;
+    panelRef.current?.focus();
+    return () => previouslyFocusedRef.current?.focus();
+  }, [inline, open]);
 
   useEffect(() => {
     if (!open || inline) return;
@@ -75,11 +81,11 @@ export function Modal({
     const trap = (e: KeyboardEvent) => {
       if (e.key !== 'Tab') return;
       const els = Array.from(panel.querySelectorAll<HTMLElement>(FOCUSABLE));
-      if (els.length === 0) return;
+      if (els.length === 0) { e.preventDefault(); panel.focus(); return; }
       const first = els[0];
       const last = els[els.length - 1];
       if (e.shiftKey) {
-        if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+        if (document.activeElement === first || document.activeElement === panel) { e.preventDefault(); last.focus(); }
       } else {
         if (document.activeElement === last) { e.preventDefault(); first.focus(); }
       }
@@ -148,7 +154,7 @@ export function Modal({
         aria-describedby={description ? descId : undefined}
         tabIndex={-1}
         className={cn(
-          'relative z-10 w-full rounded-lg bg-white shadow-xl focus-visible:outline-none animate-scale-in motion-reduce:animate-none',
+          'relative z-10 flex max-h-[calc(100dvh-2rem)] w-full flex-col overflow-hidden rounded-lg bg-white shadow-xl focus-visible:outline-none animate-scale-in motion-reduce:animate-none',
           sizeClasses[size],
           className,
         )}
@@ -176,8 +182,8 @@ export function Modal({
             </Button>
           </div>
         )}
-        <div className="px-6 py-4">{children}</div>
-        {footer && <div className="flex justify-end gap-3 border-t px-6 py-4">{footer}</div>}
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 py-4">{children}</div>
+        {footer && <div className="flex shrink-0 justify-end gap-3 border-t bg-white px-6 py-4">{footer}</div>}
       </div>
     </div>,
     document.body,

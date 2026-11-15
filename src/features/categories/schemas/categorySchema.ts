@@ -29,6 +29,7 @@ export const categorySchema = z.object({
     .regex(/^[a-z0-9-]+$/, 'Only lowercase letters, numbers, and hyphens'),
   description: z.string().trim().default(''),
   imageUrl: nullableTrimmedString.default(null),
+  imageStorageKey: nullableTrimmedString.default(null),
   sortOrder: nullableInteger.default(null),
   status: z.enum(['ACTIVE', 'INACTIVE']).optional(),
 });

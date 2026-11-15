@@ -134,6 +134,8 @@ export function CarrierTable({
       {
         id: 'name',
         header: 'Provider / Carrier',
+        className: 'sticky left-0 z-[1] min-w-[220px] bg-white',
+        headerClassName: 'sticky left-0 z-20 min-w-[220px] bg-gray-50',
         enableSorting: true,
         cell: ({ row }) => (
           <div className="flex items-center gap-3">
@@ -212,7 +214,8 @@ export function CarrierTable({
       {
         id: 'actions',
         header: '',
-        className: 'w-12',
+        className: 'sticky right-0 z-[1] w-12 bg-white',
+        headerClassName: 'sticky right-0 z-20 w-12 bg-gray-50',
         cell: ({ row }) => (
           <CarrierRowActions
             carrier={row.original}

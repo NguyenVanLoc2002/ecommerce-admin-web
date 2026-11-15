@@ -170,7 +170,7 @@ export function Sidebar() {
 
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 z-30 flex h-screen min-h-0 w-64 shrink-0 flex-col overflow-hidden bg-gray-900 transition-transform duration-300 lg:static lg:h-screen lg:translate-x-0',
+          'fixed inset-y-0 left-0 z-30 flex h-screen min-h-0 w-64 shrink-0 flex-col overflow-hidden bg-gray-900 transition-transform duration-300 lg:translate-x-0',
           sidebarOpen ? 'translate-x-0' : '-translate-x-full',
         )}
       >

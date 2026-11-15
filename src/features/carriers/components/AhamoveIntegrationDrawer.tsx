@@ -312,7 +312,7 @@ export function AhamoveIntegrationDrawer({
 
   const {
     clearErrors,
-    formState: { errors },
+    formState: { errors, isDirty },
     setError,
   } = form;
 
@@ -457,27 +457,32 @@ export function AhamoveIntegrationDrawer({
     testAhamoveConnection.isPending ||
     generateWebhookToken.isPending;
   const canManageIntegration = Boolean(carrier && integration);
+  const requestClose = () => {
+    if (isBusy) return;
+    if (isDirty && !window.confirm('Discard unsaved AhaMove configuration changes?')) return;
+    onClose();
+  };
 
   return (
     <>
       <Drawer
         open={open}
-        onClose={onClose}
+        onClose={requestClose}
         title={carrier ? `Configure ${carrier.name}` : 'Configure AhaMove'}
-        description="Structured AhaMove setup with write-only secrets, health checks, and webhook onboarding."
+        description="Provider credentials, pickup source, and shipment defaults are saved together. Secrets remain write-only."
         size="lg"
         inline={inline}
         footer={
           <>
-            <Button variant="secondary" onClick={onClose} disabled={isBusy}>
+            <Button variant="secondary" onClick={requestClose} disabled={isBusy}>
               Close
             </Button>
             <Button
               onClick={() => void handleSave()}
               isLoading={updateAhamoveIntegration.isPending}
-              disabled={!canManageIntegration}
+              disabled={!canManageIntegration || isBusy}
             >
-              Save configuration
+              {updateAhamoveIntegration.isPending ? 'Saving…' : isDirty ? 'Save changes' : 'Saved'}
             </Button>
           </>
         }
@@ -485,6 +490,10 @@ export function AhamoveIntegrationDrawer({
         {!carrier ? null : (
           <FormProvider {...form}>
             <div className="space-y-5">
+              <p role="status" aria-live="polite" className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-2 text-sm text-gray-600">
+                {updateAhamoveIntegration.isPending ? 'Saving provider settings…' : isDirty ? 'Unsaved changes. Save applies all editable configuration sections.' : 'Configuration is saved.'}
+              </p>
+
               {integrationQuery.isLoading && !integration ? (
                 <div className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-4 text-sm text-gray-600">
                   <Spinner size="sm" />

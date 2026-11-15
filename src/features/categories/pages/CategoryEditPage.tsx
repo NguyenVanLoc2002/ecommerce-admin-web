@@ -32,6 +32,7 @@ export function CategoryEditPage() {
   const navigate = useNavigate();
   const { confirm } = useConfirmDialog();
   const [isDirty, setIsDirty] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const isEditMode = id !== undefined;
   const { data: category, isLoading, isError, error, refetch } = useCategory(id);
   const { data: parentCategoryData } = useCategories(PARENT_CATEGORY_PARAMS);
@@ -64,7 +65,8 @@ export function CategoryEditPage() {
       name: values.name,
       slug: values.slug,
       description: values.description,
-      imageUrl: values.imageUrl,
+      imageUrl: values.imageStorageKey ? undefined : (values.imageUrl ?? ''),
+      imageStorageKey: values.imageStorageKey || undefined,
       sortOrder: values.sortOrder,
     };
 
@@ -103,6 +105,7 @@ export function CategoryEditPage() {
             category={category}
             categories={parentCategoryData?.items ?? []}
             isSubmitting={isSubmitting}
+            onUploadingChange={setIsUploading}
             onSubmit={handleSubmit}
             onDirtyChange={setIsDirty}
           />
@@ -114,8 +117,8 @@ export function CategoryEditPage() {
           <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-6 py-4">
             <p className="text-sm font-medium text-gray-700">{isDirty ? 'Unsaved changes' : isEditMode ? 'All changes saved' : 'Ready to create'}</p>
             <div className="flex flex-wrap items-center gap-3">
-              <Button type="button" variant="secondary" onClick={() => void requestNavigation(routes.categories.list)} disabled={isSubmitting}>Cancel</Button>
-              <Button type="submit" form="category-form" isLoading={isSubmitting}>{isSubmitting ? 'Saving...' : isEditMode ? 'Save changes' : 'Create category'}</Button>
+              <Button type="button" variant="secondary" onClick={() => void requestNavigation(routes.categories.list)} disabled={isSubmitting || isUploading}>Cancel</Button>
+              <Button type="submit" form="category-form" isLoading={isSubmitting} disabled={isSubmitting || isUploading}>{isSubmitting ? 'Saving...' : isUploading ? 'Uploading image…' : isEditMode ? 'Save changes' : 'Create category'}</Button>
             </div>
           </div>
         </div>

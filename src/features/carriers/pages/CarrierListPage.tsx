@@ -71,11 +71,11 @@ export function CarrierListPage() {
     if (editingCarrier) {
       await updateCarrier.mutateAsync({
         id: editingCarrier.id,
-        body: values,
+        body: { ...values, logoUrl: values.logoStorageKey ? undefined : (values.logoUrl ?? ''), logoStorageKey: values.logoStorageKey || undefined },
       });
       toast.success('Carrier saved.');
     } else {
-      await createCarrier.mutateAsync(values);
+      await createCarrier.mutateAsync({ ...values, logoUrl: values.logoStorageKey ? undefined : (values.logoUrl ?? ''), logoStorageKey: values.logoStorageKey || undefined });
       toast.success('Carrier created.');
     }
 

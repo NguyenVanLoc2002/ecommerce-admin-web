@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Modal } from '@/shared/components/ui/Modal';
@@ -8,6 +8,7 @@ import { FormSelect } from '@/shared/components/form/FormSelect';
 import { slugify } from '@/shared/utils/slugify';
 import { brandSchema, type BrandFormValues } from '../schemas/brandSchema';
 import type { Brand } from '../types/brand.types';
+import { ImageUploadField } from '@/shared/media/ImageUploadField';
 
 const STATUS_OPTIONS = [
   { value: 'ACTIVE', label: 'Active' },
@@ -24,6 +25,7 @@ interface BrandFormProps {
 
 export function BrandForm({ open, onClose, brand, isSubmitting, onSubmit }: BrandFormProps) {
   const isEditMode = brand !== undefined;
+  const [isUploading, setIsUploading] = useState(false);
 
   const form = useForm<BrandFormValues>({
     resolver: zodResolver(brandSchema),
@@ -32,6 +34,7 @@ export function BrandForm({ open, onClose, brand, isSubmitting, onSubmit }: Bran
       slug: '',
       description: '',
       logoUrl: null,
+      logoStorageKey: null,
       status: 'ACTIVE',
     },
   });
@@ -44,10 +47,11 @@ export function BrandForm({ open, onClose, brand, isSubmitting, onSubmit }: Bran
           slug: brand.slug,
           description: brand.description ?? '',
           logoUrl: brand.logoUrl ?? null,
+          logoStorageKey: brand.logoStorageKey ?? null,
           status: brand.status,
         });
       } else {
-        form.reset({ name: '', slug: '', description: '', logoUrl: null, status: 'ACTIVE' });
+        form.reset({ name: '', slug: '', description: '', logoUrl: null, logoStorageKey: null, status: 'ACTIVE' });
       }
     }
   }, [open, brand, form]);
@@ -72,11 +76,11 @@ export function BrandForm({ open, onClose, brand, isSubmitting, onSubmit }: Bran
       closeOnBackdropClick={false}
       footer={
         <>
-          <Button variant="secondary" onClick={onClose} disabled={isSubmitting}>
+          <Button variant="secondary" onClick={onClose} disabled={isSubmitting || isUploading}>
             Cancel
           </Button>
-          <Button type="submit" form="brand-form" isLoading={isSubmitting}>
-            {isSubmitting ? 'Saving…' : isEditMode ? 'Save changes' : 'Create brand'}
+          <Button type="submit" form="brand-form" isLoading={isSubmitting} disabled={isSubmitting || isUploading}>
+            {isSubmitting ? 'Saving…' : isUploading ? 'Uploading image…' : isEditMode ? 'Save changes' : 'Create brand'}
           </Button>
         </>
       }
@@ -113,13 +117,10 @@ export function BrandForm({ open, onClose, brand, isSubmitting, onSubmit }: Bran
               placeholder="Optional description…"
               disabled={isSubmitting}
             />
-            <FormField
-              name="logoUrl"
-              label="Logo URL"
-              placeholder="https://example.com/logo.png"
-              hint="Direct link to the brand logo image."
-              disabled={isSubmitting}
-            />
+            <ImageUploadField purpose="BRAND_LOGO" label="Brand logo" url={form.watch('logoUrl')} storageKey={form.watch('logoStorageKey')} disabled={isSubmitting} onUploadingChange={setIsUploading} onChange={(asset) => {
+              form.setValue('logoStorageKey', asset?.storageKey || null, { shouldDirty: true });
+              form.setValue('logoUrl', asset ? (asset.storageKey ? null : asset.mediaUrl) : '', { shouldDirty: true });
+            }} />
             {isEditMode && (
               <FormSelect
                 name="status"

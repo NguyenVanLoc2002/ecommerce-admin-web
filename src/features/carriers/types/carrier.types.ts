@@ -18,6 +18,7 @@ export interface Carrier {
   providerType: CarrierProviderType;
   status: EntityStatus;
   logoUrl: string | null;
+  logoStorageKey?: string | null;
   description: string | null;
   configEnabled: boolean;
   baseUrl: string | null;
@@ -44,6 +45,7 @@ export interface CreateCarrierRequest {
   providerType: CarrierProviderType;
   status?: EntityStatus;
   logoUrl?: string | null;
+  logoStorageKey?: string | null;
   description?: string | null;
 }
 
