@@ -49,6 +49,8 @@ export const routes = {
 
   warehouses: {
     list: '/warehouses',
+    create: '/warehouses/new',
+    edit: (id: EntityKey) => `/warehouses/${id}/edit`,
   },
 
   inventory: {

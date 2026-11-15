@@ -10,6 +10,11 @@ import type {
 } from '../types/inventory.types';
 
 export const warehouseService = {
+  async getById(id: EntityId): Promise<Warehouse> {
+    const response = await apiClient.get<unknown>(`/admin/warehouses/${id}`);
+    return normalizeWarehouse(response);
+  },
+
   async getList(params: WarehouseListParams): Promise<Warehouse[]> {
     const response = await apiClient.get<unknown[]>('/admin/warehouses', {
       params: sanitizeWarehouseParams(params),

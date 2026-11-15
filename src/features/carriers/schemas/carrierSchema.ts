@@ -21,6 +21,7 @@ export const carrierSchema = z.object({
     required_error: 'Status is required',
   }),
   logoUrl: optionalText(500),
+  logoStorageKey: optionalText(500),
   description: optionalText(500),
 });
 

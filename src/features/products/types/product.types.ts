@@ -96,17 +96,6 @@ export interface CatalogUploadRequest {
   sizeBytes: number;
 }
 
-export interface PresignedCatalogUpload {
-  storageKey: string;
-  uploadUrl: string;
-  requiredContentType: string;
-}
-
-export interface VerifiedCatalogAsset {
-  storageKey: string;
-  mediaUrl: string;
-}
-
 export type UpdateProductMediaRequest = Partial<CreateProductMediaRequest>;
 
 export interface ProductListItemResponse extends SoftDeletableRecord {

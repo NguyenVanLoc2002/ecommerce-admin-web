@@ -1,4 +1,5 @@
 import { Badge } from '@/shared/components/ui/Badge';
+import { SafeImage } from '@/shared/components/ui/SafeImage';
 import { CopyValueButton } from '@/shared/components/ui/CopyValueButton';
 import { StatusBadge } from '@/shared/components/ui/StatusBadge';
 import { formatDateTime } from '@/shared/utils/formatDate';
@@ -22,17 +23,7 @@ export function ProductSummaryCard({ product }: ProductSummaryCardProps) {
       <div className="rounded-lg border border-gray-200 bg-white p-5">
         <div className="flex items-start gap-4">
           <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-gray-100">
-            {primaryMedia?.mediaUrl ? (
-              <img
-                src={primaryMedia.mediaUrl}
-                alt={product.name}
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              <span className="text-xs font-medium uppercase tracking-wide text-gray-400">
-                No media
-              </span>
-            )}
+            {primaryMedia?.mediaUrl ? <SafeImage src={primaryMedia.mediaUrl} alt={product.name} className="h-full w-full object-cover" /> : <span className="text-xs font-medium uppercase tracking-wide text-gray-400">No media</span>}
           </div>
 
           <div className="min-w-0 flex-1">

@@ -11,6 +11,7 @@ export interface Brand extends SoftDeletableRecord {
   name: string;
   slug: string;
   logoUrl: string | null;
+  logoStorageKey?: string | null;
   description: string | null;
   sortOrder: number | null;
   status: EntityStatus;
@@ -27,6 +28,7 @@ export interface CreateBrandRequest {
   name: string;
   slug: string;
   logoUrl?: string | null;
+  logoStorageKey?: string | null;
   description?: string;
 }
 
@@ -34,6 +36,7 @@ export interface UpdateBrandRequest {
   name?: string;
   slug?: string;
   logoUrl?: string | null;
+  logoStorageKey?: string | null;
   description?: string;
   status?: EntityStatus;
 }

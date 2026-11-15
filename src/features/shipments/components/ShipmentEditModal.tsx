@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { Controller, FormProvider, useForm, type Path } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Modal } from '@/shared/components/ui/Modal';
+import { Drawer } from '@/shared/components/ui/Drawer';
 import { Button } from '@/shared/components/ui/Button';
 import { Badge } from '@/shared/components/ui/Badge';
 import { Select } from '@/shared/components/ui/Select';
@@ -126,7 +126,7 @@ export function ShipmentEditModal({
   });
 
   return (
-    <Modal
+    <Drawer
       open={open}
       onClose={onClose}
       title="Edit Shipment Details"
@@ -145,7 +145,7 @@ export function ShipmentEditModal({
       }
     >
       <FormProvider {...form}>
-        <form id="shipment-edit-form" onSubmit={handleSubmit} noValidate>
+        <form id="shipment-edit-form" onSubmit={(event) => void handleSubmit(event)} noValidate>
           <div className="space-y-4">
             {rootError && (
               <div className="rounded-md border border-danger-200 bg-danger-50 px-4 py-3 text-sm text-danger-700">
@@ -274,6 +274,6 @@ export function ShipmentEditModal({
           </div>
         </form>
       </FormProvider>
-    </Modal>
+    </Drawer>
   );
 }

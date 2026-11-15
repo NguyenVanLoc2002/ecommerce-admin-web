@@ -7,13 +7,14 @@ import { Button } from '@/shared/components/ui/Button';
 import { Input } from '@/shared/components/ui/Input';
 import { Select } from '@/shared/components/ui/Select';
 import { Toggle } from '@/shared/components/ui/Toggle';
+import { SafeImage } from '@/shared/components/ui/SafeImage';
 import { useConfirmDialog } from '@/shared/hooks/useConfirmDialog';
+import { useAssetUpload } from '@/shared/media/useAssetUpload';
 import { toast } from '@/shared/stores/uiStore';
 import { AppError, type EntityId } from '@/shared/types/api.types';
 import { useCreateProductMedia, useDeleteProductMedia, useUpdateProductMedia } from '../hooks/useProductMediaMutations';
 import { productMediaSchema, type ProductMediaFormValues } from '../schemas/productMediaSchema';
 import { getShortMediaName, getVariantLabel, sortMedia } from '../utils/productMedia';
-import { catalogUploadService, validateCatalogImage } from '../services/catalogUploadService';
 import type { ProductMedia, ProductVariant } from '../types/product.types';
 
 type MediaFilter = 'all' | 'product' | 'variant';
@@ -52,11 +53,7 @@ export function ProductMediaSection({ productId, media, variants, disabled }: Pr
   const [editingMedia, setEditingMedia] = useState<ProductMedia | undefined>();
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [mediaInputMode, setMediaInputMode] = useState<'upload' | 'external'>('external');
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [verifiedUpload, setVerifiedUpload] = useState<{ storageKey: string; mediaUrl: string } | null>(null);
-  const [uploadState, setUploadState] = useState<'idle' | 'uploading' | 'verifying' | 'success' | 'error'>('idle');
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [uploadError, setUploadError] = useState<string | null>(null);
+  const { selectedFile, asset: verifiedUpload, status: uploadState, progress: uploadProgress, error: uploadError, selectFile, upload, reset: resetUpload } = useAssetUpload('CATALOG_IMAGE');
   const fileInput = useRef<HTMLInputElement>(null);
   const createMedia = useCreateProductMedia(productId);
   const updateMedia = useUpdateProductMedia(productId);
@@ -78,10 +75,7 @@ export function ProductMediaSection({ productId, media, variants, disabled }: Pr
   const closeEditor = () => {
     setIsEditorOpen(false);
     setEditingMedia(undefined);
-    setSelectedFile(null);
-    setVerifiedUpload(null);
-    setUploadState('idle');
-    setUploadError(null);
+    resetUpload();
     form.reset(getDefaultValues(media));
   };
 
@@ -89,9 +83,7 @@ export function ProductMediaSection({ productId, media, variants, disabled }: Pr
     setEditingMedia(undefined);
     form.reset(getDefaultValues(media));
     setMediaInputMode('external');
-    setSelectedFile(null);
-    setVerifiedUpload(null);
-    setUploadState('idle');
+    resetUpload();
     setIsEditorOpen(true);
   };
 
@@ -100,8 +92,7 @@ export function ProductMediaSection({ productId, media, variants, disabled }: Pr
     form.reset(getDefaultValues(media, item));
     setMediaInputMode(item.storageKey ? 'upload' : 'external');
     if (item.storageKey) form.setValue('mediaUrl', 'https://upload.invalid/image');
-    setSelectedFile(null);
-    setVerifiedUpload(null);
+    resetUpload();
     setIsEditorOpen(true);
   };
 
@@ -124,14 +115,8 @@ export function ProductMediaSection({ productId, media, variants, disabled }: Pr
     let asset = verifiedUpload;
     if (mediaInputMode === 'upload' && selectedFile && !asset) {
       try {
-        setUploadError(null);
-        setUploadState('uploading');
-        asset = await catalogUploadService.uploadImage(selectedFile, setUploadProgress, () => setUploadState('verifying'));
-        setVerifiedUpload(asset);
-        setUploadState('success');
-      } catch (error) {
-        setUploadState('error');
-        setUploadError(error instanceof Error ? error.message : 'Image upload failed. Please try again.');
+        asset = await upload(selectedFile);
+      } catch {
         return;
       }
     }
@@ -212,11 +197,11 @@ export function ProductMediaSection({ productId, media, variants, disabled }: Pr
         <FormProvider {...form}>
           <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
             <div className="mb-4 flex gap-2" role="group" aria-label="Media source">
-              <Button type="button" size="sm" variant={mediaInputMode === 'upload' ? 'primary' : 'secondary'} onClick={() => { setMediaInputMode('upload'); form.setValue('mediaUrl', 'https://upload.invalid/image'); form.setValue('mediaType', 'IMAGE'); form.clearErrors('mediaUrl'); }} disabled={isSubmitting} leftIcon={<Upload className="h-4 w-4" />}>Upload image</Button>
-              <Button type="button" size="sm" variant={mediaInputMode === 'external' ? 'primary' : 'secondary'} onClick={() => { setMediaInputMode('external'); form.setValue('mediaUrl', editingMedia?.storageKey ? '' : editingMedia?.mediaUrl ?? ''); setSelectedFile(null); setVerifiedUpload(null); setUploadState('idle'); setUploadError(null); }} disabled={isSubmitting}>Use external URL</Button>
+              <Button type="button" size="sm" variant={mediaInputMode === 'upload' ? 'primary' : 'secondary'} onClick={() => { setMediaInputMode('upload'); form.setValue('mediaUrl', 'https://upload.invalid/image'); form.setValue('mediaType', 'IMAGE'); form.clearErrors('mediaUrl'); }} disabled={isSubmitting || uploadState === 'uploading' || uploadState === 'verifying'} leftIcon={<Upload className="h-4 w-4" />}>Upload image</Button>
+              <Button type="button" size="sm" variant={mediaInputMode === 'external' ? 'primary' : 'secondary'} onClick={() => { setMediaInputMode('external'); form.setValue('mediaUrl', editingMedia?.storageKey ? '' : editingMedia?.mediaUrl ?? ''); resetUpload(); }} disabled={isSubmitting || uploadState === 'uploading' || uploadState === 'verifying'}>Use external URL</Button>
             </div>
             <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_8rem_8rem]">
-              {mediaInputMode === 'external' ? <Field id="product-media-url" label="Media URL" error={form.formState.errors.mediaUrl?.message}><Input id="product-media-url" placeholder="https://cdn.example.com/product.jpg" disabled={isSubmitting} error={Boolean(form.formState.errors.mediaUrl)} {...form.register('mediaUrl')} /></Field> : <Field id="product-media-file" label="Image file"><input ref={fileInput} id="product-media-file" type="file" accept="image/jpeg,image/png,image/webp" disabled={isSubmitting || uploadState === 'uploading' || uploadState === 'verifying'} className="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm" onChange={(event) => { const file = event.target.files?.[0] ?? null; setSelectedFile(file); setVerifiedUpload(null); setUploadState('idle'); setUploadError(file ? validateCatalogImage(file) : null); }} />{selectedFile && <p className="text-xs text-gray-500">{selectedFile.name} · {(selectedFile.size / (1024 * 1024)).toFixed(2)} MiB</p>}{uploadState === 'uploading' && <p role="status" className="text-xs text-info-700">Uploading image… {uploadProgress}%</p>}{uploadState === 'verifying' && <p role="status" className="text-xs text-info-700">Verifying uploaded image…</p>}{uploadState === 'success' && <p role="status" className="text-xs text-success-700">Image uploaded and verified.</p>}{uploadError && <p role="alert" className="text-xs text-danger-600">{uploadError}</p>}</Field>}
+              {mediaInputMode === 'external' ? <Field id="product-media-url" label="Media URL" error={form.formState.errors.mediaUrl?.message}><Input id="product-media-url" placeholder="https://cdn.example.com/product.jpg" disabled={isSubmitting} error={Boolean(form.formState.errors.mediaUrl)} {...form.register('mediaUrl')} /></Field> : <Field id="product-media-file" label="Image file"><input ref={fileInput} id="product-media-file" type="file" accept="image/jpeg,image/png,image/webp" disabled={isSubmitting || uploadState === 'uploading' || uploadState === 'verifying'} className="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm" onChange={(event) => selectFile(event.target.files?.[0] ?? null)} />{selectedFile && <p className="text-xs text-gray-500">{selectedFile.name} · {(selectedFile.size / (1024 * 1024)).toFixed(2)} MiB</p>}{uploadState === 'uploading' && <p role="status" className="text-xs text-info-700">Uploading image… {uploadProgress}%</p>}{uploadState === 'verifying' && <p role="status" className="text-xs text-info-700">Verifying uploaded image…</p>}{uploadState === 'verified' && <p role="status" className="text-xs text-success-700">Image uploaded and verified.</p>}{uploadError && <p role="alert" className="text-xs text-danger-600">{uploadError}</p>}</Field>}
               <Field id="product-media-type" label="Type" error={form.formState.errors.mediaType?.message}><Select id="product-media-type" options={mediaInputMode === 'upload' ? MEDIA_TYPE_OPTIONS.filter((option) => option.value === 'IMAGE') : MEDIA_TYPE_OPTIONS} disabled={isSubmitting || mediaInputMode === 'upload'} error={Boolean(form.formState.errors.mediaType)} {...form.register('mediaType')} /></Field>
               <Field id="product-media-sort" label="Sort order" error={form.formState.errors.sortOrder?.message}><Input id="product-media-sort" type="number" min="0" disabled={isSubmitting} error={Boolean(form.formState.errors.sortOrder)} {...form.register('sortOrder')} /></Field>
             </div>
@@ -228,7 +213,7 @@ export function ProductMediaSection({ productId, media, variants, disabled }: Pr
             {form.formState.errors.root?.server?.message && <p className="mt-2 text-sm text-danger-700">{form.formState.errors.root.server.message}</p>}
             <div className="mt-4 flex items-center justify-end gap-3 border-t border-gray-200 pt-4">
               <Button type="button" variant="secondary" size="sm" onClick={closeEditor} disabled={isSubmitting}>Cancel</Button>
-              <Button type="button" size="sm" isLoading={isSubmitting || uploadState === 'uploading' || uploadState === 'verifying'} disabled={mediaInputMode === 'upload' && ((!selectedFile && !editingMedia?.storageKey) || Boolean(uploadError))} onClick={() => void handleSubmit()}>{editingMedia ? 'Save changes' : 'Add media'}</Button>
+              <Button type="button" size="sm" isLoading={isSubmitting || uploadState === 'uploading' || uploadState === 'verifying'} disabled={uploadState === 'uploading' || uploadState === 'verifying' || (mediaInputMode === 'upload' && ((!selectedFile && !editingMedia?.storageKey) || Boolean(uploadError)))} onClick={() => void handleSubmit()}>{editingMedia ? 'Save changes' : 'Add media'}</Button>
             </div>
           </div>
         </FormProvider>
@@ -251,5 +236,28 @@ function Field({ id, label, error, children }: { id: string; label: string; erro
 
 function MediaItemCard({ media, variantLabel, isMutating, onEdit, onSetPrimary, onDelete }: { media: ProductMedia; variantLabel: string | null; isMutating: boolean; onEdit: () => void; onSetPrimary: () => void; onDelete: () => void }) {
   const isImage = media.mediaType === 'IMAGE';
-  return <article className="rounded-lg border border-gray-200 bg-white p-3"><div className="flex gap-3"><div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-md bg-gray-100">{isImage && media.mediaUrl ? <img src={media.mediaUrl} alt="" className="h-full w-full object-cover" /> : <ImageOff className="h-5 w-5 text-gray-400" aria-hidden />}</div><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2">{media.primary && <Badge variant="primary">Primary</Badge>}<Badge variant={variantLabel ? 'info' : 'default'}>{variantLabel ? `Variant: ${variantLabel}` : 'Product gallery'}</Badge><Badge>{media.mediaType}</Badge></div><p className="mt-2 truncate text-sm font-medium text-gray-900">{getShortMediaName(media.mediaUrl)}</p><p className="mt-1 flex items-center gap-1 truncate text-xs text-gray-500"><Link className="h-3 w-3 shrink-0" aria-hidden />{media.mediaUrl}</p><p className="mt-2 text-xs text-gray-500">Sort order <span className="font-medium tabular-nums text-gray-700">{media.sortOrder}</span></p></div></div><div className="mt-3 flex flex-wrap justify-end gap-2 border-t border-gray-100 pt-3"><Button type="button" variant="secondary" size="sm" disabled={isMutating || media.primary || !isImage} onClick={onSetPrimary} leftIcon={<Star className="h-4 w-4" />}>Set primary</Button><Button type="button" variant="secondary" size="sm" disabled={isMutating} onClick={onEdit} leftIcon={<Pencil className="h-4 w-4" />}>Edit</Button><Button type="button" variant="ghost" size="sm" disabled={isMutating} onClick={onDelete} leftIcon={<Trash2 className="h-4 w-4" />}>Remove</Button></div></article>;
+  return (
+    <article className="rounded-lg border border-gray-200 bg-white p-3">
+      <div className="flex gap-3">
+        <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-md bg-gray-100">
+          {isImage ? <SafeImage src={media.mediaUrl} alt="Product media" className="h-full w-full object-cover" /> : <ImageOff className="h-5 w-5 text-gray-400" aria-hidden />}
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            {media.primary && <Badge variant="primary">Primary</Badge>}
+            <Badge variant={variantLabel ? 'info' : 'default'}>{variantLabel ? `Variant: ${variantLabel}` : 'Product gallery'}</Badge>
+            <Badge>{media.mediaType}</Badge>
+          </div>
+          <p className="mt-2 truncate text-sm font-medium text-gray-900">{getShortMediaName(media.mediaUrl)}</p>
+          <p className="mt-1 flex items-center gap-1 truncate text-xs text-gray-500"><Link className="h-3 w-3 shrink-0" aria-hidden />{media.mediaUrl}</p>
+          <p className="mt-2 text-xs text-gray-500">Sort order <span className="font-medium tabular-nums text-gray-700">{media.sortOrder}</span></p>
+        </div>
+      </div>
+      <div className="mt-3 flex flex-wrap justify-end gap-2 border-t border-gray-100 pt-3">
+        <Button type="button" variant="secondary" size="sm" disabled={isMutating || media.primary || !isImage} onClick={onSetPrimary} leftIcon={<Star className="h-4 w-4" />}>Set primary</Button>
+        <Button type="button" variant="secondary" size="sm" disabled={isMutating} onClick={onEdit} leftIcon={<Pencil className="h-4 w-4" />}>Edit</Button>
+        <Button type="button" variant="ghost" size="sm" disabled={isMutating} onClick={onDelete} leftIcon={<Trash2 className="h-4 w-4" />}>Remove</Button>
+      </div>
+    </article>
+  );
 }

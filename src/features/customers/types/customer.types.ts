@@ -32,6 +32,7 @@ export interface AdminCustomer extends SoftDeletableRecord {
   gender: CustomerGender | null;
   birthDate: string | null;
   avatarUrl: string | null;
+  avatarStorageKey?: string | null;
   loyaltyPoints: number;
   createdAt: string;
   updatedAt: string;
@@ -56,6 +57,7 @@ export interface UpdateCustomerRequest {
   gender?: CustomerGender;
   birthDate?: string;
   avatarUrl?: string;
+  avatarStorageKey?: string;
 }
 
 export interface UpdateCustomerStatusRequest {

@@ -17,11 +17,12 @@ interface DrawerProps {
   footer?: React.ReactNode;
   className?: string;
   inline?: boolean;
+  closeOnBackdropClick?: boolean;
 }
 
 const sideClasses: Record<DrawerSide, string> = {
-  right: 'right-0 top-0 h-full animate-slide-in-right motion-reduce:animate-none',
-  left: 'left-0 top-0 h-full animate-slide-in-left motion-reduce:animate-none',
+  right: 'right-0 top-0 bottom-px animate-slide-in-right motion-reduce:animate-none',
+  left: 'left-0 top-0 bottom-px animate-slide-in-left motion-reduce:animate-none',
 };
 
 const drawerWidths: Record<NonNullable<DrawerProps['size']>, string> = {
@@ -50,8 +51,10 @@ export function Drawer({
   footer,
   className,
   inline = false,
+  closeOnBackdropClick = true,
 }: DrawerProps) {
   const panelRef = useRef<HTMLDivElement>(null);
+  const previouslyFocusedRef = useRef<HTMLElement | null>(null);
   const uid = useId();
   const titleId = `${uid}-title`;
   const descId = `${uid}-desc`;
@@ -70,8 +73,11 @@ export function Drawer({
   }, [inline, open, onClose]);
 
   useEffect(() => {
-    if (open) panelRef.current?.focus();
-  }, [open]);
+    if (!open || inline) return;
+    previouslyFocusedRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    panelRef.current?.focus();
+    return () => previouslyFocusedRef.current?.focus();
+  }, [inline, open]);
 
   useEffect(() => {
     if (!open || inline) return;
@@ -80,11 +86,11 @@ export function Drawer({
     const trap = (e: KeyboardEvent) => {
       if (e.key !== 'Tab') return;
       const els = Array.from(panel.querySelectorAll<HTMLElement>(FOCUSABLE));
-      if (els.length === 0) return;
+      if (els.length === 0) { e.preventDefault(); panel.focus(); return; }
       const first = els[0];
       const last = els[els.length - 1];
       if (e.shiftKey) {
-        if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+        if (document.activeElement === first || document.activeElement === panel) { e.preventDefault(); last.focus(); }
       } else {
         if (document.activeElement === last) { e.preventDefault(); first.focus(); }
       }
@@ -145,7 +151,7 @@ export function Drawer({
       <div
         className="absolute inset-0 bg-black/50 animate-fade-in motion-reduce:animate-none"
         aria-hidden
-        onClick={onClose}
+        onClick={closeOnBackdropClick ? onClose : undefined}
       />
       <div
         ref={panelRef}
@@ -155,7 +161,7 @@ export function Drawer({
         aria-describedby={description ? descId : undefined}
         tabIndex={-1}
         className={cn(
-          'absolute z-10 flex flex-col bg-white shadow-xl focus-visible:outline-none',
+          'absolute z-10 flex min-h-0 max-h-[100dvh] flex-col overflow-hidden bg-white shadow-xl focus-visible:outline-none',
           sideClasses[side],
           drawerWidths[size],
           className,
@@ -184,7 +190,7 @@ export function Drawer({
             </Button>
           </div>
         )}
-        <div className="flex-1 overflow-y-auto px-6 py-4">{children}</div>
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 py-4">{children}</div>
         {footer && (
           <div className="flex justify-end gap-3 border-t px-6 py-4 shrink-0">{footer}</div>
         )}

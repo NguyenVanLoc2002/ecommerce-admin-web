@@ -9,7 +9,7 @@ import { ProductAttributeEditPage, ProductAttributeListPage } from '@/features/p
 import { CategoryEditPage, CategoryListPage } from '@/features/categories';
 import { BrandListPage } from '@/features/brands';
 import { CarrierListPage, ShippingProviderDetailPage } from '@/features/carriers';
-import { WarehouseListPage, StockPage, ReservationListPage } from '@/features/inventory';
+import { WarehouseEditPage, WarehouseListPage, StockPage, ReservationListPage } from '@/features/inventory';
 import { OrderListPage, OrderDetailPage } from '@/features/orders';
 import { ShipmentListPage, ShipmentDetailPage, CreateShipmentPage } from '@/features/shipments';
 import {
@@ -112,6 +112,10 @@ export function Router() {
           />
 
           <Route path={routes.warehouses.list} element={<WarehouseListPage />} />
+          <Route element={<RoleGuard required={['ADMIN', 'SUPER_ADMIN']} />}>
+            <Route path={routes.warehouses.create} element={<WarehouseEditPage />} />
+            <Route path={routes.warehouses.edit(':id')} element={<WarehouseEditPage />} />
+          </Route>
           <Route path={routes.inventory.warehouses} element={<Navigate to={routes.warehouses.list} replace />} />
           <Route path={routes.inventory.stock} element={<StockPage />} />
           <Route path={routes.inventory.reservations} element={<ReservationListPage />} />

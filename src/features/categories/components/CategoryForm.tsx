@@ -8,6 +8,7 @@ import { useBeforeUnload } from '@/shared/hooks/useBeforeUnload';
 import { slugify } from '@/shared/utils/slugify';
 import { categorySchema, type CategoryFormValues } from '../schemas/categorySchema';
 import type { Category } from '../types/category.types';
+import { ImageUploadField } from '@/shared/media/ImageUploadField';
 
 const STATUS_OPTIONS = [
   { value: 'ACTIVE', label: 'Active' },
@@ -20,13 +21,14 @@ interface CategoryFormProps {
   isSubmitting: boolean;
   onSubmit: (values: CategoryFormValues) => Promise<void>;
   onDirtyChange?: (isDirty: boolean) => void;
+  onUploadingChange?: (uploading: boolean) => void;
 }
 
 function truncateId(value: string): string {
   return value.slice(0, 8);
 }
 
-export function CategoryForm({ category, categories, isSubmitting, onSubmit, onDirtyChange }: CategoryFormProps) {
+export function CategoryForm({ category, categories, isSubmitting, onSubmit, onDirtyChange, onUploadingChange }: CategoryFormProps) {
   const isEditMode = category !== undefined;
   const parentOptions = useMemo(() => {
     const options = categories
@@ -55,6 +57,7 @@ export function CategoryForm({ category, categories, isSubmitting, onSubmit, onD
       slug: category?.slug ?? '',
       description: category?.description ?? '',
       imageUrl: category?.imageUrl ?? null,
+      imageStorageKey: category?.imageStorageKey ?? null,
       sortOrder: category?.sortOrder ?? null,
       status: category?.status ?? 'ACTIVE',
     });
@@ -124,7 +127,18 @@ export function CategoryForm({ category, categories, isSubmitting, onSubmit, onD
               <p className="mt-1 text-sm text-gray-500">Add a visual and short description for browsing and discovery.</p>
             </div>
             <div className="space-y-4">
-              <FormField name="imageUrl" label="Image URL" placeholder="https://example.com/category.jpg" hint="Optional thumbnail shown in the category table." disabled={isSubmitting} />
+              <ImageUploadField
+                purpose="CATEGORY_IMAGE"
+                label="Category image"
+                url={form.watch('imageUrl')}
+                storageKey={form.watch('imageStorageKey')}
+                disabled={isSubmitting}
+                onChange={(asset) => {
+                  form.setValue('imageStorageKey', asset?.storageKey || null, { shouldDirty: true, shouldValidate: true });
+                  form.setValue('imageUrl', asset ? (asset.storageKey ? null : asset.mediaUrl) : '', { shouldDirty: true, shouldValidate: true });
+                }}
+                onUploadingChange={onUploadingChange}
+              />
               <FormField name="description" label="Description" multiline rows={3} placeholder="Optional description..." disabled={isSubmitting} />
             </div>
           </section>

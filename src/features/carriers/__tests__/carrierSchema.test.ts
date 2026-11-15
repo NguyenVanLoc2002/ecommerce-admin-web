@@ -18,6 +18,7 @@ describe('carrierSchema', () => {
       providerType: 'GHN',
       status: 'ACTIVE',
       logoUrl: 'https://cdn.example.com/ghn.svg',
+      logoStorageKey: null,
       description: 'Primary checkout carrier',
     });
   });

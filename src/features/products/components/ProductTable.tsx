@@ -7,6 +7,7 @@ import { BulkActionBar } from '@/shared/components/table/BulkActionBar';
 import { FilterChips, type FilterChip } from '@/shared/components/table/FilterChips';
 import { Pagination } from '@/shared/components/table/Pagination';
 import { StatusBadge } from '@/shared/components/ui/StatusBadge';
+import { SafeImage } from '@/shared/components/ui/SafeImage';
 import { Button } from '@/shared/components/ui/Button';
 import { EmptyState } from '@/shared/components/feedback/EmptyState';
 import { SkeletonTable } from '@/shared/components/feedback/Skeleton';
@@ -79,11 +80,7 @@ export function ProductTable({
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 shrink-0 overflow-hidden rounded-md bg-gray-100">
               {row.original.thumbnailUrl ? (
-                <img
-                  src={row.original.thumbnailUrl}
-                  alt={row.original.name}
-                  className="h-full w-full object-cover"
-                />
+                <SafeImage src={row.original.thumbnailUrl} alt={row.original.name} className="h-full w-full object-cover" />
               ) : (
                 <div className="flex h-full w-full items-center justify-center">
                   <Package className="h-5 w-5 text-gray-300" />

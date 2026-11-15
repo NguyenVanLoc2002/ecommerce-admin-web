@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { FormProvider, useForm, type Path } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Modal } from '@/shared/components/ui/Modal';
@@ -9,6 +9,7 @@ import { AppError } from '@/shared/types/api.types';
 import { formatEnumLabel } from '@/shared/utils/formatEnumLabel';
 import { carrierSchema, type CarrierFormValues } from '../schemas/carrierSchema';
 import type { Carrier } from '../types/carrier.types';
+import { ImageUploadField } from '@/shared/media/ImageUploadField';
 import {
   CARRIER_PROVIDER_TYPE_VALUES,
   CARRIER_STATUS_VALUES,
@@ -40,6 +41,7 @@ export function CarrierFormModal({
   onSubmit,
 }: CarrierFormModalProps) {
   const isEditMode = carrier !== undefined;
+  const [isUploading, setIsUploading] = useState(false);
 
   const form = useForm<CarrierFormValues>({
     resolver: zodResolver(carrierSchema),
@@ -49,6 +51,7 @@ export function CarrierFormModal({
       providerType: 'MANUAL',
       status: 'ACTIVE',
       logoUrl: null,
+      logoStorageKey: null,
       description: null,
     },
   });
@@ -73,6 +76,7 @@ export function CarrierFormModal({
         providerType: carrier.providerType,
         status: carrier.status,
         logoUrl: carrier.logoUrl,
+        logoStorageKey: carrier.logoStorageKey ?? null,
         description: carrier.description,
       });
       return;
@@ -84,6 +88,7 @@ export function CarrierFormModal({
       providerType: 'MANUAL',
       status: 'ACTIVE',
       logoUrl: null,
+      logoStorageKey: null,
       description: null,
     });
   }, [carrier, clearErrors, form, open]);
@@ -127,17 +132,17 @@ export function CarrierFormModal({
       closeOnBackdropClick={false}
       footer={
         <>
-          <Button variant="secondary" onClick={onClose} disabled={isSubmitting}>
+          <Button variant="secondary" onClick={onClose} disabled={isSubmitting || isUploading}>
             Cancel
           </Button>
-          <Button type="submit" form="carrier-form" isLoading={isSubmitting}>
-            {isSubmitting ? 'Saving...' : isEditMode ? 'Save changes' : 'Create carrier'}
+          <Button type="submit" form="carrier-form" isLoading={isSubmitting} disabled={isSubmitting || isUploading}>
+            {isSubmitting ? 'Saving...' : isUploading ? 'Uploading image…' : isEditMode ? 'Save changes' : 'Create carrier'}
           </Button>
         </>
       }
     >
       <FormProvider {...form}>
-        <form id="carrier-form" onSubmit={handleSubmit} noValidate>
+        <form id="carrier-form" onSubmit={(event) => void handleSubmit(event)} noValidate>
           <div className="space-y-4">
             {rootError && (
               <div className="rounded-md border border-danger-200 bg-danger-50 px-4 py-3 text-sm text-danger-700">
@@ -180,12 +185,10 @@ export function CarrierFormModal({
               />
             </div>
 
-            <FormField
-              name="logoUrl"
-              label="Logo URL"
-              placeholder="https://example.com/logo.svg"
-              disabled={isSubmitting}
-            />
+            <ImageUploadField purpose="CARRIER_LOGO" label="Carrier logo" url={form.watch('logoUrl')} storageKey={form.watch('logoStorageKey')} disabled={isSubmitting} onUploadingChange={setIsUploading} onChange={(asset) => {
+              form.setValue('logoStorageKey', asset?.storageKey || null, { shouldDirty: true });
+              form.setValue('logoUrl', asset ? (asset.storageKey ? null : asset.mediaUrl) : '', { shouldDirty: true });
+            }} />
 
             <FormField
               name="description"

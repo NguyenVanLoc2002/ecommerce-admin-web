@@ -58,7 +58,8 @@ export function BrandListPage() {
       name: values.name,
       slug: values.slug,
       description: values.description,
-      logoUrl: values.logoUrl,
+      logoUrl: values.logoStorageKey ? undefined : (values.logoUrl ?? ''),
+      logoStorageKey: values.logoStorageKey || undefined,
     };
 
     try {

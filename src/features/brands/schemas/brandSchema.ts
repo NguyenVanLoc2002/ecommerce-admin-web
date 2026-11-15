@@ -16,6 +16,7 @@ export const brandSchema = z.object({
     .regex(/^[a-z0-9-]+$/, 'Only lowercase letters, numbers, and hyphens'),
   description: z.string().trim().default(''),
   logoUrl: nullableTrimmedString.default(null),
+  logoStorageKey: nullableTrimmedString.default(null),
   status: z.enum(['ACTIVE', 'INACTIVE']).optional(),
 });
 
