@@ -39,6 +39,12 @@ describe('orderService', () => {
       id: 'order-1',
       orderCode: 'FS-0001',
       customerId: 'customer-1',
+      customerNameSnapshot: 'Lan Nguyen',
+      customerEmailSnapshot: 'lan@example.com',
+      customerSnapshotAvailable: true,
+      currentCustomerName: 'Current Name',
+      currentCustomerEmail: 'current@example.com',
+      currentCustomerProfileAvailable: true,
       status: 'PENDING',
       paymentMethod: 'COD',
       paymentStatus: 'PENDING',
@@ -74,7 +80,46 @@ describe('orderService', () => {
 
     expect(getMock).toHaveBeenCalledWith('/admin/orders/order-1');
     expect(order.items[0].productImageUrl).toBe('/uploads/products/cotton-tee.jpg');
+    expect(order.customerNameSnapshot).toBe('Lan Nguyen');
+    expect(order.customerEmailSnapshot).toBe('lan@example.com');
+    expect(order.customerSnapshotAvailable).toBe(true);
+    expect(order.currentCustomerName).toBe('Current Name');
+    expect(order.currentCustomerEmail).toBe('current@example.com');
+    expect(order.currentCustomerProfileAvailable).toBe(true);
     expect(getOrderItemImage(order.items[0])).toBe('http://localhost:3000/uploads/products/cotton-tee.jpg');
+  });
+
+  it('keeps legacy snapshot absence distinct from current profile data in the admin list', async () => {
+    getMock.mockResolvedValue({
+      items: [{
+        id: 'order-legacy',
+        orderCode: 'FS-OLD',
+        customerId: 'customer-1',
+        customerNameSnapshot: null,
+        customerEmailSnapshot: null,
+        customerSnapshotAvailable: false,
+        customerName: 'Current Name',
+        customerEmail: 'current@example.com',
+        currentCustomerProfileAvailable: true,
+        status: 'PENDING',
+        paymentMethod: 'COD',
+        paymentStatus: 'PENDING',
+        totalAmount: 10,
+        createdAt: '2020-01-01T00:00:00Z',
+      }],
+      page: 0,
+      size: 20,
+      totalElements: 1,
+      totalPages: 1,
+      last: true,
+    });
+
+    const page = await orderService.getList({ page: 0, size: 20 });
+
+    expect(page.items[0].customerSnapshotAvailable).toBe(false);
+    expect(page.items[0].customerNameSnapshot).toBeNull();
+    expect(page.items[0].customerName).toBe('Current Name');
+    expect(page.items[0].currentCustomerProfileAvailable).toBe(true);
   });
 
   it('prefers primary variant media when the order item has no direct image URL', () => {

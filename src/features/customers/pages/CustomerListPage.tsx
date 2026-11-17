@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { AdminLayout } from '@/shared/components/layout/AdminLayout';
 import { PageHeader } from '@/shared/components/layout/PageHeader';
 import { useDebounce } from '@/shared/hooks/useDebounce';
@@ -30,13 +31,18 @@ const DEFAULT_FILTERS: AdminCustomerFilter = {
 };
 
 export function CustomerListPage() {
+  const location = useLocation();
   const [filters, setFilters, resetFilters] = useTableFilters<AdminCustomerFilter>(
     DEFAULT_FILTERS,
     { numberKeys: ['minLoyaltyPoints', 'maxLoyaltyPoints'] },
   );
   const sort = parseSortParam(filters.sort);
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [detailCustomerId, setDetailCustomerId] = useState<string | undefined>();
+  const [detailCustomerId, setDetailCustomerId] = useState<string | undefined>(() => {
+    const state: unknown = location.state;
+    if (typeof state !== 'object' || state === null || !('openCustomerId' in state)) return undefined;
+    return typeof state.openCustomerId === 'string' ? state.openCustomerId : undefined;
+  });
   const [editingCustomer, setEditingCustomer] = useState<AdminCustomer | undefined>();
   const [formOpen, setFormOpen] = useState(false);
 

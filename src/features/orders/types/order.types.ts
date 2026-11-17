@@ -40,6 +40,12 @@ export interface Order {
   id: EntityId;
   orderCode: string;
   customerId: EntityId;
+  customerNameSnapshot: string | null;
+  customerEmailSnapshot: string | null;
+  customerSnapshotAvailable: boolean;
+  currentCustomerName: string | null;
+  currentCustomerEmail: string | null;
+  currentCustomerProfileAvailable: boolean | null;
   status: OrderStatus;
   paymentMethod: PaymentMethod;
   paymentStatus: OrderPaymentStatus | null;
@@ -69,6 +75,12 @@ export interface OrderSummary {
   id: EntityId;
   orderCode: string;
   customerId: EntityId;
+  customerNameSnapshot: string | null;
+  customerEmailSnapshot: string | null;
+  customerSnapshotAvailable: boolean;
+  customerName: string | null;
+  customerEmail: string | null;
+  currentCustomerProfileAvailable: boolean;
   status: OrderStatus;
   paymentStatus: OrderPaymentStatus | null;
   paymentMethod: PaymentMethod | null;
