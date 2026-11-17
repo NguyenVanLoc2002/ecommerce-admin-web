@@ -11,7 +11,6 @@ import { EmptyState } from '@/shared/components/feedback/EmptyState';
 import { StatusBadge } from '@/shared/components/ui/StatusBadge';
 import { formatDateTime } from '@/shared/utils/formatDate';
 import { routes } from '@/constants/routes';
-import type { OrderStatus } from '@/shared/types/enums';
 import { useOrder } from '../hooks/useOrder';
 import { OrderCarrierSnapshotCard } from '../components/OrderCarrierSnapshotCard';
 import { OrderStatusStepper } from '../components/OrderStatusStepper';
@@ -80,15 +79,38 @@ export function OrderDetailPage() {
                         <Copy className="h-3.5 w-3.5" />
                       )}
                     </button>
-                    <StatusBadge type="order" status={order.status as OrderStatus} />
+                    <StatusBadge type="order" status={order.status} />
                   </div>
                 }
               />
             </div>
 
             <div className="rounded-lg border border-gray-200 bg-white px-6 py-5">
-              <OrderStatusStepper status={order.status as OrderStatus} />
+              <OrderStatusStepper status={order.status} />
             </div>
+
+            <section className="rounded-lg border border-gray-200 bg-white px-6 py-4" aria-label="Customer identity">
+              <p className="text-xs font-medium uppercase tracking-wide text-gray-400">Customer at checkout</p>
+              {order.customerSnapshotAvailable ? (
+                <div className="mt-1">
+                  <p className="text-sm font-medium text-gray-900">{order.customerNameSnapshot ?? 'Name unavailable'}</p>
+                  {order.customerEmailSnapshot && <p className="text-sm text-gray-600">{order.customerEmailSnapshot}</p>}
+                </div>
+              ) : (
+                <p className="mt-1 text-sm text-gray-600">Historical customer snapshot unavailable</p>
+              )}
+              {order.currentCustomerProfileAvailable ? (
+                <button
+                  type="button"
+                  className="mt-2 block text-xs text-primary-700 hover:underline"
+                  onClick={() => navigate(routes.customers.list, { state: { openCustomerId: order.customerId } })}
+                >
+                  Current profile: {order.currentCustomerName ?? order.currentCustomerEmail ?? order.customerId}
+                </button>
+              ) : (
+                <p className="mt-2 text-xs text-gray-500">Customer profile deleted or unavailable</p>
+              )}
+            </section>
 
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
               <div className="lg:col-span-2">
@@ -112,7 +134,7 @@ export function OrderDetailPage() {
               </div>
 
               <div className="space-y-4">
-                <OrderActionPanel order={order} refetch={refetch} />
+                <OrderActionPanel order={order} refetch={() => { void refetch(); }} />
                 <OrderAddressCard
                   receiverName={order.receiverName}
                   receiverPhone={order.receiverPhone}

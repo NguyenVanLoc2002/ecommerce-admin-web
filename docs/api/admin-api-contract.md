@@ -967,7 +967,8 @@ Carrier catalog and per-store carrier configuration used by shipment creation.
   - `paymentStatus`
 - `AdminOrderListItemResponse`
   - `id`, `orderCode`
-  - `customerId`, `customerName`, `customerEmail`
+  - `customerId`, `customerNameSnapshot`, `customerEmailSnapshot`, `customerSnapshotAvailable`
+  - `customerName`, `customerEmail`, `currentCustomerProfileAvailable`
   - `status`, `paymentMethod`, `paymentStatus`
   - `totalItems`, `totalAmount`
   - `createdAt`

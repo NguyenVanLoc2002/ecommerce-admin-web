@@ -15,7 +15,6 @@ import { formatDateTime } from '@/shared/utils/formatDate';
 import { routes } from '@/constants/routes';
 import type { ColumnDef, SortState } from '@/shared/components/table/types';
 import type { PaginatedResponse } from '@/shared/types/api.types';
-import type { OrderStatus, OrderPaymentStatus } from '@/shared/types/enums';
 import type { OrderSummary, OrderListParams } from '../types/order.types';
 
 const PAYMENT_METHOD_LABEL: Record<string, string> = {
@@ -71,11 +70,37 @@ export function OrderTable({
         ),
       },
       {
+        id: 'customer',
+        header: 'Customer',
+        cell: ({ row }) => (
+          <div className="flex min-w-0 flex-col gap-0.5">
+            <span className="truncate text-sm font-medium text-gray-900">
+              {row.original.customerSnapshotAvailable
+                ? row.original.customerNameSnapshot ?? 'Name unavailable'
+                : 'Historical snapshot unavailable'}
+            </span>
+            <span className="truncate text-xs text-gray-500">
+              {row.original.currentCustomerProfileAvailable
+                ? (
+                  <button
+                    type="button"
+                    className="text-left text-xs text-primary-700 hover:underline"
+                    onClick={() => navigate(routes.customers.list, { state: { openCustomerId: row.original.customerId } })}
+                  >
+                    Current profile: {row.original.customerName ?? row.original.customerEmail ?? 'Open profile'}
+                  </button>
+                )
+                : 'Customer profile deleted or unavailable'}
+            </span>
+          </div>
+        ),
+      },
+      {
         id: 'status',
         header: 'Status',
         enableSorting: true,
         cell: ({ row }) => (
-          <StatusBadge type="order" status={row.original.status as OrderStatus} />
+          <StatusBadge type="order" status={row.original.status} />
         ),
       },
       {
@@ -86,7 +111,7 @@ export function OrderTable({
             {row.original.paymentStatus && (
               <StatusBadge
                 type="order-payment"
-                status={row.original.paymentStatus as OrderPaymentStatus}
+                status={row.original.paymentStatus}
               />
             )}
             {row.original.paymentMethod && (
