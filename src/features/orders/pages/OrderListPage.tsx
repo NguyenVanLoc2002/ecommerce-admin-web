@@ -17,16 +17,21 @@ const DEFAULT_FILTERS: OrderListParams = {
   customerId: undefined,
   status: undefined,
   paymentStatus: undefined,
+  keyword: undefined,
+  paymentMethod: undefined,
+  shipmentStatus: undefined,
+  createdFrom: undefined,
+  createdTo: undefined,
 };
 
 export function OrderListPage() {
   const [filters, setFilters, resetFilters] = useTableFilters<OrderListParams>(DEFAULT_FILTERS);
   const sort = parseSortParam(filters.sort);
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const debouncedCustomerId = useDebounce(filters.customerId ?? '', 300);
+  const debouncedKeyword = useDebounce(filters.keyword ?? '', 300);
   const queryParams: OrderListParams = {
     ...filters,
-    customerId: debouncedCustomerId || undefined,
+    keyword: debouncedKeyword || undefined,
   };
 
   const { data, isLoading, isError, refetch } = useOrders(queryParams);
@@ -44,7 +49,7 @@ export function OrderListPage() {
       <div className="space-y-6 p-6">
         <PageHeader
           title="Orders"
-          description="View and manage customer orders."
+          description="Search orders and review payment and fulfillment status."
         />
 
         <OrderTable

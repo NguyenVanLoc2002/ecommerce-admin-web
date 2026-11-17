@@ -122,6 +122,40 @@ describe('orderService', () => {
     expect(page.items[0].currentCustomerProfileAvailable).toBe(true);
   });
 
+  it('serializes server-side search, filters, sort and pagination without blank values', async () => {
+    getMock.mockResolvedValue({
+      items: [], page: 1, size: 10, totalElements: 0, totalPages: 0, last: true,
+    });
+
+    await orderService.getList({
+      page: 1,
+      size: 10,
+      sort: 'createdAt,asc',
+      keyword: '  ORD-1  ',
+      status: 'PROCESSING',
+      paymentStatus: 'FAILED',
+      paymentMethod: 'COD',
+      shipmentStatus: 'IN_TRANSIT',
+      createdFrom: '2026-01-01T00:00',
+      createdTo: '2026-01-31T23:59',
+    });
+
+    expect(getMock).toHaveBeenCalledWith('/admin/orders', {
+      params: {
+        page: 1,
+        size: 10,
+        sort: 'createdAt,asc',
+        keyword: 'ORD-1',
+        status: 'PROCESSING',
+        paymentStatus: 'FAILED',
+        paymentMethod: 'COD',
+        shipmentStatus: 'IN_TRANSIT',
+        createdFrom: new Date('2026-01-01T00:00').toISOString().slice(0, 19),
+        createdTo: new Date(new Date('2026-01-31T23:59').getTime() + 59_999).toISOString().slice(0, -1),
+      },
+    });
+  });
+
   it('prefers primary variant media when the order item has no direct image URL', () => {
     const imageUrl = getOrderItemImage(orderItem({
       variantMedias: [

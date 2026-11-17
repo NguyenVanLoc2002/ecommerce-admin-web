@@ -43,8 +43,13 @@ function sanitizeOrderParams(params: OrderListParams) {
     size: params.size,
     sort: params.sort,
     customerId: normalizeString(params.customerId),
+    keyword: normalizeString(params.keyword),
     status: params.status,
     paymentStatus: params.paymentStatus,
+    paymentMethod: params.paymentMethod,
+    shipmentStatus: params.shipmentStatus,
+    createdFrom: normalizeLocalDateTimeToUtc(params.createdFrom),
+    createdTo: normalizeLocalDateTimeToUtc(params.createdTo, true),
   });
 }
 
@@ -64,6 +69,11 @@ function normalizeOrderSummary(input: unknown): OrderSummary {
     status: asString(record.status) as OrderSummary['status'],
     paymentStatus: asNullableString(record.paymentStatus) as OrderSummary['paymentStatus'],
     paymentMethod: asNullableString(record.paymentMethod) as OrderSummary['paymentMethod'],
+    shipmentStatus: asNullableString(record.shipmentStatus),
+    carrier: asNullableString(record.carrier),
+    trackingNumber: asNullableString(record.trackingNumber),
+    attention: asNullableString(record.attention),
+    attentionReason: asNullableString(record.attentionReason),
     totalAmount: asNumber(record.totalAmount) ?? 0,
     createdAt: asString(record.createdAt),
   };
@@ -207,4 +217,13 @@ function asNullableNumber(value: unknown): number | null {
 function normalizeString(value: string | undefined) {
   const trimmed = value?.trim();
   return trimmed ? trimmed : undefined;
+}
+
+function normalizeLocalDateTimeToUtc(value: string | undefined, includeWholeMinute = false) {
+  if (!value) return undefined;
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return undefined;
+  if (includeWholeMinute) parsed.setTime(parsed.getTime() + 59_999);
+  const iso = parsed.toISOString();
+  return includeWholeMinute ? iso.slice(0, -1) : iso.slice(0, 19);
 }

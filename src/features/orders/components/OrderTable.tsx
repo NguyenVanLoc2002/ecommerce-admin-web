@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { SlidersHorizontal, ShoppingBag, Eye } from 'lucide-react';
+import { SlidersHorizontal, ShoppingBag, Eye, AlertTriangle } from 'lucide-react';
 import { DataTable } from '@/shared/components/table/DataTable';
 import { TableToolbar } from '@/shared/components/table/TableToolbar';
 import { Pagination } from '@/shared/components/table/Pagination';
@@ -51,7 +51,8 @@ export function OrderTable({
 }: OrderTableProps) {
   const navigate = useNavigate();
 
-  const activeFilterCount = [filters.status, filters.paymentStatus].filter(Boolean).length;
+  const activeFilterCount = [filters.status, filters.paymentStatus, filters.paymentMethod,
+    filters.shipmentStatus, filters.createdFrom, filters.createdTo].filter(Boolean).length;
 
   const columns = useMemo<ColumnDef<OrderSummary>[]>(
     () => [
@@ -123,6 +124,28 @@ export function OrderTable({
         ),
       },
       {
+        id: 'fulfillment',
+        header: 'Fulfillment',
+        cell: ({ row }) => (
+          <div className="flex min-w-36 flex-col gap-1">
+            <span className="text-sm text-gray-800">
+              {row.original.shipmentStatus?.replace(/_/g, ' ') ?? 'Not shipped'}
+            </span>
+            {(row.original.carrier || row.original.trackingNumber) && (
+              <span className="truncate text-xs text-gray-500">
+                {[row.original.carrier, row.original.trackingNumber].filter(Boolean).join(' · ')}
+              </span>
+            )}
+            {row.original.attention && (
+              <span className="inline-flex items-center gap-1 text-xs font-semibold text-amber-700" title={row.original.attentionReason ?? undefined}>
+                <AlertTriangle className="h-3.5 w-3.5" />
+                {row.original.attention.replace(/_/g, ' ')}
+              </span>
+            )}
+          </div>
+        ),
+      },
+      {
         id: 'totalAmount',
         header: 'Total',
         headerClassName: 'text-right',
@@ -168,9 +191,9 @@ export function OrderTable({
   return (
     <div className="space-y-4">
       <TableToolbar
-        searchValue={filters.customerId ?? ''}
-        onSearchChange={(customerId) => onFiltersChange({ customerId: customerId || undefined })}
-        searchPlaceholder="Search by customer ID…"
+        searchValue={filters.keyword ?? ''}
+        onSearchChange={(keyword) => onFiltersChange({ keyword: keyword || undefined, page: 0 })}
+        searchPlaceholder="Search order code, customer name or email…"
         actions={
           <Button
             variant="secondary"

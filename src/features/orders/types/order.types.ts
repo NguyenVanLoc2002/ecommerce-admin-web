@@ -84,14 +84,24 @@ export interface OrderSummary {
   status: OrderStatus;
   paymentStatus: OrderPaymentStatus | null;
   paymentMethod: PaymentMethod | null;
+  shipmentStatus: string | null;
+  carrier: string | null;
+  trackingNumber: string | null;
+  attention: string | null;
+  attentionReason: string | null;
   totalAmount: number;
   createdAt: string;
 }
 
 export interface OrderListParams extends PaginationParams {
   customerId?: EntityId;
+  keyword?: string;
   status?: OrderStatus;
   paymentStatus?: OrderPaymentStatus;
+  paymentMethod?: PaymentMethod;
+  shipmentStatus?: string;
+  createdFrom?: string;
+  createdTo?: string;
 }
 
 export type OrderAction = 'confirm' | 'process' | 'deliver' | 'complete' | 'cancel';
