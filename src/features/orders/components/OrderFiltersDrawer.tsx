@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Drawer } from '@/shared/components/ui/Drawer';
 import { Button } from '@/shared/components/ui/Button';
 import { Select } from '@/shared/components/ui/Select';
-import type { OrderPaymentStatus, OrderStatus } from '@/shared/types/enums';
+import type { OrderPaymentStatus, OrderStatus, PaymentMethod } from '@/shared/types/enums';
 import type { OrderListParams } from '../types/order.types';
 
 const STATUS_OPTIONS = [
@@ -25,6 +25,18 @@ const PAYMENT_STATUS_OPTIONS = [
   { value: 'FAILED', label: 'Failed' },
   { value: 'REFUNDED', label: 'Refunded' },
   { value: 'CANCELLED', label: 'Cancelled' },
+];
+
+const PAYMENT_METHOD_OPTIONS = [
+  { value: '', label: 'All methods' },
+  { value: 'COD', label: 'Cash on delivery' },
+  { value: 'ONLINE', label: 'Online' },
+];
+
+const SHIPMENT_STATUS_OPTIONS = [
+  { value: '', label: 'All fulfillment statuses' },
+  ...['PENDING', 'PICKING', 'IN_TRANSIT', 'OUT_FOR_DELIVERY', 'DELIVERED', 'FAILED', 'RETURNED']
+    .map((value) => ({ value, label: value.replace(/_/g, ' ') })),
 ];
 
 interface OrderFiltersDrawerProps {
@@ -103,6 +115,32 @@ export function OrderFiltersDrawer({
               })
             }
           />
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="filter-payment-method" className="text-sm font-medium text-gray-700">Payment method</label>
+          <Select id="filter-payment-method" options={PAYMENT_METHOD_OPTIONS}
+            value={merged.paymentMethod ?? ''}
+            onChange={(e) => set({ paymentMethod: (e.target.value as PaymentMethod) || undefined })} />
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="filter-shipment-status" className="text-sm font-medium text-gray-700">Fulfillment status</label>
+          <Select id="filter-shipment-status" options={SHIPMENT_STATUS_OPTIONS}
+            value={merged.shipmentStatus ?? ''}
+            onChange={(e) => set({ shipmentStatus: e.target.value || undefined })} />
+        </div>
+        <div className="grid grid-cols-1 gap-3">
+          <label className="flex flex-col gap-1.5 text-sm font-medium text-gray-700">
+            Created from
+            <input type="datetime-local" value={merged.createdFrom ?? ''}
+              onChange={(e) => set({ createdFrom: e.target.value || undefined })}
+              className="rounded-md border border-gray-300 px-3 py-2 text-sm" />
+          </label>
+          <label className="flex flex-col gap-1.5 text-sm font-medium text-gray-700">
+            Created to
+            <input type="datetime-local" value={merged.createdTo ?? ''}
+              onChange={(e) => set({ createdTo: e.target.value || undefined })}
+              className="rounded-md border border-gray-300 px-3 py-2 text-sm" />
+          </label>
         </div>
       </div>
     </Drawer>
