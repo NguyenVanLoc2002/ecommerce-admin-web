@@ -23,6 +23,7 @@ import { ShipmentStatusUpdateModal } from '../components/ShipmentStatusUpdateMod
 import { useCancelShipmentProvider } from '../hooks/useCancelShipmentProvider';
 import { useShipment } from '../hooks/useShipment';
 import { useSyncShipmentProvider } from '../hooks/useSyncShipmentProvider';
+import { useReconcileShipmentBooking } from '../hooks/useReconcileShipmentBooking';
 import { useUpdateShipment } from '../hooks/useUpdateShipment';
 import { useUpdateShipmentStatus } from '../hooks/useUpdateShipmentStatus';
 import type { CancelShipmentProviderFormValues } from '../schemas/cancelShipmentProviderSchema';
@@ -42,6 +43,7 @@ export function ShipmentDetailPage() {
   const updateStatus = useUpdateShipmentStatus(shipmentId);
   const updateShipment = useUpdateShipment(shipmentId);
   const syncProvider = useSyncShipmentProvider(shipmentId);
+  const reconcileBooking = useReconcileShipmentBooking(shipmentId);
   const cancelProvider = useCancelShipmentProvider(shipmentId);
 
   useBreadcrumbLabel(
@@ -113,6 +115,24 @@ export function ShipmentDetailPage() {
         toast.error(getPhase3AdminErrorMessage(error, 'Failed to sync provider shipment.'));
       } else {
         toast.error('Failed to sync provider shipment. Please try again.');
+      }
+    }
+  };
+
+  const handleReconcileBooking = async () => {
+    if (reconcileBooking.isPending) return;
+    try {
+      const result = await reconcileBooking.mutateAsync();
+      if (result.bookingStatus === 'SUCCEEDED') {
+        toast.success('Carrier booking confirmed and shipment details reconciled.');
+      } else {
+        toast.warning('The provider could not confirm this booking. Manual reconciliation is still required.');
+      }
+    } catch (error) {
+      if (error instanceof AppError) {
+        toast.error(getPhase3AdminErrorMessage(error, 'Failed to reconcile carrier booking.'));
+      } else {
+        toast.error('Failed to reconcile carrier booking. Please try again.');
       }
     }
   };
@@ -199,8 +219,10 @@ export function ShipmentDetailPage() {
           onUpdateStatus={() => setStatusModalOpen(true)}
           onSyncProvider={() => void handleSyncProvider()}
           onCancelProvider={() => setCancelProviderOpen(true)}
+          onReconcileBooking={() => void handleReconcileBooking()}
           providerSyncPending={syncProvider.isPending}
           providerCancelPending={cancelProvider.isPending}
+          bookingReconcilePending={reconcileBooking.isPending}
         />
       </div>
 

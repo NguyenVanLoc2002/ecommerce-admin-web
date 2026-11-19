@@ -1,6 +1,7 @@
-import { Ban, Pencil, RefreshCw, RotateCw } from 'lucide-react';
+import { Ban, Pencil, RefreshCw, RotateCw, SearchCheck } from 'lucide-react';
 import { StatusBadge } from '@/shared/components/ui/StatusBadge';
 import { Button } from '@/shared/components/ui/Button';
+import { usePermission } from '@/constants/permissions';
 import { ShipmentInfoCard } from './ShipmentInfoCard';
 import { ShipmentOrderCard } from './ShipmentOrderCard';
 import { ShipmentEventTimeline } from './ShipmentEventTimeline';
@@ -14,8 +15,10 @@ interface ShipmentDetailProps {
   onUpdateStatus: () => void;
   onSyncProvider: () => void;
   onCancelProvider: () => void;
+  onReconcileBooking: () => void;
   providerSyncPending: boolean;
   providerCancelPending: boolean;
+  bookingReconcilePending: boolean;
 }
 
 export function ShipmentDetail({
@@ -24,9 +27,12 @@ export function ShipmentDetail({
   onUpdateStatus,
   onSyncProvider,
   onCancelProvider,
+  onReconcileBooking,
   providerSyncPending,
   providerCancelPending,
+  bookingReconcilePending,
 }: ShipmentDetailProps) {
+  const canReconcileBooking = usePermission('shipments', 'maintenance');
   const isTerminal = (TERMINAL_STATUSES as readonly string[]).includes(shipment.status);
   const isProviderBacked =
     shipment.carrierId !== null &&
@@ -71,6 +77,19 @@ export function ShipmentDetail({
               Sync Provider
             </Button>
           )}
+          {isProviderBacked && canReconcileBooking
+            && (shipment.bookingStatus === 'PENDING' || shipment.bookingStatus === 'UNKNOWN') && (
+              <Button
+                size="sm"
+                variant="secondary"
+                leftIcon={<SearchCheck className="h-4 w-4" />}
+                onClick={onReconcileBooking}
+                isLoading={bookingReconcilePending}
+                disabled={providerSyncPending || providerCancelPending}
+              >
+                Check Booking
+              </Button>
+            )}
           {isProviderBacked && (
             <Button
               size="sm"

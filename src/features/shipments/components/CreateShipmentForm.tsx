@@ -11,6 +11,7 @@ import { formatMoney } from '@/shared/utils/formatMoney';
 import { AppError } from '@/shared/types/api.types';
 import { cn } from '@/shared/utils/cn';
 import { formatEnumLabel } from '@/shared/utils/formatEnumLabel';
+import { useAuthStore } from '@/shared/stores/authStore';
 import {
   createShipmentSchema,
   type CreateShipmentFormValues,
@@ -25,6 +26,12 @@ const DEFAULT_VALUES: CreateShipmentFormValues = {
   trackingNumber: null,
   estimatedDeliveryDate: null,
   shippingFee: null,
+  estimatedCarrierCost: null,
+  carrierCost: null,
+  checkoutCarrierId: null,
+  checkoutCarrierName: null,
+  overrideReasonCode: null,
+  overrideNote: null,
   notes: null,
 };
 
@@ -41,22 +48,27 @@ function ModeButton({
   active,
   title,
   description,
+  disabled = false,
   onClick,
 }: {
   active: boolean;
   title: string;
   description: string;
+  disabled?: boolean;
   onClick: () => void;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
+      disabled={disabled}
       className={cn(
         'rounded-lg border px-4 py-3 text-left transition-colors',
         active
           ? 'border-primary-500 bg-primary-50'
-          : 'border-gray-200 bg-white hover:border-gray-300',
+          : disabled
+            ? 'cursor-not-allowed border-gray-200 bg-gray-50 opacity-60'
+            : 'border-gray-200 bg-white hover:border-gray-300',
       )}
     >
       <p className="text-sm font-semibold text-gray-900">{title}</p>
@@ -74,11 +86,15 @@ export function CreateShipmentForm({
   onCancel,
 }: CreateShipmentFormProps) {
   const hasOrderCarrierSnapshot = Boolean(order?.carrierId || order?.carrierName);
+  const role = useAuthStore((state) => state.role);
+  const canOverrideCarrier = role === 'ADMIN' || role === 'SUPER_ADMIN';
   const form = useForm<CreateShipmentFormValues>({
     resolver: zodResolver(createShipmentSchema),
     defaultValues: {
       ...DEFAULT_VALUES,
       orderId: defaultOrderId ?? '',
+      checkoutCarrierId: order?.carrierId ?? null,
+      checkoutCarrierName: order?.carrierName ?? null,
       carrierMode: hasOrderCarrierSnapshot ? 'orderSnapshot' : 'manual',
     },
   });
@@ -91,6 +107,17 @@ export function CreateShipmentForm({
   } = form;
   const carrierMode = watch('carrierMode');
   const selectedCarrierId = watch('carrierId');
+  const selectedCarrierName = watch('carrier');
+  const overrideReasonCode = watch('overrideReasonCode');
+  const requestedCarrierId = carrierMode === 'orderSnapshot'
+    ? order?.carrierId
+    : carrierMode === 'configured' ? selectedCarrierId : null;
+  const hasCheckoutCarrierSnapshot = Boolean(order?.carrierId || order?.carrierName);
+  const isCarrierOverride = hasCheckoutCarrierSnapshot && carrierMode !== 'orderSnapshot'
+    && (carrierMode === 'configured'
+      ? requestedCarrierId !== order?.carrierId
+      : Boolean(order?.carrierId)
+        || selectedCarrierName?.trim() !== order?.carrierName?.trim());
   const { data: carrierOptionsData, isLoading: carriersLoading } = useActiveCarrierOptions();
   const carrierOptions = carrierOptionsData?.items ?? [];
   const selectedCarrier = carrierOptions.find((carrier) => carrier.id === selectedCarrierId);
@@ -110,6 +137,8 @@ export function CreateShipmentForm({
     reset({
       ...currentValues,
       orderId: defaultOrderId ?? currentValues.orderId,
+      checkoutCarrierId: order?.carrierId ?? null,
+      checkoutCarrierName: order?.carrierName ?? null,
       carrierMode:
         currentValues.carrierMode === 'orderSnapshot' && !hasOrderCarrierSnapshot
           ? 'manual'
@@ -121,7 +150,7 @@ export function CreateShipmentForm({
               ? 'orderSnapshot'
               : 'manual',
     });
-  }, [defaultOrderId, form, hasOrderCarrierSnapshot, reset]);
+  }, [defaultOrderId, form, hasOrderCarrierSnapshot, order?.carrierId, reset]);
 
   const handleSubmit = form.handleSubmit(async (values) => {
     clearErrors();
@@ -199,12 +228,14 @@ export function CreateShipmentForm({
                         active={field.value === 'configured'}
                         title="Use configured carrier"
                         description="Pick an active carrier record and let the backend use its saved provider config."
+                        disabled={orderLoading || (hasOrderCarrierSnapshot && !canOverrideCarrier)}
                         onClick={() => field.onChange('configured')}
                       />
                       <ModeButton
                         active={field.value === 'manual'}
                         title="Manual carrier"
-                        description="Keep the existing manual carrier flow and type the carrier name yourself."
+                        description="Internal-only fulfillment, maintained by staff."
+                        disabled={orderLoading || (hasOrderCarrierSnapshot && !canOverrideCarrier)}
                         onClick={() => field.onChange('manual')}
                       />
                     </div>
@@ -287,6 +318,51 @@ export function CreateShipmentForm({
                 />
               )}
 
+              {isCarrierOverride && canOverrideCarrier && (
+                <div className="space-y-3 rounded-lg border border-warning-200 bg-warning-50 p-4">
+                  <p className="text-sm font-semibold text-gray-900">Carrier override</p>
+                  <p className="text-xs text-gray-600">
+                    The selected carrier differs from checkout. This reason is recorded with your account and the original carrier.
+                  </p>
+                  <Controller
+                    control={form.control}
+                    name="overrideReasonCode"
+                    render={({ field, fieldState }) => (
+                      <div className="space-y-1.5">
+                        <label htmlFor="shipment-override-reason" className="text-sm font-medium text-gray-700">
+                          Reason <span className="text-danger-500">*</span>
+                        </label>
+                        <Select
+                          id="shipment-override-reason"
+                          value={field.value ?? ''}
+                          onChange={(event) => field.onChange(event.target.value || null)}
+                          error={Boolean(fieldState.error)}
+                          disabled={isSubmitting}
+                          options={[
+                            { value: '', label: 'Select a reason' },
+                            { value: 'CHECKOUT_CARRIER_UNAVAILABLE', label: 'Checkout carrier unavailable' },
+                            { value: 'CUSTOMER_REQUEST', label: 'Customer request' },
+                            { value: 'SERVICE_ISSUE', label: 'Service issue' },
+                            { value: 'COST_CHANGE', label: 'Cost change' },
+                            { value: 'OTHER', label: 'Other' },
+                          ]}
+                        />
+                        {fieldState.error && <p className="text-xs text-danger-600">{fieldState.error.message}</p>}
+                      </div>
+                    )}
+                  />
+                  {overrideReasonCode === 'OTHER' && (
+                    <FormField
+                      name="overrideNote"
+                      label="Reason details"
+                      required
+                      placeholder="Describe why the checkout carrier is being changed"
+                      disabled={isSubmitting}
+                    />
+                  )}
+                </div>
+              )}
+
               <FormField
                 name="trackingNumber"
                 label="Tracking Number"
@@ -310,10 +386,18 @@ export function CreateShipmentForm({
               />
               <FormField
                 name="shippingFee"
-                label="Shipping Fee"
+                label="Legacy shipment fee"
                 type="number"
                 placeholder="Leave blank to keep backend defaults"
-                hint="Optional override for the shipment shipping fee."
+                hint="Historical shipment field. Checkout shipping fee and order total are not changed here."
+                disabled={isSubmitting}
+              />
+              <FormField
+                name="estimatedCarrierCost"
+                label="Estimated carrier cost"
+                type="number"
+                placeholder="Optional estimate"
+                hint="Estimate only; it is not a settled carrier charge."
                 disabled={isSubmitting}
               />
             </div>

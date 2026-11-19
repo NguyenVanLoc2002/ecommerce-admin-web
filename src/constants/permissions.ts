@@ -40,6 +40,7 @@ export const permissions = {
   shipments: {
     read: ['STAFF', 'ADMIN', 'SUPER_ADMIN'] as const,
     write: ['STAFF', 'ADMIN', 'SUPER_ADMIN'] as const,
+    maintenance: ['ADMIN', 'SUPER_ADMIN'] as const,
   },
   invoices: {
     read: ['STAFF', 'ADMIN', 'SUPER_ADMIN'] as const,

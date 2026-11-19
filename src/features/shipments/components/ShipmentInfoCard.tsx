@@ -60,6 +60,19 @@ export function ShipmentInfoCard({ shipment }: ShipmentInfoCardProps) {
           </Row>
         )}
 
+        {shipment.bookingStatus && (
+          <Row icon={<Clock className="h-4 w-4 text-gray-400" />} label="Carrier booking">
+            <Badge variant={shipment.bookingStatus === 'SUCCEEDED' || shipment.bookingStatus === 'INTERNAL_ONLY' ? 'success' : 'warning'}>
+              {formatEnumLabel(shipment.bookingStatus)}
+            </Badge>
+          </Row>
+        )}
+        {(shipment.bookingStatus === 'UNKNOWN' || shipment.bookingStatus === 'PENDING') && (
+          <p role="status" className="rounded-md bg-warning-50 px-3 py-2 text-xs text-warning-800">
+            The provider outcome is not confirmed. Do not create another shipment; reconcile or use the provider's manual recovery process.
+          </p>
+        )}
+
         {shipment.providerTrackingUrl && (
           <Row icon={<ExternalLink className="h-4 w-4 text-gray-400" />} label="Tracking URL">
             <a
@@ -81,8 +94,35 @@ export function ShipmentInfoCard({ shipment }: ShipmentInfoCardProps) {
         )}
 
         {shipment.shippingFee !== null && (
-          <Row icon={<Hash className="h-4 w-4 text-gray-400" />} label="Shipping Fee">
+          <Row icon={<Hash className="h-4 w-4 text-gray-400" />} label="Legacy shipment fee">
             <span className="text-sm text-gray-700">{formatMoney(shipment.shippingFee)}</span>
+          </Row>
+        )}
+
+        {shipment.estimatedCarrierCost !== null && (
+          <Row icon={<Hash className="h-4 w-4 text-gray-400" />} label="Estimated carrier cost">
+            <span className="text-sm text-gray-700">{formatMoney(shipment.estimatedCarrierCost)}</span>
+          </Row>
+        )}
+        {shipment.carrierCost !== null && (
+          <Row icon={<Hash className="h-4 w-4 text-gray-400" />} label="Actual carrier cost">
+            <span className="text-sm text-gray-700">{formatMoney(shipment.carrierCost)}</span>
+          </Row>
+        )}
+        {shipment.overrideReasonCode && (
+          <Row icon={<Hash className="h-4 w-4 text-gray-400" />} label="Override reason">
+            <div className="text-right">
+              <span className="text-sm text-gray-700">{formatEnumLabel(shipment.overrideReasonCode)}</span>
+              <p className="text-xs text-gray-500">
+                {shipment.overrideFromCarrierId ?? 'Checkout'} → {shipment.overrideToCarrierId ?? 'Manual'}
+              </p>
+              {shipment.overrideActor && (
+                <p className="text-xs text-gray-500">
+                  {shipment.overrideActor}{shipment.overrideAt ? ` · ${formatDateTime(shipment.overrideAt)}` : ''}
+                </p>
+              )}
+              {shipment.overrideNote && <p className="max-w-52 text-xs text-gray-500">{shipment.overrideNote}</p>}
+            </div>
           </Row>
         )}
 

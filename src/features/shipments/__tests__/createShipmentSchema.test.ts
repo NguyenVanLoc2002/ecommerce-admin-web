@@ -63,4 +63,34 @@ describe('createShipmentSchema', () => {
 
     expect(result.success).toBe(true);
   });
+
+  it('requires a reason when replacing the checkout carrier and a note for OTHER', () => {
+    const missingReason = createShipmentSchema.safeParse({
+      orderId: 'order-1',
+      carrierMode: 'configured',
+      checkoutCarrierId: 'checkout-carrier',
+      carrierId: 'replacement-carrier',
+      carrier: null,
+      trackingNumber: null,
+      estimatedDeliveryDate: null,
+      shippingFee: null,
+      notes: null,
+    });
+    const missingOtherNote = createShipmentSchema.safeParse({
+      orderId: 'order-1',
+      carrierMode: 'configured',
+      checkoutCarrierId: 'checkout-carrier',
+      carrierId: 'replacement-carrier',
+      overrideReasonCode: 'OTHER',
+      overrideNote: null,
+      carrier: null,
+      trackingNumber: null,
+      estimatedDeliveryDate: null,
+      shippingFee: null,
+      notes: null,
+    });
+
+    expect(missingReason.success).toBe(false);
+    expect(missingOtherNote.success).toBe(false);
+  });
 });
