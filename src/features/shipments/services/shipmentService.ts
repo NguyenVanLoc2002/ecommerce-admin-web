@@ -6,6 +6,7 @@ import type {
   ShipmentOrderReference,
   ShipmentSummary,
   ShipmentEvent,
+  CancellationOperation,
   ShipmentListParams,
   CancelShipmentProviderRequest,
   CreateShipmentRequest,
@@ -63,9 +64,9 @@ export const shipmentService = {
     return normalizeShipment(response);
   },
 
-  async cancelProvider(id: EntityId, body: CancelShipmentProviderRequest): Promise<Shipment> {
+  async cancelProvider(id: EntityId, body: CancelShipmentProviderRequest): Promise<CancellationOperation> {
     const response = await apiClient.post<unknown>(`/admin/shipments/${id}/provider/cancel`, body);
-    return normalizeShipment(response);
+    return normalizeCancellationOperation(response);
   },
 };
 
@@ -82,6 +83,22 @@ function sanitizeShipmentParams(params: ShipmentListParams) {
     dateFrom: normalizeString(params.dateFrom),
     dateTo: normalizeString(params.dateTo),
   });
+}
+
+function normalizeCancellationOperation(input: unknown): CancellationOperation {
+  const record = toRecord(input);
+  return {
+    id: asString(record.id),
+    orderId: asString(record.orderId),
+    orderCode: asString(record.orderCode),
+    shipmentId: asNullableString(record.shipmentId),
+    idempotencyKey: asString(record.idempotencyKey),
+    status: asString(record.status) as CancellationOperation['status'],
+    orderStatus: asString(record.orderStatus),
+    lastErrorCode: asNullableString(record.lastErrorCode),
+    requestedAt: asNullableString(record.requestedAt),
+    completedAt: asNullableString(record.completedAt),
+  };
 }
 
 function normalizeShipmentSummary(input: unknown): ShipmentSummary {

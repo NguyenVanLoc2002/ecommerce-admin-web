@@ -147,42 +147,25 @@ describe('shipmentService', () => {
 
   it('submits the provider cancel reason to the backend', async () => {
     postMock.mockResolvedValue({
-      id: 'shipment-1',
+      id: 'operation-1',
       orderId: 'order-1',
       orderCode: 'ORD-1',
-      shipmentCode: 'SHP-1',
-      customer: { fullName: 'Jane', email: 'jane@example.com', phone: '0912345678' },
-      shippingAddress: {
-        fullName: 'Jane',
-        phone: '0912345678',
-        street: '1 Nguyen Hue',
-        ward: 'Ben Nghe',
-        district: 'District 1',
-        province: 'HCM',
-      },
-      carrierId: 'carrier-123',
-      carrier: 'GHN HCM',
-      carrierCode: 'GHN_MAIN',
-      carrierProviderType: 'GHN',
-      carrierShipmentId: 'GHN-0001',
-      providerStatus: 'CANCELLED',
-      providerTrackingUrl: null,
-      trackingNumber: 'TRACK-1',
-      status: 'FAILED',
-      estimatedDeliveryDate: null,
-      shippedAt: null,
-      deliveredAt: null,
-      shippingFee: null,
-      note: null,
-      events: [],
-      createdAt: '2026-05-15T10:00:00Z',
-      updatedAt: '2026-05-15T10:00:00Z',
+      shipmentId: 'shipment-1',
+      idempotencyKey: 'cancel-key-1',
+      status: 'CONFIRMED',
+      orderStatus: 'CANCELLED',
+      lastErrorCode: null,
+      requestedAt: '2026-05-15T10:00:00Z',
+      completedAt: '2026-05-15T10:01:00Z',
     });
 
-    await shipmentService.cancelProvider('shipment-1', {
+    const operation = await shipmentService.cancelProvider('shipment-1', {
       reason: 'Operator requested cancellation',
     });
 
+    expect(operation.status).toBe('CONFIRMED');
+    expect(operation.orderId).toBe('order-1');
+    expect(operation.shipmentId).toBe('shipment-1');
     expect(postMock).toHaveBeenCalledWith('/admin/shipments/shipment-1/provider/cancel', {
       reason: 'Operator requested cancellation',
     });

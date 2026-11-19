@@ -4,6 +4,19 @@ import { cleanParams } from '@/shared/utils/cleanParams';
 import type { Order, OrderItem, OrderSummary, OrderListParams } from '../types/order.types';
 import { normalizeOrderItemMediaList } from '../utils/orderItemImage';
 
+export interface CancellationOperation {
+  id: string;
+  orderId: string;
+  orderCode: string;
+  shipmentId: string | null;
+  idempotencyKey: string;
+  status: 'PENDING' | 'UNKNOWN' | 'CONFIRMED' | 'REJECTED';
+  orderStatus: Order['status'];
+  lastErrorCode: string | null;
+  requestedAt: string | null;
+  completedAt: string | null;
+}
+
 export const orderService = {
   async getList(params: OrderListParams): Promise<PaginatedResponse<OrderSummary>> {
     const response = await apiClient.get<PaginatedResponse<unknown>>('/admin/orders', {
@@ -33,8 +46,29 @@ export const orderService = {
   complete: (id: EntityId) =>
     apiClient.post<Order>(`/admin/orders/${id}/complete`),
 
-  cancel: (id: EntityId) =>
-    apiClient.post<Order>(`/admin/orders/${id}/cancel`),
+  cancel: (id: EntityId, body: { reason: string }) =>
+    apiClient.post<CancellationOperation>(`/admin/orders/${id}/cancel`, body),
+
+  reconcileCancellation: (id: EntityId, body: { confirmed: boolean; note: string }) =>
+    apiClient.post<CancellationOperation>(`/admin/orders/${id}/cancellation/reconcile`, body),
+
+  async getCancellation(id: EntityId): Promise<CancellationOperation | null> {
+    const response = await apiClient.get<unknown>(`/admin/orders/${id}/cancellation`);
+    if (response == null) return null;
+    const record = toRecord(response);
+    return {
+      id: asString(record.id),
+      orderId: asString(record.orderId),
+      orderCode: asString(record.orderCode),
+      shipmentId: asNullableString(record.shipmentId),
+      idempotencyKey: asString(record.idempotencyKey),
+      status: asString(record.status) as CancellationOperation['status'],
+      orderStatus: asString(record.orderStatus) as Order['status'],
+      lastErrorCode: asNullableString(record.lastErrorCode),
+      requestedAt: asNullableString(record.requestedAt),
+      completedAt: asNullableString(record.completedAt),
+    };
+  },
 };
 
 function sanitizeOrderParams(params: OrderListParams) {

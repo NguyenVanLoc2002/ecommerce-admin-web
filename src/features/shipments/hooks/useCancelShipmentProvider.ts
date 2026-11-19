@@ -9,11 +9,15 @@ export function useCancelShipmentProvider(shipmentId: string) {
   return useMutation({
     mutationFn: (body: CancelShipmentProviderRequest) =>
       shipmentService.cancelProvider(shipmentId, body),
-    onSuccess: (shipment) => {
+    onSuccess: (operation) => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.shipments.detail(shipmentId) });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.shipments.byOrder(shipment.orderId) });
+      if (operation.shipmentId) {
+        void queryClient.invalidateQueries({ queryKey: queryKeys.shipments.detail(operation.shipmentId) });
+      }
+      void queryClient.invalidateQueries({ queryKey: queryKeys.shipments.byOrder(operation.orderId) });
       void queryClient.invalidateQueries({ queryKey: queryKeys.shipments.lists() });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.orders.detail(shipment.orderId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.orders.detail(operation.orderId) });
+      void queryClient.invalidateQueries({ queryKey: ['orders', operation.orderId, 'cancellation'] });
     },
   });
 }
