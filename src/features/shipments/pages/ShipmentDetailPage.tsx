@@ -143,8 +143,14 @@ export function ShipmentDetailPage() {
     }
 
     try {
-      await cancelProvider.mutateAsync({ reason: values.reason });
-      toast.success('Provider shipment cancelled.');
+      const operation = await cancelProvider.mutateAsync({ reason: values.reason });
+      if (operation.status === 'UNKNOWN' || operation.status === 'PENDING') {
+        toast.warning('Cancellation is awaiting reconciliation. The order has not been marked cancelled.');
+      } else if (operation.status === 'REJECTED') {
+        toast.error('The provider did not confirm cancellation. The order remains active.');
+      } else {
+        toast.success('Shipment and order cancellation confirmed.');
+      }
       setCancelProviderOpen(false);
     } catch (error) {
       if (error instanceof AppError) {

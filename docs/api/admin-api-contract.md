@@ -1409,12 +1409,12 @@ Carrier catalog and per-store carrier configuration used by shipment creation.
 
 ### POST `/api/v1/admin/shipments/{id}/provider/cancel`
 
-- Access: `STAFF`, `ADMIN`, `SUPER_ADMIN`
-- Description: cancel the provider shipment/order when the carrier still allows cancellation; records a shipment event and stores the provider status returned by the carrier flow
+- Access: `ADMIN`, `SUPER_ADMIN`
+- Description: create or return the durable order and shipment cancellation operation. An unknown provider result stays pending reconciliation and repeated requests do not call the provider again.
 - Request body:
   - `CancelProviderShipmentRequest`
 - Response:
-  - `ApiResponse<ShipmentResponse>`
+  - `ApiResponse<CancellationOperationResponse>`
 
 ### POST `/api/v1/admin/shipments/{id}/booking/reconcile`
 

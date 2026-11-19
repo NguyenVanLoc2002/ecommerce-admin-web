@@ -156,6 +156,28 @@ describe('orderService', () => {
     });
   });
 
+  it('loads a persisted cancellation state for reconciliation controls', async () => {
+    getMock.mockResolvedValue({
+      id: 'operation-1',
+      orderId: 'order-1',
+      orderCode: 'ORD-1',
+      shipmentId: 'shipment-1',
+      idempotencyKey: 'cancel-key-1',
+      status: 'UNKNOWN',
+      orderStatus: 'SHIPPED',
+      lastErrorCode: 'PROVIDER_CANCELLATION_OUTCOME_UNKNOWN',
+      requestedAt: '2026-05-15T10:00:00Z',
+      completedAt: null,
+    });
+
+    const operation = await orderService.getCancellation('order-1');
+
+    expect(getMock).toHaveBeenCalledWith('/admin/orders/order-1/cancellation');
+    expect(operation?.status).toBe('UNKNOWN');
+    expect(operation?.shipmentId).toBe('shipment-1');
+    expect(operation?.completedAt).toBeNull();
+  });
+
   it('prefers primary variant media when the order item has no direct image URL', () => {
     const imageUrl = getOrderItemImage(orderItem({
       variantMedias: [

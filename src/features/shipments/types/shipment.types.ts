@@ -9,6 +9,19 @@ export type CarrierOverrideReason =
   | 'COST_CHANGE'
   | 'OTHER';
 
+export interface CancellationOperation {
+  id: EntityId;
+  orderId: EntityId;
+  orderCode: string;
+  shipmentId: EntityId | null;
+  idempotencyKey: string;
+  status: 'PENDING' | 'UNKNOWN' | 'CONFIRMED' | 'REJECTED';
+  orderStatus: string;
+  lastErrorCode: string | null;
+  requestedAt: string | null;
+  completedAt: string | null;
+}
+
 export interface ShipmentAddress {
   fullName: string;
   phone: string;

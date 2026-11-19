@@ -38,6 +38,8 @@ export function ShipmentDetail({
     shipment.carrierId !== null &&
     shipment.carrierProviderType !== null &&
     shipment.carrierProviderType !== 'MANUAL';
+  const canRequestProviderCancellation = isProviderBacked
+    && (shipment.status === 'PENDING' || shipment.status === 'PICKING');
 
   return (
     <>
@@ -65,7 +67,7 @@ export function ShipmentDetail({
               Update Status
             </Button>
           )}
-          {isProviderBacked && (
+          {canRequestProviderCancellation && (
             <Button
               size="sm"
               variant="secondary"
