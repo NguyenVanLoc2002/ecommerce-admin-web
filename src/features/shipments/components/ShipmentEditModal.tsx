@@ -28,22 +28,27 @@ function ModeButton({
   active,
   title,
   description,
+  disabled = false,
   onClick,
 }: {
   active: boolean;
   title: string;
   description: string;
+  disabled?: boolean;
   onClick: () => void;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
+      disabled={disabled}
       className={cn(
         'rounded-lg border px-4 py-3 text-left transition-colors',
         active
           ? 'border-primary-500 bg-primary-50'
-          : 'border-gray-200 bg-white hover:border-gray-300',
+          : disabled
+            ? 'cursor-not-allowed border-gray-200 bg-gray-50 opacity-60'
+            : 'border-gray-200 bg-white hover:border-gray-300',
       )}
     >
       <p className="text-sm font-semibold text-gray-900">{title}</p>
@@ -69,6 +74,8 @@ export function ShipmentEditModal({
       trackingNumber: shipment.trackingNumber,
       estimatedDeliveryDate: shipment.estimatedDeliveryDate,
       shippingFee: shipment.shippingFee === null ? null : String(shipment.shippingFee),
+      carrierCost: shipment.carrierCost === null ? null : String(shipment.carrierCost),
+      estimatedCarrierCost: shipment.estimatedCarrierCost === null ? null : String(shipment.estimatedCarrierCost),
       notes: shipment.note,
     },
   });
@@ -99,6 +106,8 @@ export function ShipmentEditModal({
       trackingNumber: shipment.trackingNumber,
       estimatedDeliveryDate: shipment.estimatedDeliveryDate,
       shippingFee: shipment.shippingFee === null ? null : String(shipment.shippingFee),
+      carrierCost: shipment.carrierCost === null ? null : String(shipment.carrierCost),
+      estimatedCarrierCost: shipment.estimatedCarrierCost === null ? null : String(shipment.estimatedCarrierCost),
       notes: shipment.note,
     });
   }, [clearErrors, form, open, shipment]);
@@ -130,7 +139,7 @@ export function ShipmentEditModal({
       open={open}
       onClose={onClose}
       title="Edit Shipment Details"
-      description="Switch between a configured carrier flow and manual carrier entry without changing shipment status."
+      description="Carrier selection is fixed after shipment creation. Update tracking and cost details here."
       size="lg"
       closeOnBackdropClick={false}
       footer={
@@ -169,12 +178,14 @@ export function ShipmentEditModal({
                       active={field.value === 'configured'}
                       title="Use configured carrier"
                       description="Pick an active carrier record and let the backend use its saved provider config."
+                      disabled
                       onClick={() => field.onChange('configured')}
                     />
                     <ModeButton
                       active={field.value === 'manual'}
                       title="Manual carrier"
                       description="Keep the legacy flow and enter the carrier name yourself."
+                      disabled
                       onClick={() => field.onChange('manual')}
                     />
                   </div>
@@ -197,7 +208,7 @@ export function ShipmentEditModal({
                       value={field.value ?? ''}
                       onChange={(event) => field.onChange(event.target.value || null)}
                       error={Boolean(fieldState.error)}
-                      disabled={isSubmitting}
+                      disabled
                       options={[
                         { value: '', label: carriersLoading ? 'Loading carriers...' : 'Select a carrier' },
                         ...carrierOptions.map((carrier) => ({
@@ -233,7 +244,7 @@ export function ShipmentEditModal({
                 required
                 placeholder="e.g. Viettel Post"
                 hint="Use the manual carrier flow when no configured provider should be called."
-                disabled={isSubmitting}
+                disabled
               />
             )}
 
@@ -256,9 +267,25 @@ export function ShipmentEditModal({
               />
               <FormField
                 name="shippingFee"
-                label="Shipping Fee"
+                label="Legacy shipment fee"
                 type="number"
                 placeholder="Leave blank to keep the current shipment fee"
+                hint="This field does not change checkout shipping fee or order total."
+                disabled={isSubmitting}
+              />
+              <FormField
+                name="estimatedCarrierCost"
+                label="Estimated carrier cost"
+                type="number"
+                placeholder="Optional estimate"
+                disabled={isSubmitting}
+              />
+              <FormField
+                name="carrierCost"
+                label="Actual carrier cost"
+                type="number"
+                placeholder="Only enter a confirmed charge"
+                hint="Leave blank until supported by a carrier charge record."
                 disabled={isSubmitting}
               />
             </div>

@@ -1,6 +1,14 @@
 import type { PaginationParams, EntityId } from '@/shared/types/api.types';
 import type { CarrierProviderType, ShipmentStatus } from '@/shared/types/enums';
 
+export type BookingAttemptStatus = 'PENDING' | 'SUCCEEDED' | 'FAILED_FINAL' | 'UNKNOWN' | 'INTERNAL_ONLY';
+export type CarrierOverrideReason =
+  | 'CHECKOUT_CARRIER_UNAVAILABLE'
+  | 'CUSTOMER_REQUEST'
+  | 'SERVICE_ISSUE'
+  | 'COST_CHANGE'
+  | 'OTHER';
+
 export interface ShipmentAddress {
   fullName: string;
   phone: string;
@@ -46,6 +54,16 @@ export interface ShipmentSummary {
   shippedAt: string | null;
   deliveredAt: string | null;
   shippingFee: number | null;
+  carrierCost: number | null;
+  estimatedCarrierCost: number | null;
+  bookingStatus: BookingAttemptStatus | null;
+  bookingAttemptKey: string | null;
+  overrideReasonCode: CarrierOverrideReason | null;
+  overrideNote: string | null;
+  overrideFromCarrierId: EntityId | null;
+  overrideToCarrierId: EntityId | null;
+  overrideActor: string | null;
+  overrideAt: string | null;
   note: string | null;
   createdAt: string;
   updatedAt: string;
@@ -71,6 +89,16 @@ export interface Shipment {
   shippedAt: string | null;
   deliveredAt: string | null;
   shippingFee: number | null;
+  carrierCost: number | null;
+  estimatedCarrierCost: number | null;
+  bookingStatus: BookingAttemptStatus | null;
+  bookingAttemptKey: string | null;
+  overrideReasonCode: CarrierOverrideReason | null;
+  overrideNote: string | null;
+  overrideFromCarrierId: EntityId | null;
+  overrideToCarrierId: EntityId | null;
+  overrideActor: string | null;
+  overrideAt: string | null;
   note: string | null;
   events: ShipmentEvent[];
   createdAt: string;
@@ -97,11 +125,15 @@ export interface ShipmentListParams extends PaginationParams {
 
 export interface CreateShipmentRequest {
   orderId: EntityId;
+  useManualCarrier?: boolean;
   carrierId?: EntityId | null;
   carrier?: string | null;
   trackingNumber: string | null;
   estimatedDeliveryDate: string | null;
   shippingFee?: number | null;
+  estimatedCarrierCost?: number | null;
+  overrideReasonCode?: CarrierOverrideReason | null;
+  overrideNote?: string | null;
   note: string | null;
 }
 
@@ -111,6 +143,8 @@ export interface UpdateShipmentRequest {
   trackingNumber?: string | null;
   estimatedDeliveryDate?: string | null;
   shippingFee?: number | null;
+  carrierCost?: number | null;
+  estimatedCarrierCost?: number | null;
   note?: string | null;
 }
 

@@ -58,6 +58,11 @@ export const shipmentService = {
     return normalizeShipment(response);
   },
 
+  async reconcileBooking(id: EntityId): Promise<Shipment> {
+    const response = await apiClient.post<unknown>(`/admin/shipments/${id}/booking/reconcile`);
+    return normalizeShipment(response);
+  },
+
   async cancelProvider(id: EntityId, body: CancelShipmentProviderRequest): Promise<Shipment> {
     const response = await apiClient.post<unknown>(`/admin/shipments/${id}/provider/cancel`, body);
     return normalizeShipment(response);
@@ -102,6 +107,16 @@ function normalizeShipmentSummary(input: unknown): ShipmentSummary {
     shippedAt: asNullableString(record.shippedAt),
     deliveredAt: asNullableString(record.deliveredAt),
     shippingFee: asNullableNumber(record.shippingFee),
+    carrierCost: asNullableNumber(record.carrierCost),
+    estimatedCarrierCost: asNullableNumber(record.estimatedCarrierCost),
+    bookingStatus: asNullableString(record.bookingStatus) as ShipmentSummary['bookingStatus'],
+    bookingAttemptKey: asNullableString(record.bookingAttemptKey),
+    overrideReasonCode: asNullableString(record.overrideReasonCode) as ShipmentSummary['overrideReasonCode'],
+    overrideNote: asNullableString(record.overrideNote),
+    overrideFromCarrierId: asNullableString(record.overrideFromCarrierId),
+    overrideToCarrierId: asNullableString(record.overrideToCarrierId),
+    overrideActor: asNullableString(record.overrideActor),
+    overrideAt: asNullableString(record.overrideAt),
     note: asNullableString(record.note),
     createdAt: asString(record.createdAt),
     updatedAt: asString(record.updatedAt ?? record.createdAt),
@@ -124,6 +139,10 @@ function normalizeShipment(input: unknown): Shipment {
       province: asString(record.shippingCity ?? shippingAddress.province),
     },
     shippingFee: asNullableNumber(record.shippingFee),
+    carrierCost: asNullableNumber(record.carrierCost),
+    estimatedCarrierCost: asNullableNumber(record.estimatedCarrierCost),
+    bookingStatus: asNullableString(record.bookingStatus) as Shipment['bookingStatus'],
+    bookingAttemptKey: asNullableString(record.bookingAttemptKey),
     note: asNullableString(record.note),
     events: normalizeShipmentEvents(record.events),
   };
