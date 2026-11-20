@@ -19,6 +19,8 @@ export function CreateShipmentPage() {
   const {
     data: order,
     isLoading: orderLoading,
+    isError: orderError,
+    refetch: refetchOrder,
   } = useShipmentOrderReference(orderId);
 
   const handleSubmit = async (values: CreateShipmentFormValues) => {
@@ -28,7 +30,11 @@ export function CreateShipmentPage() {
 
     const shipment = await createShipment.mutateAsync(mapShipmentFormToCreateRequest(values));
 
-    toast.success('Shipment created. The order has been advanced to Shipped.');
+    if (shipment.bookingStatus === 'UNKNOWN' || shipment.bookingStatus === 'PENDING') {
+      toast.warning('Shipment record created, but carrier booking is not confirmed. Reconcile its status before retrying.');
+    } else {
+      toast.success('Shipment created.');
+    }
     navigate(routes.shipments.detail(shipment.id));
   };
 
@@ -56,6 +62,8 @@ export function CreateShipmentPage() {
               defaultOrderId={orderId}
               order={order}
               orderLoading={orderLoading}
+              orderError={orderError}
+              onRetryOrder={() => void refetchOrder()}
               isSubmitting={createShipment.isPending}
               onSubmit={handleSubmit}
               onCancel={() => navigate(routes.shipments.list)}

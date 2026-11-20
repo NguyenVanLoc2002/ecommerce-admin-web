@@ -17,6 +17,7 @@ import {
   type CreateShipmentFormValues,
 } from '../schemas/createShipmentSchema';
 import type { ShipmentOrderReference } from '../types/shipment.types';
+import { getOrderShipmentEligibilityMessage } from '@/shared/utils/orderShipmentEligibility';
 
 const DEFAULT_VALUES: CreateShipmentFormValues = {
   orderId: '',
@@ -39,6 +40,8 @@ interface CreateShipmentFormProps {
   defaultOrderId?: string;
   order?: ShipmentOrderReference;
   orderLoading?: boolean;
+  orderError?: boolean;
+  onRetryOrder?: () => void;
   isSubmitting: boolean;
   onSubmit: (values: CreateShipmentFormValues) => Promise<void>;
   onCancel: () => void;
@@ -81,6 +84,8 @@ export function CreateShipmentForm({
   defaultOrderId,
   order,
   orderLoading = false,
+  orderError = false,
+  onRetryOrder,
   isSubmitting,
   onSubmit,
   onCancel,
@@ -122,6 +127,9 @@ export function CreateShipmentForm({
   const carrierOptions = carrierOptionsData?.items ?? [];
   const selectedCarrier = carrierOptions.find((carrier) => carrier.id === selectedCarrierId);
   const rootError = errors.root?.server?.message;
+  const eligibilityMessage = order ? getOrderShipmentEligibilityMessage(order) : null;
+  const orderUnavailable = Boolean(defaultOrderId) && (!order || orderError);
+  const cannotSubmit = isSubmitting || orderLoading || orderUnavailable || Boolean(eligibilityMessage);
 
   useBeforeUnload(form.formState.isDirty, 'Leave without creating the shipment?');
 
@@ -150,7 +158,7 @@ export function CreateShipmentForm({
               ? 'orderSnapshot'
               : 'manual',
     });
-  }, [defaultOrderId, form, hasOrderCarrierSnapshot, order?.carrierId, reset]);
+  }, [defaultOrderId, form, hasOrderCarrierSnapshot, order?.carrierId, order?.carrierName, reset]);
 
   const handleSubmit = form.handleSubmit(async (values) => {
     clearErrors();
@@ -191,6 +199,22 @@ export function CreateShipmentForm({
           {rootError && (
             <div className="rounded-md border border-danger-200 bg-danger-50 px-4 py-3 text-sm text-danger-700">
               {rootError}
+            </div>
+          )}
+
+          {orderUnavailable && !orderLoading && (
+            <div className="rounded-md border border-warning-200 bg-warning-50 px-4 py-3 text-sm text-warning-800" role="alert">
+              The order could not be loaded. Retry loading it before creating a shipment.
+              {orderError && (
+                <Button className="ml-3" size="sm" variant="secondary" type="button" onClick={onRetryOrder}>
+                  Retry
+                </Button>
+              )}
+            </div>
+          )}
+          {eligibilityMessage && (
+            <div className="rounded-md border border-warning-200 bg-warning-50 px-4 py-3 text-sm text-warning-800" role="status">
+              {eligibilityMessage}
             </div>
           )}
 
@@ -423,7 +447,7 @@ export function CreateShipmentForm({
             >
               Cancel
             </Button>
-            <Button type="submit" isLoading={isSubmitting}>
+            <Button type="submit" isLoading={isSubmitting} disabled={cannotSubmit}>
               {isSubmitting ? 'Creating...' : 'Create Shipment'}
             </Button>
           </div>

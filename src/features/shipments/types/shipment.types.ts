@@ -1,5 +1,11 @@
 import type { PaginationParams, EntityId } from '@/shared/types/api.types';
-import type { CarrierProviderType, ShipmentStatus } from '@/shared/types/enums';
+import type {
+  CarrierProviderType,
+  OrderPaymentStatus,
+  OrderStatus,
+  PaymentMethod,
+  ShipmentStatus,
+} from '@/shared/types/enums';
 
 export type BookingAttemptStatus = 'PENDING' | 'SUCCEEDED' | 'FAILED_FINAL' | 'UNKNOWN' | 'INTERNAL_ONLY';
 export type CarrierOverrideReason =
@@ -40,6 +46,9 @@ export interface ShipmentCustomer {
 export interface ShipmentOrderReference {
   id: EntityId;
   orderCode: string;
+  status: OrderStatus;
+  paymentMethod: PaymentMethod;
+  paymentStatus: OrderPaymentStatus | null;
   carrierId: EntityId | null;
   carrierCode: string | null;
   carrierName: string | null;
