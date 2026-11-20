@@ -1,8 +1,11 @@
 import { Truck } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { Button } from '@/shared/components/ui/Button';
 import { Badge } from '@/shared/components/ui/Badge';
 import { formatMoney } from '@/shared/utils/formatMoney';
 import { formatEnumLabel } from '@/shared/utils/formatEnumLabel';
+import { getOrderShipmentEligibilityMessage } from '@/shared/utils/orderShipmentEligibility';
+import { routes } from '@/constants/routes';
 import type { Order } from '../types/order.types';
 
 interface OrderCarrierSnapshotCardProps {
@@ -15,6 +18,7 @@ export function OrderCarrierSnapshotCard({
   onCreateShipment,
 }: OrderCarrierSnapshotCardProps) {
   const hasSnapshot = Boolean(order.carrierId || order.carrierName);
+  const eligibilityMessage = getOrderShipmentEligibilityMessage(order);
 
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-4 space-y-3">
@@ -59,9 +63,16 @@ export function OrderCarrierSnapshotCard({
         </div>
       )}
 
-      <Button className="w-full" onClick={onCreateShipment}>
+      <Button className="w-full" onClick={onCreateShipment} disabled={Boolean(eligibilityMessage)}>
         {hasSnapshot ? 'Create shipment with checkout carrier' : 'Create shipment'}
       </Button>
+      {eligibilityMessage && <p className="text-xs text-warning-700" role="status">{eligibilityMessage}</p>}
+      <Link
+        className="block text-center text-xs font-medium text-primary-700 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+        to={`${routes.shipments.list}?orderId=${encodeURIComponent(String(order.id))}`}
+      >
+        View shipment operations
+      </Link>
     </div>
   );
 }
