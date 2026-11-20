@@ -1,7 +1,9 @@
 import { CreditCard } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { StatusBadge } from '@/shared/components/ui/StatusBadge';
 import { formatMoney } from '@/shared/utils/formatMoney';
 import type { PaymentMethod, OrderPaymentStatus } from '@/shared/types/enums';
+import { routes } from '@/constants/routes';
 
 const PAYMENT_METHOD_LABEL: Record<string, string> = {
   COD: 'Cash on Delivery',
@@ -16,12 +18,14 @@ interface OrderPaymentSummaryProps {
   paymentMethod: PaymentMethod;
   paymentStatus: OrderPaymentStatus | null;
   totalAmount: number;
+  orderCode: string;
 }
 
 export function OrderPaymentSummary({
   paymentMethod,
   paymentStatus,
   totalAmount,
+  orderCode,
 }: OrderPaymentSummaryProps) {
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-4 space-y-3">
@@ -50,6 +54,12 @@ export function OrderPaymentSummary({
           <span className="text-sm font-semibold text-gray-900">{formatMoney(totalAmount)}</span>
         </div>
       </div>
+      <Link
+        className="block text-right text-xs font-medium text-primary-700 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+        to={`${routes.payments.list}?orderCode=${encodeURIComponent(orderCode)}`}
+      >
+        View payment records
+      </Link>
     </div>
   );
 }

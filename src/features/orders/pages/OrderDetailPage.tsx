@@ -18,6 +18,8 @@ import { OrderActionPanel } from '../components/OrderActionPanel';
 import { OrderAddressCard } from '../components/OrderAddressCard';
 import { OrderItemsTable } from '../components/OrderItemsTable';
 import { OrderPaymentSummary } from '../components/OrderPaymentSummary';
+import { OrderShipmentPanel } from '@/features/shipments';
+import { useOrders } from '../hooks/useOrders';
 
 export function OrderDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -26,6 +28,18 @@ export function OrderDetailPage() {
   const [copied, setCopied] = useState(false);
 
   const { data: order, isLoading, isError, refetch } = useOrder(orderId);
+  const {
+    data: summaries,
+    isLoading: attentionLoading,
+    isError: attentionError,
+    refetch: refetchAttention,
+  } = useOrders({
+    page: 0,
+    size: 20,
+    sort: 'createdAt,desc',
+    keyword: order?.orderCode,
+  }, Boolean(order?.orderCode));
+  const orderSummary = summaries?.items.find((item) => item.id === orderId);
 
   useBreadcrumbLabel(
     routes.orders.detail(orderId),
@@ -89,6 +103,32 @@ export function OrderDetailPage() {
               <OrderStatusStepper status={order.status} />
             </div>
 
+            {(attentionLoading || attentionError || orderSummary?.attention) && (
+              <section
+                className={`rounded-lg border px-4 py-3 ${attentionError ? 'border-danger-200 bg-danger-50' : 'border-warning-200 bg-warning-50'}`}
+                aria-label="Order attention"
+                role={attentionError ? 'alert' : 'status'}
+              >
+                <p className={`text-xs font-semibold uppercase tracking-wide ${attentionError ? 'text-danger-800' : 'text-warning-800'}`}>
+                  {attentionLoading
+                    ? 'Checking order attention'
+                    : attentionError
+                      ? 'Order attention unavailable'
+                      : orderSummary?.attention?.replace(/_/g, ' ')}
+                </p>
+                {orderSummary?.attentionReason && (
+                  <p className={`mt-1 text-sm ${attentionError ? 'text-danger-900' : 'text-warning-900'}`}>
+                    {orderSummary.attentionReason}
+                  </p>
+                )}
+                {attentionError && (
+                  <Button className="mt-2" size="sm" variant="secondary" onClick={() => void refetchAttention()}>
+                    Retry attention check
+                  </Button>
+                )}
+              </section>
+            )}
+
             <section className="rounded-lg border border-gray-200 bg-white px-6 py-4" aria-label="Customer identity">
               <p className="text-xs font-medium uppercase tracking-wide text-gray-400">Customer at checkout</p>
               {order.customerSnapshotAvailable ? (
@@ -148,6 +188,7 @@ export function OrderDetailPage() {
                   paymentMethod={order.paymentMethod}
                   paymentStatus={order.paymentStatus}
                   totalAmount={order.totalAmount}
+                  orderCode={order.orderCode}
                 />
                 <OrderCarrierSnapshotCard
                   order={order}
@@ -155,6 +196,7 @@ export function OrderDetailPage() {
                 />
               </div>
             </div>
+            <OrderShipmentPanel orderId={order.id} shippingFee={order.shippingFee} />
           </div>
         )}
       </div>
