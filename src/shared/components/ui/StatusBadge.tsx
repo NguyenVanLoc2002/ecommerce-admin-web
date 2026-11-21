@@ -63,6 +63,8 @@ const shipmentStatusMap: Record<ShipmentStatus, { label: string; variant: BadgeV
 const invoiceStatusMap: Record<InvoiceStatus, { label: string; variant: BadgeVariant }> = {
   ISSUED: { label: 'Issued', variant: 'info' },
   PAID: { label: 'Paid', variant: 'success' },
+  PARTIALLY_REFUNDED: { label: 'Partially refunded', variant: 'warning' },
+  REFUNDED: { label: 'Refunded', variant: 'danger' },
   VOIDED: { label: 'Voided', variant: 'danger' },
 };
 

@@ -57,6 +57,8 @@ export type ShipmentStatus = (typeof ShipmentStatus)[keyof typeof ShipmentStatus
 export const InvoiceStatus = {
   ISSUED: 'ISSUED',
   PAID: 'PAID',
+  PARTIALLY_REFUNDED: 'PARTIALLY_REFUNDED',
+  REFUNDED: 'REFUNDED',
   VOIDED: 'VOIDED',
 } as const;
 export type InvoiceStatus = (typeof InvoiceStatus)[keyof typeof InvoiceStatus];

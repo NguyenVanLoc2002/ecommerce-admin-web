@@ -16,11 +16,10 @@ import {
   getPhase3AdminErrorMessage,
   isConcurrencyErrorCode,
 } from '@/shared/utils/adminPhase3Errors';
-import { InvoiceStatusUpdateModal } from '../components/InvoiceStatusUpdateModal';
+import { VoidInvoiceModal } from '../components/VoidInvoiceModal';
 import { InvoiceView } from '../components/InvoiceView';
 import { useInvoice } from '../hooks/useInvoice';
 import { useUpdateInvoiceStatus } from '../hooks/useUpdateInvoiceStatus';
-import type { UpdateInvoiceStatusFormValues } from '../schemas/updateInvoiceStatusSchema';
 
 export function InvoicePage() {
   const { id } = useParams<{ id: string }>();
@@ -37,14 +36,14 @@ export function InvoicePage() {
     isLoading ? 'Loading...' : (invoice?.invoiceCode ?? 'Not found'),
   );
 
-  const handleStatusUpdate = async (values: UpdateInvoiceStatusFormValues) => {
+  const handleStatusUpdate = async (note: string) => {
     if (updateInvoiceStatus.isPending) {
       return;
     }
 
     try {
-      await updateInvoiceStatus.mutateAsync(values);
-      toast.success('Invoice status updated.');
+      await updateInvoiceStatus.mutateAsync({ status: 'VOIDED', notes: note });
+      toast.success('Invoice voided.');
       setStatusModalOpen(false);
     } catch (error) {
       if (error instanceof AppError) {
@@ -137,13 +136,6 @@ export function InvoicePage() {
             actions={
               <>
                 <CopyValueButton value={invoice.id} label="Copy ID" />
-                <Button
-                  size="sm"
-                  disabled={updateInvoiceStatus.isPending}
-                  onClick={() => setStatusModalOpen(true)}
-                >
-                  Update Status
-                </Button>
               </>
             }
           />
@@ -156,13 +148,11 @@ export function InvoicePage() {
         />
       </div>
 
-      <InvoiceStatusUpdateModal
+      <VoidInvoiceModal
         open={statusModalOpen}
         onClose={() => setStatusModalOpen(false)}
-        currentStatus={invoice.status}
-        currentNotes={invoice.notes}
         isSubmitting={updateInvoiceStatus.isPending}
-        onSubmit={(values) => void handleStatusUpdate(values)}
+        onSubmit={(note) => void handleStatusUpdate(note)}
       />
     </AdminLayout>
   );

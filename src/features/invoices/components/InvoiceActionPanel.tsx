@@ -21,14 +21,16 @@ export function InvoiceActionPanel({
         <StatusBadge type="invoice" status={status} />
       </div>
 
-      <Button
-        size="sm"
-        leftIcon={<PencilLine className="h-4 w-4" />}
-        isLoading={isUpdatingStatus}
-        onClick={onUpdateStatus}
-      >
-        Update status
-      </Button>
+      {status === 'ISSUED' ? (
+        <Button
+          size="sm"
+          leftIcon={<PencilLine className="h-4 w-4" />}
+          isLoading={isUpdatingStatus}
+          onClick={onUpdateStatus}
+        >
+          Void invoice
+        </Button>
+      ) : null}
     </div>
   );
 }
