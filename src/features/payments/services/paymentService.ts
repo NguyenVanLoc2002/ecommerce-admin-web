@@ -103,6 +103,7 @@ function normalizePaymentTransaction(input: unknown, paymentId: EntityId): Payme
     status: asString(record.status),
     gatewayRef: asNullableString(record.gatewayRef ?? record.providerTxnId),
     note: asNullableString(record.note),
+    referenceType: asNullableString(record.referenceType),
     createdAt: asString(record.createdAt),
   };
 }

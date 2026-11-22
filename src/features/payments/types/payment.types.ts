@@ -47,6 +47,7 @@ export interface PaymentTransaction {
   status: string;
   gatewayRef: string | null;
   note: string | null;
+  referenceType: string | null;
   createdAt: string;
 }
 
