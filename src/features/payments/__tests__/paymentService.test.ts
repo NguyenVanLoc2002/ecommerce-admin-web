@@ -49,6 +49,21 @@ describe('paymentService', () => {
     expect(getMock).toHaveBeenCalledWith('/admin/payments/integration/paypal');
   });
 
+  it('preserves late payment reconciliation marker in transaction history', async () => {
+    getMock.mockResolvedValueOnce([{
+      id: 'transaction-1',
+      status: 'SUCCESS',
+      amount: 100,
+      referenceType: 'LATE_SUCCESS_AFTER_CANCEL',
+      note: 'Admin refund required',
+    }]);
+
+    const transactions = await paymentService.getTransactions('payment-1');
+
+    expect(transactions[0]?.referenceType).toBe('LATE_SUCCESS_AFTER_CANCEL');
+    expect(transactions[0]?.note).toBe('Admin refund required');
+  });
+
   it('saves the PayPal integration payload with advanced sandbox settings', async () => {
     await paymentService.updatePaypalIntegration({
       environment: 'sandbox',

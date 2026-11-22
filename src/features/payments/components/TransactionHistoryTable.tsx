@@ -29,7 +29,7 @@ function titleCase(value: string): string {
   return value
     .toLowerCase()
     .split(/[_\s]+/)
-    .map((p) => (p ? p[0]!.toUpperCase() + p.slice(1) : ''))
+    .map((p) => (p ? p[0].toUpperCase() + p.slice(1) : ''))
     .join(' ');
 }
 
@@ -85,7 +85,14 @@ export function TransactionHistoryTable({
         <tbody className="divide-y divide-gray-50">
           {transactions.map((tx) => (
             <tr key={tx.id}>
-              <td className="py-2.5 pr-4 text-sm font-semibold text-gray-800">{titleCase(tx.type)}</td>
+              <td className="py-2.5 pr-4 text-sm font-semibold text-gray-800">
+                {tx.referenceType === 'LATE_SUCCESS_AFTER_CANCEL' ? 'Refund required' : titleCase(tx.type)}
+                {tx.referenceType === 'LATE_SUCCESS_AFTER_CANCEL' && (
+                  <p className="mt-1 text-xs font-normal text-warning-800">
+                    Payment received after cancellation. Reconcile and refund manually.
+                  </p>
+                )}
+              </td>
               <td className="py-2.5 pr-4 text-right text-sm font-semibold tabular-nums text-gray-900">
                 {formatMoney(tx.amount)}
               </td>

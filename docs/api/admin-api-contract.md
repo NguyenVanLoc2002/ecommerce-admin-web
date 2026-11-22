@@ -1023,6 +1023,7 @@ Carrier catalog and per-store carrier configuration used by shipment creation.
 - Status transition note:
   - `PENDING -> CONFIRMED`
   - `AWAITING_PAYMENT -> CONFIRMED`
+  - `REFUND_REQUIRED` attention on a cancelled but paid order requires Admin reconciliation and a manual refund; payment transaction history marks late success.
   - online orders must already be paid
 - Response:
   - `ApiResponse<OrderResponse>`

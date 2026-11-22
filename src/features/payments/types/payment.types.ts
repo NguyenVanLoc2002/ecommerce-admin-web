@@ -47,6 +47,7 @@ export interface PaymentTransaction {
   status: string;
   gatewayRef: string | null;
   note: string | null;
+  referenceType: string | null;
   createdAt: string;
 }
 
@@ -59,7 +60,7 @@ export interface PaymentListParams extends PaginationParams {
 }
 
 export interface MomoPaymentIntegration {
-  provider: 'MOMO' | string;
+  provider: string;
   managedInDatabase: boolean;
   enabled: boolean;
   environment: string | null;
@@ -91,7 +92,7 @@ export interface UpdateMomoPaymentIntegrationRequest {
 }
 
 export interface PaypalPaymentIntegration {
-  provider: 'PAYPAL' | string;
+  provider: string;
   managedInDatabase: boolean;
   enabled: boolean;
   environment: string | null;
