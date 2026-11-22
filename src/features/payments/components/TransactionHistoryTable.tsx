@@ -29,7 +29,7 @@ function titleCase(value: string): string {
   return value
     .toLowerCase()
     .split(/[_\s]+/)
-    .map((p) => (p ? p[0]!.toUpperCase() + p.slice(1) : ''))
+    .map((p) => (p ? p[0].toUpperCase() + p.slice(1) : ''))
     .join(' ');
 }
 
