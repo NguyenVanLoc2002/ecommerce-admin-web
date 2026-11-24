@@ -1064,6 +1064,28 @@ Carrier catalog and per-store carrier configuration used by shipment creation.
 
 ---
 
+### Returns and exchanges
+
+Backend contract confirmed against [backend PR #80](https://github.com/NguyenVanLoc2002/ecommerce-backend/pull/80). Return state is separate from the order, forward shipment, and payment status.
+
+- Product and category create/update accept optional `returnPolicy` values `STANDARD`, `SEALED_ONLY`, `REVIEW_REQUIRED`, and `CUSTOMIZED_FINAL_SALE`. Checkout snapshots the strictest configured policy across the product and its non-deleted categories.
+- Return actions require `ADMIN` or `SUPER_ADMIN`. Paths below are relative to `/api/v1/admin/orders/{orderId}/returns/{returnId}`.
+
+| POST path | Request and outcome |
+| --- | --- |
+| `/verify-delivery` | `reason` and `deliveredAt` in UTC. Checks the 14-day window against the original request time. |
+| `/approve`, `/reject` | `reason`. Records an audited decision. |
+| `/receive` | `note`, received `items` with `orderItemId` and `quantity`, and optional `carrier`, `trackingNumber`, `trackingAt`, `evidenceReference`. |
+| `/inspect` | `note` and a disposition for each received line using `quantity`, `restock`, and `damaged`. Supply `warehouseId` when restocking. |
+| `/exchanges` | `orderItemId`, `variantId`, `warehouseId`, `quantity`, and optional `historicalPriceEvidence`. Uses checkout price evidence and holds inventory for 48 hours. |
+| `/exchanges/{exchangeId}/cancel` | Releases the reservation. |
+| `/exchanges/{exchangeId}/replacement` | Creates a linked replacement after inspection from a valid hold. Returns the same replacement on replay. |
+| `/refund` | Prepares a `PENDING` partial refund after inspection, reserves the amount against the original payment, and returns the existing refund on replay. |
+
+Send `Idempotency-Key` for decisions, receipt, inspection, and creating an exchange reservation. Reservation responses include `PRICE_REVIEW_REQUIRED`, `DIFFERENT_PRICE`, `WAITING_CUSTOMER_CHOICE`, `RESERVED`, and `HOLD_EXPIRED`. A replacement order exposes `replacementForOrderId` in detail, uses `EXCHANGE` and `NOT_REQUIRED`, and has no separate payment or sales invoice.
+
+Return refund preparation uses saved net line values. Original shipping is included for a single full-order shop-fault return. `RETURN_REFUND_REVIEW_REQUIRED` identifies insufficient historical allocation data. PayPal confirmation, COD maker-checker, and historical reconciliation are pending. The legacy refund-completion API rejects refunds linked to a Return.
+
 ## 8. Payment
 
 ### DTOs
@@ -1205,7 +1227,7 @@ Carrier catalog and per-store carrier configuration used by shipment creation.
 ### POST `/api/v1/admin/payments/refunds/{refundCode}/complete`
 
 - Access: `ADMIN`, `SUPER_ADMIN`
-- Description: mark a pending refund as completed after funds are confirmed transferred. Repeating the operation for an already-completed refund is idempotent.
+- Description: mark a pending refund as completed after funds are confirmed transferred. Repeating the operation for an already-completed legacy refund is idempotent. Refunds linked to a Return are rejected by this endpoint.
 - Request params:
   - `providerRefundId`: optional string
 - Response:
