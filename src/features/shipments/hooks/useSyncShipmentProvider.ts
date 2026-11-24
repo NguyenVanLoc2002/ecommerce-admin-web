@@ -12,6 +12,7 @@ export function useSyncShipmentProvider(shipmentId: string) {
       void queryClient.invalidateQueries({ queryKey: queryKeys.shipments.byOrder(shipment.orderId) });
       void queryClient.invalidateQueries({ queryKey: queryKeys.shipments.lists() });
       void queryClient.invalidateQueries({ queryKey: queryKeys.orders.detail(shipment.orderId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.orders.lists() });
     },
   });
 }

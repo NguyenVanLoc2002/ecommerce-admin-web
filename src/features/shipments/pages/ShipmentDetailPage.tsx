@@ -108,8 +108,12 @@ export function ShipmentDetailPage() {
     }
 
     try {
-      await syncProvider.mutateAsync();
-      toast.success('Shipment provider status synced.');
+      const result = await syncProvider.mutateAsync();
+      if (result.status === 'FAILED' || result.status === 'RETURNED') {
+        toast.warning(`Carrier check complete. Shipment status: ${result.status.toLowerCase()}.`);
+      } else {
+        toast.success('Shipment provider status checked.');
+      }
     } catch (error) {
       if (error instanceof AppError) {
         toast.error(getPhase3AdminErrorMessage(error, 'Failed to sync provider shipment.'));
@@ -148,8 +152,10 @@ export function ShipmentDetailPage() {
         toast.warning('Cancellation is awaiting reconciliation. The order has not been marked cancelled.');
       } else if (operation.status === 'REJECTED') {
         toast.error('The provider did not confirm cancellation. The order remains active.');
-      } else {
+      } else if (operation.orderStatus === 'CANCELLED') {
         toast.success('Shipment and order cancellation confirmed.');
+      } else {
+        toast.warning('Carrier cancellation was confirmed. Check the linked order for its current status.');
       }
       setCancelProviderOpen(false);
     } catch (error) {

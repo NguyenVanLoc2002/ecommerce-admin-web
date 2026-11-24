@@ -38,18 +38,20 @@ export function ShipmentDetail({
     shipment.carrierId !== null &&
     shipment.carrierProviderType !== null &&
     shipment.carrierProviderType !== 'MANUAL';
-  const canRequestProviderCancellation = isProviderBacked
+  const bookingNeedsReconciliation = shipment.bookingStatus === 'PENDING' || shipment.bookingStatus === 'UNKNOWN';
+  const canSyncProvider = isProviderBacked && !bookingNeedsReconciliation && Boolean(shipment.carrierShipmentId?.trim());
+  const canRequestProviderCancellation = canReconcileBooking && isProviderBacked
     && (shipment.status === 'PENDING' || shipment.status === 'PICKING');
 
   return (
     <>
       {/* Status row */}
-      <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-4 py-3">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-gray-200 bg-white px-4 py-3">
         <div className="flex items-center gap-3">
           <span className="text-sm text-gray-500">Current status</span>
           <StatusBadge type="shipment" status={shipment.status} />
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Button
             size="sm"
             variant="secondary"
@@ -67,7 +69,7 @@ export function ShipmentDetail({
               Update Status
             </Button>
           )}
-          {canRequestProviderCancellation && (
+          {canSyncProvider && (
             <Button
               size="sm"
               variant="secondary"
@@ -79,8 +81,7 @@ export function ShipmentDetail({
               Sync Provider
             </Button>
           )}
-          {isProviderBacked && canReconcileBooking
-            && (shipment.bookingStatus === 'PENDING' || shipment.bookingStatus === 'UNKNOWN') && (
+          {isProviderBacked && canReconcileBooking && bookingNeedsReconciliation && (
               <Button
                 size="sm"
                 variant="secondary"
@@ -92,7 +93,7 @@ export function ShipmentDetail({
                 Check Booking
               </Button>
             )}
-          {isProviderBacked && (
+          {canRequestProviderCancellation && !bookingNeedsReconciliation && (
             <Button
               size="sm"
               variant="danger"

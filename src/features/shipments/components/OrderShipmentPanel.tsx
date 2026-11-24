@@ -38,13 +38,23 @@ export function OrderShipmentPanel({ orderId, shippingFee }: { orderId: string; 
           className="text-xs font-medium text-primary-700 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
           to={routes.shipments.detail(shipment.id)}
         >
-          Open shipment details
+          {shipment.status === 'FAILED' || shipment.status === 'RETURNED'
+            ? 'Review shipment exception'
+            : 'Open shipment details'}
         </Link>
       </div>
 
       {shipment.bookingStatus === 'UNKNOWN' || shipment.bookingStatus === 'PENDING' ? (
         <p className="mt-3 rounded-md border border-warning-200 bg-warning-50 px-3 py-2 text-xs text-warning-800" role="status">
           Carrier booking is {shipment.bookingStatus.toLowerCase()}. Reconcile this shipment before attempting another booking.
+        </p>
+      ) : null}
+
+      {shipment.status === 'FAILED' || shipment.status === 'RETURNED' ? (
+        <p className="mt-3 rounded-md border border-warning-200 bg-warning-50 px-3 py-2 text-xs text-warning-800" role="status">
+          {shipment.status === 'FAILED'
+            ? 'Delivery failed. Review shipment events and check the carrier outcome.'
+            : 'The carrier shipment was returned. Review shipment events for the return details.'}
         </p>
       ) : null}
 
