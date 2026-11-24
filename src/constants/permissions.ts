@@ -30,6 +30,7 @@ export const permissions = {
     delete: ['ADMIN', 'SUPER_ADMIN'] as const,
   },
   orders: {
+    returns: ['ADMIN', 'SUPER_ADMIN'] as const,
     read: ['STAFF', 'ADMIN', 'SUPER_ADMIN'] as const,
     write: ['STAFF', 'ADMIN', 'SUPER_ADMIN'] as const,
   },

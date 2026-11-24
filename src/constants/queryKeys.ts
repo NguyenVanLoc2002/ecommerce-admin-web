@@ -98,6 +98,8 @@ export const queryKeys = {
   // ── Phase 7: Orders ─────────────────────────────────────────────────────
   orders: {
     all: ['orders'] as const,
+    returnLists: () => [...queryKeys.orders.all, 'returns'] as const,
+    returns: (params: object) => [...queryKeys.orders.returnLists(), params] as const,
     lists: () => [...queryKeys.orders.all, 'list'] as const,
     list: (params: object) =>
       [...queryKeys.orders.lists(), cleanParams(params)] as const,

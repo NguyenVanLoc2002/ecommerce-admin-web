@@ -60,6 +60,7 @@ export const routes = {
   },
 
   orders: {
+    returns: '/orders/returns',
     list: '/orders',
     detail: (id: EntityKey) => `/orders/${id}`,
   },

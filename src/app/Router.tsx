@@ -10,7 +10,7 @@ import { CategoryEditPage, CategoryListPage } from '@/features/categories';
 import { BrandListPage } from '@/features/brands';
 import { CarrierListPage, ShippingProviderDetailPage } from '@/features/carriers';
 import { WarehouseEditPage, WarehouseListPage, StockPage, ReservationListPage } from '@/features/inventory';
-import { OrderListPage, OrderDetailPage } from '@/features/orders';
+import { OrderListPage, OrderDetailPage, OrderReturnsPage } from '@/features/orders';
 import { ShipmentListPage, ShipmentDetailPage, CreateShipmentPage } from '@/features/shipments';
 import {
   PaymentListPage,
@@ -120,6 +120,9 @@ export function Router() {
           <Route path={routes.inventory.stock} element={<StockPage />} />
           <Route path={routes.inventory.reservations} element={<ReservationListPage />} />
 
+          <Route element={<RoleGuard required={['ADMIN', 'SUPER_ADMIN']} />}>
+            <Route path={routes.orders.returns} element={<OrderReturnsPage />} />
+          </Route>
           <Route path={routes.orders.list} element={<OrderListPage />} />
           <Route path={routes.orders.detail(':id')} element={<OrderDetailPage />} />
 
