@@ -1,4 +1,7 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { routes } from '@/constants/routes';
+import { usePermission } from '@/constants/permissions';
 import { AdminLayout } from '@/shared/components/layout/AdminLayout';
 import { PageHeader } from '@/shared/components/layout/PageHeader';
 import { useTableFilters } from '@/shared/hooks/useTableFilters';
@@ -25,6 +28,7 @@ const DEFAULT_FILTERS: OrderListParams = {
 };
 
 export function OrderListPage() {
+  const canViewReturns = usePermission('orders', 'returns');
   const [filters, setFilters, resetFilters] = useTableFilters<OrderListParams>(DEFAULT_FILTERS);
   const sort = parseSortParam(filters.sort);
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -49,6 +53,7 @@ export function OrderListPage() {
       <div className="space-y-6 p-6">
         <PageHeader
           title="Orders"
+          actions={canViewReturns ? <Link className="text-primary-700 underline" to={routes.orders.returns}>Return requests</Link> : undefined}
           description="Search orders and review payment and fulfillment status."
         />
 

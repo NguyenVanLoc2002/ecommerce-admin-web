@@ -11,6 +11,8 @@ import { EmptyState } from '@/shared/components/feedback/EmptyState';
 import { StatusBadge } from '@/shared/components/ui/StatusBadge';
 import { formatDateTime } from '@/shared/utils/formatDate';
 import { routes } from '@/constants/routes';
+import { usePermission } from '@/constants/permissions';
+import { OrderReturns } from '../components/OrderReturns';
 import { useOrder } from '../hooks/useOrder';
 import { OrderCarrierSnapshotCard } from '../components/OrderCarrierSnapshotCard';
 import { OrderStatusStepper } from '../components/OrderStatusStepper';
@@ -25,6 +27,8 @@ export function OrderDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const orderId = id ?? '';
+  const canViewReturns = usePermission('orders', 'returns');
+  const [returnPage, setReturnPage] = useState(0);
   const [copied, setCopied] = useState(false);
 
   const { data: order, isLoading, isError, refetch } = useOrder(orderId);
@@ -197,6 +201,12 @@ export function OrderDetailPage() {
               </div>
             </div>
             <OrderShipmentPanel orderId={order.id} shippingFee={order.shippingFee} />
+            {canViewReturns && (
+              <section className="rounded-lg border border-gray-200 bg-white p-5" aria-labelledby="order-returns-title">
+                <h2 id="order-returns-title" className="text-sm font-semibold">Return requests</h2>
+                <OrderReturns orderId={order.id} page={returnPage} onPageChange={setReturnPage} />
+              </section>
+            )}
           </div>
         )}
       </div>
