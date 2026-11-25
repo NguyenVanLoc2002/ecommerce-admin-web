@@ -1066,7 +1066,7 @@ Carrier catalog and per-store carrier configuration used by shipment creation.
 
 ### Returns and exchanges
 
-`GET /api/v1/admin/returns/{orderId}/{returnId}` returns the request, optional persisted receipt and inspection, and the linked refund when one exists. A pending refund is an amount reserved for settlement.
+`GET /api/v1/admin/returns/{orderId}/{returnId}` returns the request, optional persisted receipt and inspection, the linked refund when one exists, and persisted exchanges with the effective hold status. A pending refund is an amount reserved for settlement.
 
 `GET /api/v1/admin/returns` lists requests for `ADMIN` and `SUPER_ADMIN`. Optional filters are `status` and `orderId`. The response uses standard pagination and includes request ID, order ID, status, reason, note, creation timestamp, and requested item quantities.
 
@@ -1088,7 +1088,7 @@ Backend contract confirmed against [backend PR #80](https://github.com/NguyenVan
 
 Send `Idempotency-Key` for decisions, receipt, inspection, and creating an exchange reservation. Reservation responses include `PRICE_REVIEW_REQUIRED`, `DIFFERENT_PRICE`, `WAITING_CUSTOMER_CHOICE`, `RESERVED`, and `HOLD_EXPIRED`. A replacement order exposes `replacementForOrderId` in detail, uses `EXCHANGE` and `NOT_REQUIRED`, and has no separate payment or sales invoice.
 
-Return refund preparation uses saved net line values. Original shipping is included for a single full-order shop-fault return. `RETURN_REFUND_REVIEW_REQUIRED` identifies insufficient historical allocation data. PayPal confirmation, COD maker-checker, and historical reconciliation are pending. The legacy refund-completion API rejects refunds linked to a Return.
+Return refund preparation uses saved net line values. Original shipping is included for a single full-order shop-fault return. `RETURN_REFUND_REVIEW_REQUIRED` identifies insufficient historical allocation data. Use `/refund/paypal/verify` to verify a PayPal refund ID. Use `/refund/cod/evidence` to record a transfer reference and `/refund/cod/confirm` for confirmation by a different Admin. Pending outcomes do not settle the refund. Missing historical capture or conversion data requires reconciliation. The legacy refund-completion API rejects refunds linked to a Return.
 
 ## 8. Payment
 

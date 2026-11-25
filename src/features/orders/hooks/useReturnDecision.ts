@@ -7,8 +7,8 @@ export function useReturnDecision(entry: OrderReturn) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (request: { action: ReturnDecision; reason: string; key: string }) =>
-      decideOrderReturn(entry, request.action, request.reason, request.key),
+    mutationFn: (request: { action: ReturnDecision; reason: string; key: string; deliveredAt?: string }) =>
+      decideOrderReturn(entry, request.action, request.reason, request.key, request.deliveredAt),
     onSuccess: (result) => {
       toast.success(`Return status: ${result.status.toLowerCase().replace(/_/g, ' ')}.`);
     },
