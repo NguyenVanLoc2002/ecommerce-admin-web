@@ -43,7 +43,7 @@ describe('Return refund settlement', () => {
   });
 
   afterEach(async () => {
-    await act(async () => root.unmount());
+    await act(() => root.unmount());
     client.clear();
     useAuthStore.getState().clear();
     container.remove();
@@ -54,7 +54,7 @@ describe('Return refund settlement', () => {
     client.setQueryData(queryKeys.orders.returnDetail(request.id), {
       request, refund, receipt: null, inspection: null,
     } satisfies ReturnDetail);
-    await act(async () => root.render(
+    await act(() => root.render(
       <MemoryRouter>
         <QueryClientProvider client={client}><Screen /></QueryClientProvider>
       </MemoryRouter>,
@@ -66,7 +66,7 @@ describe('Return refund settlement', () => {
     if (!input?.form) throw new Error('Expected settlement form');
     const form = input.form;
     input.value = reference;
-    await act(async () => form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })));
+    await act(() => { form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })); });
   }
 
   it('keeps a pending PayPal result visible and only announces a confirmed server result', async () => {
@@ -94,7 +94,7 @@ describe('Return refund settlement', () => {
     await render(processing, 'checker@example.test');
     const button = [...container.querySelectorAll('button')].find((element) => element.textContent === 'Review and confirm transfer');
     if (!button) throw new Error('Expected checker confirmation');
-    await act(async () => button.click());
+    await act(() => button.click());
     await vi.waitFor(() => expect(container.textContent).toContain('Refund confirmed.'));
     expect(post).toHaveBeenNthCalledWith(1, '/admin/orders/order-1/returns/return-1/refund/cod/evidence',
       { reference: 'TRANSFER-1' });
