@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { apiClient } from '@/shared/lib/axios';
 import { decideOrderReturn, listOrderReturns, type OrderReturn } from '../services/orderReturnService';
 
-vi.mock('@/shared/lib/axios', () => ({ apiClient: { get: vi.fn(), post: vi.fn() } }));
+const mocks = vi.hoisted(() => ({ get: vi.fn(), post: vi.fn() }));
+vi.mock('@/shared/lib/axios', () => ({ apiClient: mocks }));
 
 describe('orderReturnService', () => {
   beforeEach(() => vi.clearAllMocks());
@@ -10,7 +10,7 @@ describe('orderReturnService', () => {
   it('sends queue filters and pagination to the admin returns endpoint', async () => {
     const filters = { orderId: 'order-1', status: 'REQUESTED', page: 1 } as const;
     await listOrderReturns(filters);
-    expect(apiClient.get).toHaveBeenCalledWith('/admin/returns', { params: filters });
+    expect(mocks.get).toHaveBeenCalledWith('/admin/returns', { params: filters });
   });
 
   it('sends the selected return, reason and retry key with a decision', async () => {
@@ -21,7 +21,7 @@ describe('orderReturnService', () => {
     };
 
     await decideOrderReturn(entry, 'approve', 'Verified defect', 'retry-key');
-    expect(apiClient.post).toHaveBeenCalledWith('/admin/orders/order-1/returns/return-1/approve',
+    expect(mocks.post).toHaveBeenCalledWith('/admin/orders/order-1/returns/return-1/approve',
       { reason: 'Verified defect' }, { headers: { 'Idempotency-Key': 'retry-key' } });
   });
 });
