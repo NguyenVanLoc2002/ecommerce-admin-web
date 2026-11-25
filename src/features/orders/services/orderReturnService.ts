@@ -18,10 +18,10 @@ export interface OrderReturn {
   items: { orderItemId: string; quantity: number }[];
 }
 
-export type ReturnDecision = 'approve' | 'reject';
+export type ReturnDecision = 'approve' | 'reject' | 'verify-delivery';
 
-export function decideOrderReturn(entry: OrderReturn, action: ReturnDecision, reason: string, key: string) {
-  return apiClient.post<OrderReturn>(`/admin/orders/${entry.orderId}/returns/${entry.id}/${action}`, { reason }, {
+export function decideOrderReturn(entry: OrderReturn, action: ReturnDecision, reason: string, key: string, deliveredAt?: string) {
+  return apiClient.post<OrderReturn>(`/admin/orders/${entry.orderId}/returns/${entry.id}/${action}`, { reason, ...(deliveredAt ? { deliveredAt } : {}) }, {
     headers: { 'Idempotency-Key': key },
   });
 }
@@ -48,7 +48,57 @@ export interface ReturnDetail {
   request: OrderReturn;
   receipt: ReturnHandling | null;
   inspection: ReturnHandling | null;
-  refund: { paymentId: string; refundCode: string; status: string; amount: number } | null;
+  exchanges?: ReturnExchange[];
+  refund: ReturnRefund | null;
+}
+
+export interface ReturnRefund {
+  paymentId: string;
+  refundCode: string;
+  status: string;
+  amount: number;
+  paymentMethod?: string;
+  settlementReference?: string | null;
+  settlementSubmittedBy?: string | null;
+}
+
+export type RefundSettlement =
+  | { action: 'paypal/verify' | 'cod/evidence'; reference: string }
+  | { action: 'cod/confirm' };
+
+export function settleReturnRefund(entry: OrderReturn, operation: RefundSettlement) {
+  return apiClient.post<ReturnRefund>(`/admin/orders/${entry.orderId}/returns/${entry.id}/refund/${operation.action}`,
+    'reference' in operation ? { reference: operation.reference } : undefined);
+}
+
+export interface ReturnExchange {
+  id: string;
+  orderItemId: string;
+  variantId: string;
+  quantity: number;
+  status: 'PRICE_REVIEW_REQUIRED' | 'DIFFERENT_PRICE' | 'WAITING_CUSTOMER_CHOICE' | 'RESERVED' | 'HOLD_EXPIRED' | 'REPLACEMENT_CREATED' | 'CANCELLED';
+  expiresAt: string | null;
+  replacementOrderId: string | null;
+}
+
+export interface ExchangeSelection {
+  orderItemId: string;
+  variantId: string;
+  warehouseId: string;
+  quantity: number;
+  historicalPriceEvidence?: string;
+}
+
+export type ExchangeOperation =
+  | { action: 'reserve'; selection: ExchangeSelection; key: string }
+  | { action: 'cancel' | 'replacement'; exchangeId: string };
+
+export function submitReturnExchange(entry: OrderReturn, operation: ExchangeOperation) {
+  const path = `/admin/orders/${entry.orderId}/returns/${entry.id}/exchanges`;
+  if (operation.action === 'reserve') {
+    return apiClient.post<ReturnExchange>(path, operation.selection, { headers: { 'Idempotency-Key': operation.key } });
+  }
+  return apiClient.post<ReturnExchange>(`${path}/${operation.exchangeId}/${operation.action}`);
 }
 
 export interface ReturnHandlingRequest extends ReturnHandling {

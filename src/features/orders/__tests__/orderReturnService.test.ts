@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { decideOrderReturn, getReturnDetail, listOrderReturns, submitReturnHandling, type OrderReturn } from '../services/orderReturnService';
+import { decideOrderReturn, getReturnDetail, listOrderReturns, submitReturnHandling, submitReturnExchange, type OrderReturn } from '../services/orderReturnService';
 
 const mocks = vi.hoisted(() => ({ get: vi.fn(), post: vi.fn() }));
 vi.mock('@/shared/lib/axios', () => ({ apiClient: mocks }));
@@ -23,6 +23,20 @@ describe('orderReturnService', () => {
     await decideOrderReturn(entry, 'approve', 'Verified defect', 'retry-key');
     expect(mocks.post).toHaveBeenCalledWith('/admin/orders/order-1/returns/return-1/approve',
       { reason: 'Verified defect' }, { headers: { 'Idempotency-Key': 'retry-key' } });
+  });
+
+  it('sends UTC delivery evidence and scopes replacement to the selected exchange', async () => {
+    const entry: OrderReturn = {
+      id: 'return-1', orderId: 'order-1', status: 'PENDING_DELIVERY_VERIFICATION',
+      createdAt: '2026-11-24T00:00:00Z', reason: 'DEFECTIVE', note: '', items: [],
+    };
+    await decideOrderReturn(entry, 'verify-delivery', 'Carrier delivery receipt', 'verify-key', '2026-11-23T10:00:00');
+    expect(mocks.post).toHaveBeenCalledWith('/admin/orders/order-1/returns/return-1/verify-delivery',
+      { reason: 'Carrier delivery receipt', deliveredAt: '2026-11-23T10:00:00' },
+      { headers: { 'Idempotency-Key': 'verify-key' } });
+
+    await submitReturnExchange(entry, { action: 'replacement', exchangeId: 'exchange-1' });
+    expect(mocks.post).toHaveBeenCalledWith('/admin/orders/order-1/returns/return-1/exchanges/exchange-1/replacement');
   });
 
   it('sends actual quantities for partial receipt and preserves the retry key', async () => {

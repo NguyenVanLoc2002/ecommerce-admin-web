@@ -1,8 +1,8 @@
 import { useRef, useState, type FormEvent } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Link } from 'react-router-dom';
 import { queryKeys } from '@/constants/queryKeys';
-import { routes } from '@/constants/routes';
+import { ReturnRefundSettlement } from './ReturnRefundSettlement';
+import { ReturnExchangePanel } from './ReturnExchangePanel';
 import { Button } from '@/shared/components/ui/Button';
 import { getReturnDetail, submitReturnHandling, type OrderReturn, type ReturnHandlingRequest } from '../services/orderReturnService';
 
@@ -44,6 +44,8 @@ function ReturnOperationDetails({ entry }: { entry: OrderReturn }) {
   const { request, receipt, inspection, refund } = detail.data;
   const isInspection = request.status === 'RECEIVED' && receipt !== null;
   const canReceive = request.status === 'APPROVED';
+  const exchangeBlocksRefund = detail.data.exchanges?.some((exchange) =>
+    exchange.status === 'RESERVED' || exchange.status === 'REPLACEMENT_CREATED');
   const lines = isInspection ? receipt.items : request.items;
 
   function submit(action: 'receive' | 'inspect' | 'refund', body?: ReturnHandlingRequest) {
@@ -90,11 +92,7 @@ function ReturnOperationDetails({ entry }: { entry: OrderReturn }) {
       </p>}
       {inspection && <p>Inspection recorded · {inspection.note} · {inspection.items.reduce((sum, line) => sum + line.restock, 0)} restocked
         {' · '}{inspection.items.reduce((sum, line) => sum + line.damaged, 0)} damaged</p>}
-      {refund && (
-        <p>Refund {refund.refundCode} · {refund.status.replace(/_/g, ' ')}
-          {' · '}<Link className="underline" to={routes.payments.detail(refund.paymentId)}>Payment details</Link>
-        </p>
-      )}
+      {refund && <ReturnRefundSettlement entry={request} refund={refund} />}
       {(canReceive || isInspection) && (
         <form key={request.status} className="space-y-2" onSubmit={handleSubmit}>
           {lines.map((line) => (
@@ -115,9 +113,10 @@ function ReturnOperationDetails({ entry }: { entry: OrderReturn }) {
           <Button type="submit" isLoading={mutation.isPending}>{isInspection ? 'Record inspection' : 'Record receipt'}</Button>
         </form>
       )}
-      {request.status === 'INSPECTED' && !refund && (
+      {request.status === 'INSPECTED' && !refund && !exchangeBlocksRefund && (
         <Button isLoading={mutation.isPending} onClick={() => submit('refund')}>Prepare pending refund</Button>
       )}
+      <ReturnExchangePanel detail={detail.data} />
       {mutation.isPending && <p role="status">Saving return operation…</p>}
       {mutation.isSuccess && <p role="status">Return operation saved.</p>}
       {validation && <p role="alert">{validation}</p>}
