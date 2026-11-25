@@ -1066,6 +1066,8 @@ Carrier catalog and per-store carrier configuration used by shipment creation.
 
 ### Returns and exchanges
 
+`GET /api/v1/admin/returns/{orderId}/{returnId}` returns the request, optional persisted receipt and inspection, and the linked refund when one exists. A pending refund is an amount reserved for settlement.
+
 `GET /api/v1/admin/returns` lists requests for `ADMIN` and `SUPER_ADMIN`. Optional filters are `status` and `orderId`. The response uses standard pagination and includes request ID, order ID, status, reason, note, creation timestamp, and requested item quantities.
 
 Backend contract confirmed against [backend PR #80](https://github.com/NguyenVanLoc2002/ecommerce-backend/pull/80). Return state is separate from the order, forward shipment, and payment status.

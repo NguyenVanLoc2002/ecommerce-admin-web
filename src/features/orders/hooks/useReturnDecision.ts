@@ -12,6 +12,11 @@ export function useReturnDecision(entry: OrderReturn) {
     onSuccess: (result) => {
       toast.success(`Return status: ${result.status.toLowerCase().replace(/_/g, ' ')}.`);
     },
-    onSettled: () => queryClient.invalidateQueries({ queryKey: queryKeys.orders.returnLists() }),
+    onSettled: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.orders.returnLists() }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.orders.returnDetail(entry.id) }),
+      ]);
+    },
   });
 }

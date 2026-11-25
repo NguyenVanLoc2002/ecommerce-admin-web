@@ -29,3 +29,40 @@ export function decideOrderReturn(entry: OrderReturn, action: ReturnDecision, re
 export function listOrderReturns(params: { orderId?: string; status?: ReturnStatus; page: number }) {
   return apiClient.get<PaginatedResponse<OrderReturn>>('/admin/returns', { params });
 }
+
+export interface ReturnHandlingLine {
+  orderItemId: string;
+  quantity: number;
+  restock: number;
+  damaged: number;
+}
+
+export interface ReturnHandling {
+  note: string;
+  carrier?: string;
+  trackingNumber?: string;
+  items: ReturnHandlingLine[];
+}
+
+export interface ReturnDetail {
+  request: OrderReturn;
+  receipt: ReturnHandling | null;
+  inspection: ReturnHandling | null;
+  refund: { paymentId: string; refundCode: string; status: string; amount: number } | null;
+}
+
+export interface ReturnHandlingRequest extends ReturnHandling {
+  warehouseId?: string;
+}
+
+export function getReturnDetail(entry: OrderReturn) {
+  return apiClient.get<ReturnDetail>(`/admin/returns/${entry.orderId}/${entry.id}`);
+}
+
+export function submitReturnHandling(
+  entry: OrderReturn, action: 'receive' | 'inspect' | 'refund', body: ReturnHandlingRequest | undefined, key: string,
+) {
+  return apiClient.post(`/admin/orders/${entry.orderId}/returns/${entry.id}/${action}`, body, {
+    headers: { 'Idempotency-Key': key },
+  });
+}

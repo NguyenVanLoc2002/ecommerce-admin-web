@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { routes } from '@/constants/routes';
 import { ErrorCard } from '@/shared/components/feedback/ErrorCard';
 import { Button } from '@/shared/components/ui/Button';
+import { ReturnOperations } from './ReturnOperations';
 import { ReturnDecisionForm } from './ReturnDecisionForm';
 import { useOrderReturns } from '../hooks/useOrderReturns';
 
@@ -36,6 +37,7 @@ export function OrderReturns({ orderId, status, page, onPageChange }: OrderRetur
                 <li key={item.orderItemId}>Item {item.orderItemId} · Requested quantity {item.quantity}</li>
               ))}
             </ul>
+            {orderId && <ReturnOperations entry={entry} />}
             {orderId && (entry.status === 'REQUESTED' || entry.status === 'PENDING_DELIVERY_VERIFICATION') && (
               <ReturnDecisionForm entry={entry} />
             )}
