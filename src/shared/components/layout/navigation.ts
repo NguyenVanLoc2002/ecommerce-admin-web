@@ -177,6 +177,18 @@ export const sidebarNavGroups: SidebarNavGroup[] = [
     label: 'Integrations',
     items: [
       {
+        label: 'Tuyến dự kiến giao hàng',
+        to: routes.deliveryRules,
+        icon: PackageCheck,
+        adminOnly: true,
+      },
+      {
+        label: 'Lịch vận hành',
+        to: routes.shippingCalendars,
+        icon: PackageCheck,
+        adminOnly: true,
+      },
+      {
         label: 'Shipping Policy',
         to: routes.shippingPolicy,
         icon: PackageCheck,

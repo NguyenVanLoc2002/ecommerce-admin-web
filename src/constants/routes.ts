@@ -44,6 +44,8 @@ export const routes = {
   },
 
   shippingPolicy: '/shipping-policy',
+  shippingCalendars: '/shipping-calendars',
+  deliveryRules: '/delivery-rules',
 
   carriers: {
     list: '/carriers',
