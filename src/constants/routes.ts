@@ -43,10 +43,6 @@ export const routes = {
     list: '/brands',
   },
 
-  shippingPolicy: '/shipping-policy',
-  shippingCalendars: '/shipping-calendars',
-  deliveryRules: '/delivery-rules',
-
   carriers: {
     list: '/carriers',
   },
@@ -62,6 +58,10 @@ export const routes = {
       detail: (providerCode: EntityKey) => `/integrations/payment-providers/${providerCode}`,
     },
   },
+
+  shippingPolicy: '/shipping-policy',
+  shippingCalendars: '/shipping-calendars',
+  deliveryRules: '/delivery-rules',
 
   warehouses: {
     list: '/warehouses',

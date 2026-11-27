@@ -13,7 +13,6 @@ import { SizeGuideListPage } from '@/features/size-guides/pages/SizeGuideListPag
 import { ProductAttributeEditPage, ProductAttributeListPage } from '@/features/product-attributes';
 import { CategoryEditPage, CategoryListPage } from '@/features/categories';
 import { BrandListPage } from '@/features/brands';
-import { ShippingPolicyPage } from '@/features/shipping-policy/ShippingPolicyPage';
 import { CarrierListPage, ShippingProviderDetailPage } from '@/features/carriers';
 import { WarehouseEditPage, WarehouseListPage, StockPage, ReservationListPage } from '@/features/inventory';
 import { OrderListPage, OrderDetailPage, OrderReturnsPage } from '@/features/orders';
@@ -31,6 +30,7 @@ import { ReviewModerationPage } from '@/features/reviews';
 import { UserListPage } from '@/features/users';
 import { CustomerListPage } from '@/features/customers';
 import { AuditLogPage } from '@/features/audit-log';
+import { ShippingPolicyPage } from '@/features/shipping-policy/ShippingPolicyPage';
 import { ForbiddenPage } from './pages/ForbiddenPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 
@@ -131,9 +131,6 @@ export function Router() {
           <Route path={routes.inventory.reservations} element={<ReservationListPage />} />
 
           <Route element={<RoleGuard required={['ADMIN', 'SUPER_ADMIN']} />}>
-            <Route path={routes.deliveryRules} element={<Suspense fallback={shippingConfigLoading}><DeliveryRulePage /></Suspense>} />
-            <Route path={routes.shippingCalendars} element={<Suspense fallback={shippingConfigLoading}><ShippingCalendarPage /></Suspense>} />
-            <Route path={routes.shippingPolicy} element={<ShippingPolicyPage />} />
             <Route path={routes.orders.returns} element={<OrderReturnsPage />} />
           </Route>
           <Route path={routes.orders.list} element={<OrderListPage />} />
@@ -171,6 +168,9 @@ export function Router() {
             <Route path={routes.productAttributes.list} element={<ProductAttributeListPage />} />
             <Route path={routes.productAttributes.create} element={<ProductAttributeEditPage />} />
             <Route path={routes.productAttributes.edit(':id')} element={<ProductAttributeEditPage />} />
+            <Route path={routes.deliveryRules} element={<Suspense fallback={shippingConfigLoading}><DeliveryRulePage /></Suspense>} />
+            <Route path={routes.shippingCalendars} element={<Suspense fallback={shippingConfigLoading}><ShippingCalendarPage /></Suspense>} />
+            <Route path={routes.shippingPolicy} element={<ShippingPolicyPage />} />
             <Route path={routes.promotions.list} element={<PromotionListPage />} />
             <Route path={routes.promotions.create} element={<PromotionEditPage />} />
             <Route path={routes.promotions.edit(':id')} element={<PromotionEditPage />} />
