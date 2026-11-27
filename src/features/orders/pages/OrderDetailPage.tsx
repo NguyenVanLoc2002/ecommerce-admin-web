@@ -20,6 +20,7 @@ import { OrderActionPanel } from '../components/OrderActionPanel';
 import { OrderAddressCard } from '../components/OrderAddressCard';
 import { OrderItemsTable } from '../components/OrderItemsTable';
 import { OrderPaymentSummary } from '../components/OrderPaymentSummary';
+import { OrderTaxSnapshots } from '@/features/tax/OrderTaxSnapshots';
 import { OrderShipmentPanel } from '@/features/shipments';
 import { useOrders } from '../hooks/useOrders';
 
@@ -28,6 +29,7 @@ export function OrderDetailPage() {
   const navigate = useNavigate();
   const orderId = id ?? '';
   const canViewReturns = usePermission('orders', 'returns');
+  const canViewTax = usePermission('taxSnapshots', 'read');
   const [returnPage, setReturnPage] = useState(0);
   const [copied, setCopied] = useState(false);
 
@@ -194,6 +196,7 @@ export function OrderDetailPage() {
                   totalAmount={order.totalAmount}
                   orderCode={order.orderCode}
                 />
+                {canViewTax ? <OrderTaxSnapshots orderId={order.id} /> : null}
                 <OrderCarrierSnapshotCard
                   order={order}
                   onCreateShipment={() => navigate(routes.shipments.createForOrder(order.id))}

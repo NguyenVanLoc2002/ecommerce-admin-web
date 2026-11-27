@@ -43,6 +43,8 @@ export const routes = {
     list: '/brands',
   },
 
+  taxConfiguration: '/tax-configuration',
+
   carriers: {
     list: '/carriers',
   },

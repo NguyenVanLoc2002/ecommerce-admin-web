@@ -213,6 +213,12 @@ export const sidebarNavGroups: SidebarNavGroup[] = [
     label: 'Administration',
     items: [
       {
+        label: 'Cấu hình VAT',
+        to: routes.taxConfiguration,
+        icon: Landmark,
+        adminOnly: true,
+      },
+      {
         label: 'Staff',
         to: routes.users.list,
         icon: Users,
