@@ -61,6 +61,18 @@ export const sidebarNavGroups: SidebarNavGroup[] = [
         matchPrefixes: [routes.productAttributes.list],
       },
       {
+        label: 'Nhãn sản phẩm',
+        to: routes.productBadges.list,
+        icon: Tag,
+        adminOnly: true,
+      },
+      {
+        label: 'Bảng size',
+        to: routes.sizeGuides.list,
+        icon: ClipboardList,
+        adminOnly: true,
+      },
+      {
         label: 'Categories',
         to: routes.categories.list,
         icon: Tag,
