@@ -68,6 +68,9 @@ export const permissions = {
     write: ['ADMIN', 'SUPER_ADMIN'] as const,
     delete: ['ADMIN', 'SUPER_ADMIN'] as const,
   },
+  taxSnapshots: {
+    read: ['ADMIN', 'SUPER_ADMIN'] as const,
+  },
   auditLog: {
     read: ['ADMIN', 'SUPER_ADMIN'] as const,
   },
