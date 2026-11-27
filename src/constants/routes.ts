@@ -15,6 +15,18 @@ export const routes = {
     variants: (id: EntityKey) => `/products/${id}/variants`,
   },
 
+  productBadges: {
+    list: '/product-badges',
+    create: '/product-badges/new',
+    edit: (id: EntityKey) => `/product-badges/${id}/edit`,
+  },
+
+  sizeGuides: {
+    list: '/size-guides',
+    create: '/size-guides/new',
+    edit: (id: EntityKey) => `/size-guides/${id}/edit`,
+  },
+
   productAttributes: {
     list: '/product-attributes',
     create: '/product-attributes/new',

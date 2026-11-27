@@ -5,6 +5,10 @@ import { routes } from '@/constants/routes';
 import { LoginPage } from '@/features/auth/pages/LoginPage';
 import { DashboardPage } from '@/features/dashboard';
 import { ProductListPage, ProductDetailPage, ProductEditPage, ProductVariantsPage } from '@/features/products';
+import { ProductBadgeEditPage } from '@/features/product-badges/pages/ProductBadgeEditPage';
+import { ProductBadgeListPage } from '@/features/product-badges/pages/ProductBadgeListPage';
+import { SizeGuideEditPage } from '@/features/size-guides/pages/SizeGuideEditPage';
+import { SizeGuideListPage } from '@/features/size-guides/pages/SizeGuideListPage';
 import { ProductAttributeEditPage, ProductAttributeListPage } from '@/features/product-attributes';
 import { CategoryEditPage, CategoryListPage } from '@/features/categories';
 import { BrandListPage } from '@/features/brands';
@@ -149,6 +153,12 @@ export function Router() {
           <Route path={routes.invoices.detail(':id')} element={<InvoicePage />} />
 
           <Route element={<RoleGuard required={['ADMIN', 'SUPER_ADMIN']} />}>
+            <Route path={routes.productBadges.list} element={<ProductBadgeListPage />} />
+            <Route path={routes.productBadges.create} element={<ProductBadgeEditPage />} />
+            <Route path={routes.productBadges.edit(':id')} element={<ProductBadgeEditPage />} />
+            <Route path={routes.sizeGuides.list} element={<SizeGuideListPage />} />
+            <Route path={routes.sizeGuides.create} element={<SizeGuideEditPage />} />
+            <Route path={routes.sizeGuides.edit(':id')} element={<SizeGuideEditPage />} />
             <Route path={routes.productAttributes.list} element={<ProductAttributeListPage />} />
             <Route path={routes.productAttributes.create} element={<ProductAttributeEditPage />} />
             <Route path={routes.productAttributes.edit(':id')} element={<ProductAttributeEditPage />} />

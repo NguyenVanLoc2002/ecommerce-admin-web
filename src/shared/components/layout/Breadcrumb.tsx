@@ -16,10 +16,10 @@ export function Breadcrumb({ className }: BreadcrumbProps) {
   if (crumbs.length <= 1) return null;
 
   return (
-    <nav aria-label="Breadcrumb" className={cn('flex items-center', className)}>
-      <ol className="flex items-center gap-1">
+    <nav aria-label="Breadcrumb" className={cn('flex min-w-0 items-center', className)}>
+      <ol className="flex min-w-0 items-center gap-1">
         {crumbs.map((crumb, index) => (
-          <li key={`${crumb.path ?? crumb.label}-${index}`} className="flex items-center gap-1">
+          <li key={`${crumb.path ?? crumb.label}-${index}`} className="flex min-w-0 items-center gap-1">
             {index > 0 && (
               <ChevronRight className="h-3.5 w-3.5 text-gray-400 shrink-0" aria-hidden />
             )}
