@@ -177,6 +177,12 @@ export const sidebarNavGroups: SidebarNavGroup[] = [
     label: 'Integrations',
     items: [
       {
+        label: 'Shipping Policy',
+        to: routes.shippingPolicy,
+        icon: PackageCheck,
+        adminOnly: true,
+      },
+      {
         label: 'Shipping Providers',
         to: routes.integrations.shippingProviders.list,
         icon: PackageCheck,

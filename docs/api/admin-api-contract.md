@@ -2133,3 +2133,8 @@ Size guide payload is `{ name, active, version?, content }`. Content has ordered
 Assignment payload is `{ scope, productId?, categoryId?, brandId?, priority }` with `PRODUCT`, `CATEGORY_BRAND`, `BRAND`, `CATEGORY` and `SHOP`. Supply the target IDs for the selected scope. A lower priority wins within a scope when a product has more than one matching category. Reassigning a scope replaces its previous guide. Disabling a guide retains assignments for reactivation and the storefront falls back to the next eligible scope.
 
 A badge uses `{ code, label, active, priority, version? }`. Codes must be unique and use uppercase letters, numbers or underscores. Existing commerce-state codes are reserved. The storefront excludes inactive badges and sorts by priority ascending, then code. Creation and assignment are manual. No default badge is automatically linked to a product.
+
+
+## Shipping policy (#88)
+
+Use `/api/v1/admin/policies/shipping` to list and create versions. Add `/{version}` to read or update a draft, `/publish` or `/archive` for status changes, and `/history` for paginated audit history. Request `/capabilities` before displaying restricted actions. Edit and status changes require the last loaded revision and return 409 if stale. All dates are ISO 8601 instants. See the [Backend contract](https://github.com/NguyenVanLoc2002/ecommerce-backend/issues/88) for rollout.

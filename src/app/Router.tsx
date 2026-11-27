@@ -12,6 +12,7 @@ import { SizeGuideListPage } from '@/features/size-guides/pages/SizeGuideListPag
 import { ProductAttributeEditPage, ProductAttributeListPage } from '@/features/product-attributes';
 import { CategoryEditPage, CategoryListPage } from '@/features/categories';
 import { BrandListPage } from '@/features/brands';
+import { ShippingPolicyPage } from '@/features/shipping-policy/ShippingPolicyPage';
 import { CarrierListPage, ShippingProviderDetailPage } from '@/features/carriers';
 import { WarehouseEditPage, WarehouseListPage, StockPage, ReservationListPage } from '@/features/inventory';
 import { OrderListPage, OrderDetailPage, OrderReturnsPage } from '@/features/orders';
@@ -125,6 +126,7 @@ export function Router() {
           <Route path={routes.inventory.reservations} element={<ReservationListPage />} />
 
           <Route element={<RoleGuard required={['ADMIN', 'SUPER_ADMIN']} />}>
+            <Route path={routes.shippingPolicy} element={<ShippingPolicyPage />} />
             <Route path={routes.orders.returns} element={<OrderReturnsPage />} />
           </Route>
           <Route path={routes.orders.list} element={<OrderListPage />} />

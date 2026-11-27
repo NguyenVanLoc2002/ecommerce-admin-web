@@ -43,6 +43,8 @@ export const routes = {
     list: '/brands',
   },
 
+  shippingPolicy: '/shipping-policy',
+
   carriers: {
     list: '/carriers',
   },
