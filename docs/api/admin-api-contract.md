@@ -757,6 +757,14 @@ Carrier catalog and per-store carrier configuration used by shipment creation.
 
 ---
 
+### Shipping policy (#88)
+
+Use `/api/v1/admin/policies/shipping` to list and create versions. Add `/{version}` to read or update a draft, `/publish` or `/archive` for status changes, and `/history` for paginated audit history. Request `/capabilities` before displaying restricted actions. Edit and status changes require the last loaded revision and return 409 if stale. All dates are ISO 8601 instants. See the [Backend contract](https://github.com/NguyenVanLoc2002/ecommerce-backend/issues/88) for rollout.
+
+The /shipping-calendars screen uses /api/v1/admin/shipping/calendars for managing independent carrier and warehouse calendars. Preview and audit routes use the persisted version. Editing requires the current revision and an explicit Backend grant.
+
+The /delivery-rules screen uses /api/v1/admin/shipping/delivery-rules for two-level destinations, carrier applicability, schedule priorities, preview, and revision history. Activation requires coverage evidence and an enabled service.
+
 ## 5. Inventory
 
 ### DTOs

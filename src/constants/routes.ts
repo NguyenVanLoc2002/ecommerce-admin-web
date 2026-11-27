@@ -59,6 +59,10 @@ export const routes = {
     },
   },
 
+  shippingPolicy: '/shipping-policy',
+  shippingCalendars: '/shipping-calendars',
+  deliveryRules: '/delivery-rules',
+
   warehouses: {
     list: '/warehouses',
     create: '/warehouses/new',

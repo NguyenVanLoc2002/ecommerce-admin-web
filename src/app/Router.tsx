@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react';
 import { BrowserRouter, Navigate, Outlet, Route, Routes, useLocation, useParams } from 'react-router-dom';
 import { useAuthStore } from '@/shared/stores/authStore';
 import type { Role } from '@/shared/types/auth.types';
@@ -29,8 +30,13 @@ import { ReviewModerationPage } from '@/features/reviews';
 import { UserListPage } from '@/features/users';
 import { CustomerListPage } from '@/features/customers';
 import { AuditLogPage } from '@/features/audit-log';
+import { ShippingPolicyPage } from '@/features/shipping-policy/ShippingPolicyPage';
 import { ForbiddenPage } from './pages/ForbiddenPage';
 import { NotFoundPage } from './pages/NotFoundPage';
+
+const DeliveryRulePage = lazy(() => import('@/features/delivery-rules/DeliveryRulePage').then((module) => ({ default: module.DeliveryRulePage })));
+const ShippingCalendarPage = lazy(() => import('@/features/shipping-calendar/ShippingCalendarPage').then((module) => ({ default: module.ShippingCalendarPage })));
+const shippingConfigLoading = <p className="p-4" role="status">Đang tải cấu hình…</p>;
 
 export function AuthGuard() {
   const accessToken = useAuthStore((state) => state.accessToken);
@@ -162,6 +168,9 @@ export function Router() {
             <Route path={routes.productAttributes.list} element={<ProductAttributeListPage />} />
             <Route path={routes.productAttributes.create} element={<ProductAttributeEditPage />} />
             <Route path={routes.productAttributes.edit(':id')} element={<ProductAttributeEditPage />} />
+            <Route path={routes.deliveryRules} element={<Suspense fallback={shippingConfigLoading}><DeliveryRulePage /></Suspense>} />
+            <Route path={routes.shippingCalendars} element={<Suspense fallback={shippingConfigLoading}><ShippingCalendarPage /></Suspense>} />
+            <Route path={routes.shippingPolicy} element={<ShippingPolicyPage />} />
             <Route path={routes.promotions.list} element={<PromotionListPage />} />
             <Route path={routes.promotions.create} element={<PromotionEditPage />} />
             <Route path={routes.promotions.edit(':id')} element={<PromotionEditPage />} />
