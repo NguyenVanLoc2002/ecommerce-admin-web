@@ -2,6 +2,8 @@ import { ArrowLeft, FileText } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { routes } from '@/constants/routes';
+import { usePermission } from '@/constants/permissions';
+import { TaxInvoiceDocuments } from '../components/TaxInvoiceDocuments';
 import { EmptyState } from '@/shared/components/feedback/EmptyState';
 import { ErrorCard } from '@/shared/components/feedback/ErrorCard';
 import { SkeletonDetail } from '@/shared/components/feedback/Skeleton';
@@ -25,6 +27,7 @@ export function InvoicePage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const invoiceId = id ?? '';
+  const canViewTax = usePermission('taxInvoices', 'read');
   const [statusModalOpen, setStatusModalOpen] = useState(false);
 
   const { data: invoice, isLoading, isError, error, refetch } = useInvoice(invoiceId);
@@ -146,6 +149,7 @@ export function InvoicePage() {
           isUpdatingStatus={updateInvoiceStatus.isPending}
           onUpdateStatus={() => setStatusModalOpen(true)}
         />
+        {canViewTax ? <TaxInvoiceDocuments invoiceId={invoiceId} /> : null}
       </div>
 
       <VoidInvoiceModal

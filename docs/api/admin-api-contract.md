@@ -2138,3 +2138,5 @@ A badge uses `{ code, label, active, priority, version? }`. Codes must be unique
 ## VAT configuration (#87)
 
 The /tax-configuration screen uses /api/v1/admin/tax for category schedules, product assignment, history and reading order estimates. Access is enforced by the Backend. The screen reads snapshot amounts and does not calculate order VAT.
+
+Invoice Detail uses /api/v1/admin/tax/invoices/{invoiceId}/preparation, /preparation.csv and /external-record for accounting exports and recording external invoice evidence. These operations require dedicated Backend grants.
