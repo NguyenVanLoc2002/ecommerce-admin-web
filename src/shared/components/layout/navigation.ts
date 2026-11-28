@@ -189,6 +189,12 @@ export const sidebarNavGroups: SidebarNavGroup[] = [
         adminOnly: true,
       },
       {
+        label: 'Miễn phí vận chuyển',
+        to: routes.freeShipping,
+        icon: PackageCheck,
+        adminOnly: true,
+      },
+      {
         label: 'Shipping Policy',
         to: routes.shippingPolicy,
         icon: PackageCheck,
