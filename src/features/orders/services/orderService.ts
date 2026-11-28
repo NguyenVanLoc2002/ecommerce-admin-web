@@ -115,6 +115,11 @@ function normalizeOrderSummary(input: unknown): OrderSummary {
 
 function normalizeOrder(input: unknown): Order {
   const record = toRecord(input);
+  const snapshot = toRecord(record.freeShippingSnapshot);
+  const policyRevision = asNumber(snapshot.policyRevision);
+  const threshold = asNumber(snapshot.threshold);
+  const eligibleAmount = asNumber(snapshot.eligibleAmount);
+  const quotedFee = asNumber(snapshot.quotedFee);
 
   return {
     id: asString(record.id),
@@ -145,6 +150,9 @@ function normalizeOrder(input: unknown): Order {
     subTotal: asNumber(record.subTotal) ?? 0,
     discountAmount: asNumber(record.discountAmount) ?? 0,
     shippingFee: asNumber(record.shippingFee) ?? 0,
+    freeShippingSnapshot: policyRevision != null && threshold != null && eligibleAmount != null && quotedFee != null
+      ? { policyRevision, threshold, eligibleAmount, quotedFee }
+      : undefined,
     totalAmount: asNumber(record.totalAmount) ?? 0,
     voucherCode: asNullableString(record.voucherCode),
     customerNote: asNullableString(record.customerNote),

@@ -63,6 +63,7 @@ export interface Order {
   subTotal: number;
   discountAmount: number;
   shippingFee: number;
+  freeShippingSnapshot?: { policyRevision: number; threshold: number; eligibleAmount: number; quotedFee: number };
   totalAmount: number;
   voucherCode: string | null;
   customerNote: string | null;

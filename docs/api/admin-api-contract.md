@@ -2148,3 +2148,7 @@ A badge uses `{ code, label, active, priority, version? }`. Codes must be unique
 The /tax-configuration screen uses /api/v1/admin/tax for category schedules, product assignment, history and reading order estimates. Access is enforced by the Backend. The screen reads snapshot amounts and does not calculate order VAT.
 
 Invoice Detail uses /api/v1/admin/tax/invoices/{invoiceId}/preparation, /preparation.csv and /external-record for accounting exports and recording external invoice evidence. These operations require dedicated Backend grants.
+
+## Shop free shipping configuration (#34)
+
+`GET /api/v1/admin/shipping/free-shipping-policy` reads the whole-shop policy. `PUT` saves `enabled`, `threshold` (whole VND, nullable only when disabled) and the current `revision`. Both require Admin or Super Admin. A conflict (409) means the policy must be reloaded before saving. Policy starts disabled. The customer eligibility base is merchandise after discounts, excluding shipping. An order detail may include `freeShippingSnapshot` containing the threshold, eligible amount, policy revision and quoted fee at checkout. The `shippingFee` field continues to represent the amount charged to the customer.

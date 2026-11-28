@@ -63,6 +63,7 @@ export const routes = {
 
   shippingPolicy: '/shipping-policy',
   shippingCalendars: '/shipping-calendars',
+  freeShipping: '/free-shipping',
   deliveryRules: '/delivery-rules',
 
   warehouses: {
